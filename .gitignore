@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+build/
+
+# Entorno y Secretos
+.env
+.env*.local
+
+# Docker y Base de datos
+pgdata/
+erp-taller/pgdata/
+
+# Logs y SO
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
