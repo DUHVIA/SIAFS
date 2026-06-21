@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../../docs/03_arquitectura/modelo_db.svg"
+  theme    = "dark"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  DUENO
+  ADMIN
+  VENDEDOR
+}
+
+enum CategoriaProducto {
+  AUTOPARTE
+  MOTOR
+}
+
+enum EstadoCotizacion {
+  PENDIENTE
+  VENDIDA
+  ANULADA
+}
+
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  nombre          String
+  email           String    @unique
+  password_hash   String
+  rol             Rol       @default(VENDEDOR)
+  is_active       Boolean   @default(true)
+
+  cotizaciones    Cotizacion[]
+  gastos          Gasto[]
+}
+
+model Cliente {
+  id              Int       @id @default(autoincrement())
+  documento       String    @unique
+  nombre          String
+  telefono        String?
+  direccion       String?
+
+  cotizaciones    Cotizacion[]
+}
+
+model Producto {
+  id              Int       @id @default(autoincrement())
+  nombre          String
+  categoria       CategoriaProducto
+  precio_base     Decimal   @db.Decimal(10, 2)
+  stock           Int       @default(0)
+  detalles        Json      
+  is_active       Boolean   @default(true)
+
+  detalles_cot    CotizacionDetalle[]
+}
+
+model Cotizacion {
+  id              Int       @id @default(autoincrement())
+  estado          EstadoCotizacion @default(PENDIENTE)
+  metodo_pago     String?   
+  total           Decimal   @db.Decimal(10, 2)
+  fecha_creacion  DateTime  @default(now())
+  fecha_venta     DateTime? 
+
+  cliente_id      Int
+  cliente         Cliente   @relation(fields: [cliente_id], references: [id])
+  vendedor_id     Int
+  vendedor        Usuario   @relation(fields: [vendedor_id], references: [id])
+
+  items           CotizacionDetalle[]
+}
+
+model CotizacionDetalle {
+  id                Int       @id @default(autoincrement())
+  cantidad          Int
+  precio_unitario   Decimal   @db.Decimal(10, 2) 
+  subtotal          Decimal   @db.Decimal(10, 2)
+
+  cotizacion_id     Int
+  cotizacion        Cotizacion @relation(fields: [cotizacion_id], references: [id])
+  producto_id       Int
+  producto          Producto   @relation(fields: [producto_id], references: [id])
+}
+
+model Gasto {
+  id              Int       @id @default(autoincrement())
+  motivo          String
+  monto           Decimal   @db.Decimal(10, 2)
+  fecha           DateTime  @default(now())
+  is_active       Boolean   @default(true)
+
+  usuario_id      Int
+  usuario         Usuario   @relation(fields: [usuario_id], references: [id])
+}
