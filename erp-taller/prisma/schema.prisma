@@ -6,9 +6,8 @@ generator client {
 
 generator erd {
   provider                  = "prisma-erd-generator"
-  output                    = "../../docs/03_arquitectura/modelo_db_v2.svg"
-  theme                     = "light"
-  includeRelationFromFields = true // <-- Intentamos forzar a que el SVG muestre las FKs
+  output                    = "../../docs/03_arquitectura/modelo_db_v3.svg"
+  includeRelationFromFields = true 
 }
 
 datasource db {
@@ -17,48 +16,98 @@ datasource db {
 
 // === ENUMS DEL SISTEMA ===
 
-enum RolUsuario {
-  DUEÑO
-  ADMIN
-  VENDEDOR
-}
-
-enum MetodoPago {
-  EFECTIVO
-  TARJETA
-  YAPE_PLIN
-}
-
 enum CategoriaProducto {
   AUTOPARTE
   MOTOR
 }
 
-enum EstadoCotizacion {
+enum TipoOrden {
+  COTIZACION
+  VENTA
+}
+
+enum EstadoOrden {
   PENDIENTE
-  VENDIDA
+  COMPLETADA // Para ventas cerradas o cotizaciones ganadas
   ANULADA
 }
 
-// === MODELOS DE ENTIDAD ===
+enum TipoMovimientoKardex {
+  INGRESO
+  SALIDA
+  AJUSTE
+}
+
+// === MÓDULO DE SEGURIDAD Y PERMISOS (RBAC) ===
+
+model Rol {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre      String   @unique @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  
+  usuarios    Usuario[]
+  permisos    RolPermisoBase[]
+
+  @@map("roles")
+}
+
+model Permiso {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigo      String   @unique @db.VarChar(100) // Ej. "CREAR_VENTA"
+  
+  roles       RolPermisoBase[]
+  usuarios    UsuarioPermiso[]
+
+  @@map("permisos")
+}
+
+model RolPermisoBase {
+  rolId       String   @map("rol_id") @db.Uuid
+  permisoId   String   @map("permiso_id") @db.Uuid
+  
+  rol         Rol      @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso     Permiso  @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+  
+  @@id([rolId, permisoId])
+  @@map("rol_permiso_base")
+}
+
+model UsuarioPermiso {
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  permisoId   String   @map("permiso_id") @db.Uuid
+  
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  permiso     Permiso  @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+  
+  @@id([usuarioId, permisoId])
+  @@map("usuario_permisos")
+}
 
 model Usuario {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nombre        String    @db.VarChar(255)
-  email         String    @unique @db.VarChar(255)
-  passwordHash  String    @map("password_hash") @db.VarChar(255)
-  rol           RolUsuario
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rolId           String   @map("rol_id") @db.Uuid
+  nombre          String   @db.VarChar(255)
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  salt            String   @db.VarChar(255) // Seguridad añadida
+  accesoSistema   Boolean  @default(true) @map("acceso_sistema")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
 
   // Relaciones
-  historicosPrecios HistoricoPrecios[]
-  cotizaciones      Cotizacion[]
-  ventas            Venta[]
-  gastosInternos    GastoInterno[]
+  rol             Rol      @relation(fields: [rolId], references: [id])
+  permisos        UsuarioPermiso[]
+  ordenes         Orden[]
+  ingresos        Ingreso[]
+  movimientosKardex Kardex[]
+  gastosInternos  GastoInterno[]
+  historialPrecios HistorialPrecio[]
+  historialNombres HistorialNombre[]
 
   @@map("usuarios")
 }
+
+// === MÓDULO DE CLIENTES ===
 
 model Cliente {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -71,19 +120,12 @@ model Cliente {
   direccionCifrado String?  @map("direccion_cifrado") @db.Text
   createdAt        DateTime @default(now()) @map("created_at")
 
-  // Relaciones
-  cotizaciones Cotizacion[]
-  ventas       Venta[]
+  ordenes          Orden[]
 
   @@map("clientes")
 }
 
-model TipoAutoparte {
-  id     Int    @id @default(autoincrement())
-  nombre String @unique @db.VarChar(100)
-
-  @@map("tipos_autoparte")
-}
+// === MÓDULO DE INVENTARIO Y PRODUCTOS ===
 
 model Producto {
   id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -91,115 +133,156 @@ model Producto {
   idxNombre           String?           @map("idx_nombre") @db.VarChar(64)
   categoria           CategoriaProducto
   precioVentaCifrado  String            @map("precio_venta_cifrado") @db.Text
-  stockCifrado        String            @map("stock_cifrado") @db.Text
+  stockCifrado        String            @map("stock_cifrado") @db.Text // Actúa como caché rápida
   rangoStock          Int               @default(0) @map("rango_stock")
   detallesCifrados    String            @map("detalles_cifrados") @db.Text
   isActive            Boolean           @default(true) @map("is_active")
   createdAt           DateTime          @default(now()) @map("created_at")
 
-  // Relaciones
-  historicosPrecios   HistoricoPrecios[]
-  detalleCotizaciones DetalleCotizacion[]
-  detalleVentas       DetalleVenta[]
+  historialPrecios    HistorialPrecio[]
+  historialNombres    HistorialNombre[]
+  movimientosKardex   Kardex[]
+  detalleOrdenes      DetalleOrden[]
+  detalleIngresos     DetalleIngreso[]
 
   @@map("productos")
 }
 
-model HistoricoPrecios {
+// === HISTORIALES Y KARDEX (Auditoría) ===
+
+model Kardex {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productoId          String               @map("producto_id") @db.Uuid
+  usuarioId           String               @map("usuario_id") @db.Uuid
+  tipoMovimiento      TipoMovimientoKardex @map("tipo_movimiento")
+  cantidadCifrada     String               @map("cantidad_cifrada") @db.Text
+  motivoCifrado       String               @map("motivo_cifrado") @db.Text // Ej. "Venta", "Compra Lote", "Ajuste inventario"
+  fechaMovimiento     DateTime             @default(now()) @map("fecha_movimiento")
+
+  producto            Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  usuario             Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@map("kardex")
+}
+
+model HistorialPrecio {
   id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   productoId              String   @map("producto_id") @db.Uuid
-  precioCompraCifrado     String   @map("precio_compra_cifrado") @db.Text
-  cantidadIngresadaCifrada String   @map("cantidad_ingresada_cifrada") @db.Text
-  fechaIngreso            DateTime @default(now()) @map("fecha_ingreso")
   usuarioId               String   @map("usuario_id") @db.Uuid
+  precioCompraCifrado     String?  @map("precio_compra_cifrado") @db.Text
+  precioVentaCifrado      String   @map("precio_venta_cifrado") @db.Text
+  fechaCambio             DateTime @default(now()) @map("fecha_cambio")
 
-  // Relaciones FK explícitas
   producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
 
-  @@map("historico_precios")
+  @@map("historial_precios")
 }
 
-model Cotizacion {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clienteId    String           @map("cliente_id") @db.Uuid
-  usuarioId    String           @map("usuario_id") @db.Uuid
-  estado       EstadoCotizacion @default(PENDIENTE)
-  subtotalCifrado String        @map("subtotal_cifrado") @db.Text
-  totalCifrado String           @map("total_cifrado") @db.Text
-  fechaValidez DateTime?        @map("fecha_validez")
-  createdAt    DateTime         @default(now()) @map("created_at")
+model HistorialNombre {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productoId        String   @map("producto_id") @db.Uuid
+  usuarioId         String   @map("usuario_id") @db.Uuid
+  nombreAntiguoCifrado String @map("nombre_antiguo_cifrado") @db.Text
+  nombreNuevoCifrado   String @map("nombre_nuevo_cifrado") @db.Text
+  fechaCambio       DateTime @default(now()) @map("fecha_cambio")
 
-  // Relaciones FK explícitas
-  cliente Cliente @relation(fields: [clienteId], references: [id])
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
 
-  // Relaciones inversas
-  detalleCotizaciones DetalleCotizacion[]
-  venta               Venta?
-
-  @@map("cotizaciones")
+  @@map("historial_nombres")
 }
 
-model DetalleCotizacion {
-  id                            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cotizacionId                  String @map("cotizacion_id") @db.Uuid
-  productoId                    String @map("producto_id") @db.Uuid
-  cantidadCifrada               String @map("cantidad_cifrada") @db.Text
-  precioUnitarioCongeladoCifrado String @map("precio_unitario_congelado_cifrado") @db.Text
+// === COMPRAS / INGRESOS (Lotes) ===
 
-  // Relaciones FK explícitas
-  cotizacion Cotizacion @relation(fields: [cotizacionId], references: [id], onDelete: Cascade)
-  producto   Producto   @relation(fields: [productoId], references: [id])
+model Ingreso {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId           String   @map("usuario_id") @db.Uuid
+  descripcionCifrada  String?  @map("descripcion_cifrada") @db.Text // Notas del proveedor
+  totalCifrado        String   @map("total_cifrado") @db.Text
+  fechaIngreso        DateTime @default(now()) @map("fecha_ingreso")
 
-  @@map("detalle_cotizaciones")
+  usuario             Usuario  @relation(fields: [usuarioId], references: [id])
+  detalles            DetalleIngreso[]
+
+  @@map("ingresos")
 }
 
-model Venta {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cotizacionId String?    @unique @map("cotizacion_id") @db.Uuid
-  clienteId    String     @map("cliente_id") @db.Uuid
-  usuarioId    String     @map("usuario_id") @db.Uuid
-  metodoPago   MetodoPago @map("metodo_pago")
-  totalCifrado String     @map("total_cifrado") @db.Text
-  createdAt    DateTime   @default(now()) @map("created_at")
+model DetalleIngreso {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ingresoId           String   @map("ingreso_id") @db.Uuid
+  productoId          String   @map("producto_id") @db.Uuid
+  cantidadCifrada     String   @map("cantidad_cifrada") @db.Text
+  costoUnitarioCifrado String  @map("costo_unitario_cifrado") @db.Text
 
-  // Relaciones FK explícitas
-  cotizacion Cotizacion? @relation(fields: [cotizacionId], references: [id])
-  cliente    Cliente     @relation(fields: [clienteId], references: [id])
-  usuario    Usuario     @relation(fields: [usuarioId], references: [id])
+  ingreso             Ingreso  @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
+  producto            Producto @relation(fields: [productoId], references: [id])
 
-  // Relaciones inversas
-  detalleVentas DetalleVenta[]
-
-  @@map("ventas")
+  @@map("detalle_ingresos")
 }
 
-model DetalleVenta {
-  id                  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ventaId             String @map("venta_id") @db.Uuid
-  productoId          String @map("producto_id") @db.Uuid
-  cantidadCifrada     String @map("cantidad_cifrada") @db.Text
-  precioUnitarioCifrado String @map("precio_unitario_cifrado") @db.Text
+// === VENTAS Y COTIZACIONES UNIFICADAS ===
 
-  // Relaciones FK explícitas
-  venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
-  producto Producto @relation(fields: [productoId], references: [id])
+model MetodoPago {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre      String   @unique @db.VarChar(50) // EFECTIVO, YAPE, CUOTAS, etc.
+  isActive    Boolean  @default(true) @map("is_active")
+  
+  ordenes     Orden[]
 
-  @@map("detalle_ventas")
+  @@map("metodos_pago")
 }
+
+model Orden {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo            TipoOrden    // Define si es COTIZACION o VENTA
+  estado          EstadoOrden  @default(PENDIENTE)
+  clienteId       String       @map("cliente_id") @db.Uuid
+  usuarioId       String       @map("usuario_id") @db.Uuid
+  metodoPagoId    String?      @map("metodo_pago_id") @db.Uuid // Nullable porque una cotización no siempre tiene método de pago inicial
+  
+  subtotalCifrado String       @map("subtotal_cifrado") @db.Text
+  totalCifrado    String       @map("total_cifrado") @db.Text
+  fechaValidez    DateTime?    @map("fecha_validez") // Solo para cotizaciones
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  cliente         Cliente      @relation(fields: [clienteId], references: [id])
+  usuario         Usuario      @relation(fields: [usuarioId], references: [id])
+  metodoPago      MetodoPago?  @relation(fields: [metodoPagoId], references: [id])
+  detalles        DetalleOrden[]
+
+  @@map("ordenes")
+}
+
+model DetalleOrden {
+  id                            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ordenId                       String   @map("orden_id") @db.Uuid
+  productoId                    String?  @map("producto_id") @db.Uuid
+  
+  // SNAPSHOTS (Vital por si cambian los nombres/precios a futuro)
+  productoNombreCifrado         String   @map("producto_nombre_cifrado") @db.Text 
+  precioUnitarioCongeladoCifrado String  @map("precio_unitario_congelado_cifrado") @db.Text
+  cantidadCifrada               String   @map("cantidad_cifrada") @db.Text
+  subtotalCifrado               String   @map("subtotal_cifrado") @db.Text
+
+  orden      Orden      @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  producto   Producto?  @relation(fields: [productoId], references: [id])
+
+  @@map("detalle_ordenes")
+}
+
+// === CAJA CHICA Y GASTOS ===
 
 model GastoInterno {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId     String   @map("usuario_id") @db.Uuid
   motivoCifrado String   @map("motivo_cifrado") @db.Text
   montoCifrado  String   @map("monto_cifrado") @db.Text
   fecha         DateTime @db.Date
-  usuarioId     String   @map("usuario_id") @db.Uuid
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  // Relaciones FK explícitas
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id])
 
   @@map("gastos_internos")
 }
