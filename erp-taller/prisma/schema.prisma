@@ -235,15 +235,16 @@ model MetodoPago {
 
 model Orden {
   id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  numeroOrden     Int          @default(autoincrement()) @map("numero_orden") // <-- EL ID LEGIBLE (Ej: 1, 2, 3...)
   tipo            TipoOrden    // Define si es COTIZACION o VENTA
   estado          EstadoOrden  @default(PENDIENTE)
   clienteId       String       @map("cliente_id") @db.Uuid
   usuarioId       String       @map("usuario_id") @db.Uuid
-  metodoPagoId    String?      @map("metodo_pago_id") @db.Uuid // Nullable porque una cotización no siempre tiene método de pago inicial
+  metodoPagoId    String?      @map("metodo_pago_id") @db.Uuid 
   
   subtotalCifrado String       @map("subtotal_cifrado") @db.Text
   totalCifrado    String       @map("total_cifrado") @db.Text
-  fechaValidez    DateTime?    @map("fecha_validez") // Solo para cotizaciones
+  fechaValidez    DateTime?    @map("fecha_validez") 
   createdAt       DateTime     @default(now()) @map("created_at")
 
   cliente         Cliente      @relation(fields: [clienteId], references: [id])

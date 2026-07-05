@@ -5,10 +5,12 @@ import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
+  // Agrega este bloque para el seed:
   migrations: {
-    path: "prisma/migrations",
+    seed: 'pnpm dlx tsx prisma/seed.ts',
   },
+  // Mantén el datasource que ya tenías configurado ahí:
   datasource: {
-    url: process.env["DATABASE_URL"],
+    url: process.env.DATABASE_URL,
   },
 });
