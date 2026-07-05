@@ -55,7 +55,7 @@ export function Sidebar() {
  className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 font-body text-sm font-medium
  ${isActive 
  ? 'bg-primary/10 text-primary shadow-sm' 
- : 'text-tertiary hover:bg-neutral-light hover:text-primary '
+ : 'text-tertiary hover:bg-primary/5 hover:text-primary '
  }`}
  >
  <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'opacity-70'}`} />
