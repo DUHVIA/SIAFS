@@ -82,5 +82,21 @@ export const OrdenService = {
 
       return nuevaOrden;
     });
+  },
+
+  async obtenerTodas() {
+    const ordenes = await prisma.orden.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        cliente: true
+      }
+    });
+
+    return ordenes.map(orden => ({
+      ...orden,
+      total: descifrarTexto(orden.totalCifrado),
+      subtotal: descifrarTexto(orden.subtotalCifrado),
+      clienteNombre: orden.cliente ? descifrarTexto(orden.cliente.nombreCifrado) : 'Consumidor Final'
+    }));
   }
 };
