@@ -4,28 +4,62 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
 
+// Mapeo de rutas (tanto Vistas como APIs) a los permisos requeridos
+const ROUTE_PERMISSIONS: Record<string, string> = {
+  '/inventario': 'VER_INVENTARIO',
+  '/ordenes': 'VER_VENTAS',
+  '/clientes': 'VER_CLIENTES',
+  '/usuarios': 'GESTIONAR_PERSONAL',
+  '/finanzas': 'VER_GASTOS',
+  '/api/productos': 'VER_INVENTARIO',
+  '/api/ordenes': 'VER_VENTAS',
+  '/api/clientes': 'VER_CLIENTES',
+  '/api/usuarios': 'GESTIONAR_PERSONAL',
+  '/api/gastos': 'VER_GASTOS',
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Solo proteger rutas de API, excepto auth/login y auth/logout
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) {
+  // Rutas públicas (Estáticas y de Login)
+  if (pathname.startsWith('/api/auth/login') || pathname === '/login') {
+    return NextResponse.next();
+  }
+
+  // Comprobar si es una ruta protegida
+  const isApiRoute = pathname.startsWith('/api/');
+  const isProtectedAppRoute = ['/inventario', '/ordenes', '/clientes', '/usuarios', '/finanzas', '/'].includes(pathname);
+
+  if (isApiRoute || isProtectedAppRoute) {
     const tokenCookie = request.cookies.get('auth_token');
     
     if (!tokenCookie || !tokenCookie.value) {
-      return NextResponse.json({ error: 'No autorizado - Falta token' }, { status: 401 });
+      if (isApiRoute) {
+        return NextResponse.json({ error: 'No autorizado - Falta token' }, { status: 401 });
+      } else {
+        // En un escenario real, redirigir al /login. Por ahora redirigiremos a /login (el usuario tendrá que crearlo).
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
     }
 
     try {
       // Validar el JWT en el Edge Runtime con jose
       const { payload } = await jwtVerify(tokenCookie.value, JWT_SECRET);
       
-      // Opcional: Validación de permisos por ruta (ejemplo)
-      // const permisos = payload.permisos as string[];
-      // if (pathname === '/api/ventas' && !permisos.includes('CREAR_VENTA')) {
-      //   return NextResponse.json({ error: 'Permisos insuficientes' }, { status: 403 });
-      // }
+      const permisosUsuario = (payload.permisos as string[]) || [];
+
+      // Validar el permiso si la ruta está en el diccionario ROUTE_PERMISSIONS
+      const requiredPermission = ROUTE_PERMISSIONS[pathname];
+      if (requiredPermission && !permisosUsuario.includes(requiredPermission)) {
+        if (isApiRoute) {
+          return NextResponse.json({ error: 'Permisos insuficientes para esta acción' }, { status: 403 });
+        } else {
+          // Redirigir al inicio si intenta ver una pantalla prohibida
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      }
       
-      // Pasar data al request header si el backend interno lo requiere
+      // Adjuntar info limpia a los headers
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-usuario-id', payload.usuarioId as string);
       requestHeaders.set('x-rol-id', payload.rolId as string);
@@ -37,7 +71,11 @@ export async function middleware(request: NextRequest) {
       });
     } catch (error) {
       console.error('Error verificando JWT:', error);
-      return NextResponse.json({ error: 'No autorizado - Token inválido o expirado' }, { status: 401 });
+      if (isApiRoute) {
+        return NextResponse.json({ error: 'Token inválido o expirado' }, { status: 401 });
+      } else {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
     }
   }
 
@@ -45,5 +83,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*'],
+  // Proteger toda la aplicación excepto los assets estáticos de Next.js
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|LOGO.png).*)'],
 };
