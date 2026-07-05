@@ -1,0 +1,22 @@
+/* colors.css - Definición de colores de la marca para Tailwind v4 */
+
+@theme {
+  /* Rojo Corporativo (Elementos grandes, CTAs, Cabeceras del Sidebar) */
+  --color-primary: #DB052B;
+  --color-primary-hover: #b30423;
+
+  /* Tonos Oscuros (Solo para textos principales y componentes pequeños) */
+  --color-secondary: #1A1A1A;
+  
+  /* Tonos Grises (Textos secundarios, bordes sutiles) */
+  --color-tertiary: #747474;
+  --color-tertiary-light: #A0A0A0;
+
+  /* Tonos Claros (Fondos, paneles principales) */
+  --color-neutral-light: #F8F9FA;
+  --color-neutral-white: #FFFFFF;
+
+  /* Sombras Suaves para el efecto "Soft UI" */
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
+}

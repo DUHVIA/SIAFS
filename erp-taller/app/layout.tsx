@@ -3,9 +3,9 @@ import { Inter, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 import { siteConfig } from '@/lib/config';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Navbar } from '@/components/layout/Navbar';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { ToastProvider } from '@/components/providers/ToastProvider';
+import { LoadingProvider } from '@/components/providers/LoadingProvider';
 
 // Configuración de las fuentes de Google
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
@@ -26,16 +26,11 @@ export default function RootLayout({
     <html lang="es" className={`${inter.variable} ${hankenGrotesk.variable} ${jetBrainsMono.variable}`}>
       <body className="font-body antialiased transition-colors duration-300 flex min-h-screen bg-transparent">
         <ToastProvider>
-          {/* Sidebar Fixed & Floating */}
-          <Sidebar />
-          
-          {/* Main Content Area */}
-          <main className="flex-1 flex flex-col min-h-screen ml-[18rem] transition-all duration-300">
-            <Navbar />
-            <div className="flex-1 p-8">
+          <LoadingProvider>
+            <AppLayout>
               {children}
-            </div>
-          </main>
+            </AppLayout>
+          </LoadingProvider>
         </ToastProvider>
       </body>
     </html>

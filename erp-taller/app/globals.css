@@ -1,18 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "./colors.css";
+
+@theme {
+  --font-headline: var(--font-headline);
+  --font-body: var(--font-body);
+  --font-label: var(--font-label);
+}
 
 @layer base {
   body {
-    /* Fondo con gradiente radial imperceptible para el modo claro (Soft UI) */
-    background: radial-gradient(circle at 15% 50%, #ffffff, #F3F3F3);
-    color: #1A1A1A;
+    /* Fondo con gradiente radial imperceptible, brillante y profesional */
+    background: radial-gradient(circle at 15% 50%, #ffffff, #F8F9FA);
+    color: var(--color-secondary);
     min-height: 100vh;
-  }
-
-  .dark body {
-    /* Fondo con gradiente radial imperceptible para el modo oscuro (Minimalista) */
-    background: radial-gradient(circle at 15% 50%, #242424, #121212);
-    color: #F3F3F3;
   }
 }
