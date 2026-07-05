@@ -58,3 +58,8 @@ export function hashPassword(password: string) {
   const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
   return { salt, hash };
 }
+
+export function verificarPassword(password: string, salt: string, hashGuardado: string): boolean {
+  const hashCalculado = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return hashCalculado === hashGuardado;
+}
