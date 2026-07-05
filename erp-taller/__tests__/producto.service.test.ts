@@ -34,9 +34,10 @@ describe('ProductoService (CRUD y Control de Errores)', () => {
       const dto = {
         usuarioId: 'uuid-user',
         nombre: 'Bujía',
-        categoria: 'REPUESTO' as any,
+        categoria: 'AUTOPARTE' as any,
         precioVenta: '25.00',
-        stock: '10'
+        stock: '10',
+        detalles: {}
       };
 
       prismaMock.producto.create.mockResolvedValue({
@@ -60,9 +61,10 @@ describe('ProductoService (CRUD y Control de Errores)', () => {
       const dto = {
         usuarioId: 'uuid-user',
         nombre: 'Bujía',
-        categoria: 'REPUESTO' as any,
+        categoria: 'AUTOPARTE' as any,
         precioVenta: '25.00',
-        stock: '10'
+        stock: '10',
+        detalles: {}
       };
 
       prismaMock.producto.create.mockRejectedValue(new Error('Unique constraint failed'));
