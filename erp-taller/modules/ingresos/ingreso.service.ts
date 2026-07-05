@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto } from '@/lib/crypto';
 import { CrearIngresoDTO } from './ingreso.dto';
 
-const prisma = new PrismaClient();
+
 
 export const IngresoService = {
   async crearIngreso(data: CrearIngresoDTO) {

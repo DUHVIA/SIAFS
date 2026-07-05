@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { verificarPassword } from '@/lib/crypto';
 import { SignJWT } from 'jose';
 
-const prisma = new PrismaClient();
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
 
 export const AuthService = {

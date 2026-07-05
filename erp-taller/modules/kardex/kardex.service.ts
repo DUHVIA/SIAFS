@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto } from '@/lib/crypto';
 import { RegistrarMovimientoDTO } from './kardex.dto';
 
-const prisma = new PrismaClient();
+
 
 export const KardexService = {
   async registrarMovimiento(data: RegistrarMovimientoDTO) {

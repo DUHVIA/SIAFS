@@ -1,7 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { descifrarTexto } from '@/lib/crypto';
 
-const prisma = new PrismaClient();
+
 
 export const DashboardService = {
   async obtenerMetricasGenerales() {

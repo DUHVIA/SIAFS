@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/crypto';
 import { CrearUsuarioDTO, ActualizarUsuarioDTO } from './usuario.dto';
 
-const prisma = new PrismaClient();
+
 
 export const UsuarioService = {
   async obtenerTodos() {

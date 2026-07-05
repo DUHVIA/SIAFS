@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto, generarIndiceCiego } from '@/lib/crypto';
 import { CrearClienteDTO, ActualizarClienteDTO } from './cliente.dto';
 
-const prisma = new PrismaClient();
+
 
 export const ClienteService = {
   async obtenerTodos() {

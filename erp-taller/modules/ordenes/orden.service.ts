@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto } from '@/lib/crypto';
 import { CrearOrdenDTO } from './orden.dto';
 
-const prisma = new PrismaClient();
+
 
 export const OrdenService = {
   async crearOrden(data: CrearOrdenDTO) {
