@@ -118,6 +118,7 @@ model Cliente {
   telefonoCifrado  String?  @map("telefono_cifrado") @db.Text
   correoCifrado    String?  @map("correo_cifrado") @db.Text
   direccionCifrado String?  @map("direccion_cifrado") @db.Text
+  isActive         Boolean  @default(true) @map("is_active")
   createdAt        DateTime @default(now()) @map("created_at")
 
   ordenes          Orden[]
