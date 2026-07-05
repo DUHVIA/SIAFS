@@ -4,17 +4,16 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
 
-// Mapeo de rutas (tanto Vistas como APIs) a los permisos requeridos
 const ROUTE_PERMISSIONS: Record<string, string> = {
-  '/inventario': 'VER_INVENTARIO',
-  '/ordenes': 'VER_VENTAS',
+  '/inventario': 'VER_PRODUCTOS',
+  '/ordenes': 'VER_ORDENES',
   '/clientes': 'VER_CLIENTES',
-  '/usuarios': 'GESTIONAR_PERSONAL',
+  '/usuarios': 'GESTIONAR_USUARIOS',
   '/finanzas': 'VER_GASTOS',
-  '/api/productos': 'VER_INVENTARIO',
-  '/api/ordenes': 'VER_VENTAS',
+  '/api/productos': 'VER_PRODUCTOS',
+  '/api/ordenes': 'VER_ORDENES',
   '/api/clientes': 'VER_CLIENTES',
-  '/api/usuarios': 'GESTIONAR_PERSONAL',
+  '/api/usuarios': 'GESTIONAR_USUARIOS',
   '/api/gastos': 'VER_GASTOS',
 };
 
