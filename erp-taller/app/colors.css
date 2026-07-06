@@ -1,22 +1,43 @@
-/* colors.css - Definición de colores de la marca para Tailwind v4 */
+/* colors.css - Definición de colores de la marca para Tailwind v4 con soporte Dark Mode nativo */
+
+:root {
+  /* Variables de Luz (Light Theme) */
+  --app-secondary: #1A1A1A;
+  --app-tertiary: #747474;
+  --app-tertiary-light: #A0A0A0;
+  --app-neutral-light: #F8F9FA;
+  --app-neutral-white: #FFFFFF;
+  --bg-gradient-start: #ffffff;
+  --bg-gradient-end: #F8F9FA;
+}
+
+.dark {
+  /* Variables de Oscuridad (Dark Theme) */
+  --app-secondary: #F8F9FA;
+  --app-tertiary: #A0A0A0;
+  --app-tertiary-light: #747474;
+  --app-neutral-light: #121212;
+  --app-neutral-white: #1A1A1A;
+  --bg-gradient-start: #0a0a0a;
+  --bg-gradient-end: #121212;
+}
 
 @theme {
-  /* Rojo Corporativo (Elementos grandes, CTAs, Cabeceras del Sidebar) */
+  /* Sobrescribimos el color blanco nativo de Tailwind para que responda al modo oscuro */
+  --color-white: var(--app-neutral-white);
+
+  /* Rojo Corporativo (Se mantiene brillante en ambos modos) */
   --color-primary: #DB052B;
   --color-primary-hover: #b30423;
 
-  /* Tonos Oscuros (Solo para textos principales y componentes pequeños) */
-  --color-secondary: #1A1A1A;
-  
-  /* Tonos Grises (Textos secundarios, bordes sutiles) */
-  --color-tertiary: #747474;
-  --color-tertiary-light: #A0A0A0;
+  /* Mapeo de Tonos Dinámicos a la configuración de Tailwind */
+  --color-secondary: var(--app-secondary);
+  --color-tertiary: var(--app-tertiary);
+  --color-tertiary-light: var(--app-tertiary-light);
+  --color-neutral-light: var(--app-neutral-light);
+  --color-neutral-white: var(--app-neutral-white);
 
-  /* Tonos Claros (Fondos, paneles principales) */
-  --color-neutral-light: #F8F9FA;
-  --color-neutral-white: #FFFFFF;
-
-  /* Sombras Suaves para el efecto "Soft UI" */
+  /* Sombras Suaves (Se podrían hacer más oscuras en modo oscuro si se quisiera, pero esto funciona bien) */
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.08);
 }

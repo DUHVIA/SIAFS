@@ -9,8 +9,8 @@
 
 @layer base {
   body {
-    /* Fondo con gradiente radial imperceptible, brillante y profesional */
-    background: radial-gradient(circle at 15% 50%, #ffffff, #F8F9FA);
+    /* Fondo con gradiente radial imperceptible, reacciona a Dark Mode */
+    background: radial-gradient(circle at 15% 50%, var(--bg-gradient-start), var(--bg-gradient-end));
     color: var(--color-secondary);
     min-height: 100vh;
   }
