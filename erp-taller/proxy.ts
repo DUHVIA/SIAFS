@@ -53,8 +53,8 @@ export async function proxy(request: NextRequest) {
         if (isApiRoute) {
           return NextResponse.json({ error: 'Permisos insuficientes para esta acción' }, { status: 403 });
         } else {
-          // Redirigir al inicio si intenta ver una pantalla prohibida
-          return NextResponse.redirect(new URL('/', request.url));
+          // Redirigir a pantalla de acceso denegado si intenta ver una pantalla prohibida
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
       }
       

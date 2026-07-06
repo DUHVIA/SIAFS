@@ -27,23 +27,23 @@ export function SalesChart({ data }: SalesChartProps) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
-          <XAxis 
-            dataKey="name" 
-            stroke="#747474" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
+          <XAxis
+            dataKey="name"
+            stroke="#747474"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
           />
-          <YAxis 
-            stroke="#747474" 
-            fontSize={12} 
-            tickLine={false} 
-            axisLine={false} 
-            tickFormatter={(value) => `$${value}`} 
+          <YAxis
+            stroke="#747474"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => `$${value}`}
           />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'rgba(26, 26, 26, 0.9)', 
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'rgba(26, 26, 26, 0.9)',
               borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.1)',
               color: '#fff',
@@ -52,13 +52,13 @@ export function SalesChart({ data }: SalesChartProps) {
             itemStyle={{ color: '#F3F3F3' }}
             formatter={(value: any) => [`$${Number(value).toFixed(2)}`, 'Ingresos']}
           />
-          <Area 
-            type="monotone" 
-            dataKey="total" 
-            stroke="#DB052B" 
+          <Area
+            type="monotone"
+            dataKey="total"
+            stroke="#DB052B"
             strokeWidth={3}
-            fillOpacity={1} 
-            fill="url(#colorTotal)" 
+            fillOpacity={1}
+            fill="url(#colorTotal)"
           />
         </AreaChart>
       </ResponsiveContainer>

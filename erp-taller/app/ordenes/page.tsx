@@ -14,7 +14,7 @@ export default async function OrdenesPage() {
   ]);
 
   return (
-    <OrdenesView 
+    <OrdenesView
       ordenes={ordenes}
       productos={productos}
       clientes={clientes}
