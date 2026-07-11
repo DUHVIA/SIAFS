@@ -129,4 +129,43 @@ describe('ProductoService (CRUD y Control de Errores)', () => {
       expect(resultado.nombreCifrado).toBe('sometext'); // Los datos cifrados se mantienen
     });
   });
+
+  describe('Reabastecimiento (Restock / Reposición)', () => {
+    it('debe registrar un ingreso de mercadería correctamente', async () => {
+      prismaMock.producto.findUniqueOrThrow.mockResolvedValue({
+        id: 'uuid-prod',
+        nombreCifrado: cifrarTexto('Bujía'),
+        precioVentaCifrado: cifrarTexto('25.00'),
+        stockCifrado: cifrarTexto('10'),
+        detallesCifrados: cifrarTexto(JSON.stringify({ sku: 'BRK-990-22' }))
+      });
+
+      prismaMock.producto.update.mockResolvedValue({
+        id: 'uuid-prod',
+        nombreCifrado: cifrarTexto('Bujía'),
+        precioVentaCifrado: cifrarTexto('25.00'),
+        stockCifrado: cifrarTexto('60'),
+        detallesCifrados: cifrarTexto(JSON.stringify({ sku: 'BRK-990-22' }))
+      });
+
+      prismaMock.kardex.create.mockResolvedValue({});
+
+      const resultado = await ProductoService.registrarReposicion('uuid-prod', {
+        cantidad: '50',
+        motivo: 'Compra Lote 2',
+        usuarioId: 'uuid-user'
+      });
+
+      expect(prismaMock.producto.findUniqueOrThrow).toHaveBeenCalledTimes(1);
+      expect(prismaMock.producto.update).toHaveBeenCalledTimes(1);
+      expect(prismaMock.kardex.create).toHaveBeenCalledTimes(1);
+
+      expect(resultado.stock).toBe('60');
+      
+      const kardexArgs = prismaMock.kardex.create.mock.calls[0][0];
+      expect(kardexArgs.data.tipoMovimiento).toBe('INGRESO');
+      expect(descifrarTexto(kardexArgs.data.cantidadCifrada)).toBe('50');
+      expect(descifrarTexto(kardexArgs.data.motivoCifrado)).toBe('Compra Lote 2');
+    });
+  });
 });

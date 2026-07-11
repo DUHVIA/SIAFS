@@ -1,0 +1,498 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Sales &amp; Quotes | AutoLogix Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#f1f0f0",
+                    "surface-container-high": "#e8e8e8",
+                    "secondary": "#5f5e5e",
+                    "primary-fixed": "#ffdad8",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed": "#e3e2e2",
+                    "surface-container": "#eeeeee",
+                    "outline-variant": "#e7bcba",
+                    "surface-dim": "#dadada",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "background": "#f9f9f9",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#930019",
+                    "error": "#ba1a1a",
+                    "on-surface": "#1a1c1c",
+                    "on-primary-container": "#ffeceb",
+                    "surface-container-low": "#f3f3f3",
+                    "on-background": "#1a1c1c",
+                    "on-secondary-container": "#636262",
+                    "tertiary-fixed-dim": "#c7c6c6",
+                    "on-surface-variant": "#5d3f3d",
+                    "primary": "#ae001f",
+                    "on-primary-fixed": "#410006",
+                    "tertiary-container": "#6d6d6d",
+                    "surface-bright": "#f9f9f9",
+                    "inverse-on-surface": "#f1f1f1",
+                    "secondary-container": "#e2dfde",
+                    "inverse-primary": "#ffb3af",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#926e6c",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#ffb3af",
+                    "tertiary": "#545555",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "on-secondary-fixed-variant": "#474746",
+                    "surface-tint": "#bf0023",
+                    "primary-container": "#db052b",
+                    "inverse-surface": "#2f3131",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "surface-variant": "#e2e2e2",
+                    "surface": "#f9f9f9",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "base": "8px",
+                    "margin-desktop": "32px",
+                    "xs": "4px",
+                    "lg": "40px",
+                    "margin-mobile": "16px",
+                    "sm": "12px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-caps": ["JetBrains Mono"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dbdbdb; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ae001f; }
+        
+        .zebra-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .tab-active { color: #ae001f; border-bottom: 2px solid #ae001f; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-surface border-r border-outline-variant flex flex-col z-50">
+<div class="p-md flex flex-col gap-xs">
+<h1 class="text-headline-sm font-headline-sm font-bold text-primary">AutoLogix Pro</h1>
+<p class="text-label-caps font-label-caps text-secondary uppercase">Warehouse Management</p>
+</div>
+<nav class="flex-1 px-sm mt-md space-y-xs">
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-body-md">Sales</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-body-md">Expenses</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md">Users</span>
+</a>
+</nav>
+<div class="p-md border-t border-outline-variant">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up professional portrait of an automotive logistics manager wearing a clean grey polo shirt in a bright modern office environment. The lighting is crisp and natural, highlighting a friendly and authoritative expression. The background is softly blurred to focus on the person, suggesting high-end corporate reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOuvBM0sFK2PfxQFuWQ4h0V9EVNkiez8gNrfkXJyaIN4VeVC_OBgiHjVkM5PGRRMFTcVD9dwbWky-ZiqeU7rOOZvOKATKzr35EO7_1Hci3aZQ1woANdbUJacx4g92KPfynhHXSNR89AeUecyg3h4F3bvZddlX-uSjo1h0mwcwi4IrPAN_PMfK9gLoXh_9bat8s9vKV8xbhWv94G75bIhWPptRAJpfJJsT39TamlV9hWQopQzdhrUBrN71_QmyYEc9m_FTwOOwF0l0Y">
+</div>
+<div>
+<p class="font-body-md font-bold">Alex Rivera</p>
+<p class="text-label-caps text-secondary">Manager Profile</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 left-[260px] h-16 bg-surface border-b border-outline-variant flex items-center justify-between px-margin-desktop z-40">
+<div class="flex items-center gap-md w-1/2">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary" data-icon="search">search</span>
+<input class="w-full pl-10 pr-md py-2 bg-surface-container border border-outline-variant rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all font-body-md" placeholder="Search orders, quotes, or customers..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="relative text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[260px] pt-16 h-screen overflow-y-auto">
+<div class="p-margin-desktop space-y-md">
+<!-- Page Header Actions -->
+<div class="flex items-end justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Sales &amp; Quotes</h2>
+<p class="font-body-md text-secondary">Manage customer orders and generate technical pricing estimates.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-2 border-2 border-on-surface font-bold text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+                        Process Sale
+                    </button>
+<button class="px-md py-2 bg-primary text-on-primary font-bold hover:bg-primary-container transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                        Generate Quote
+                    </button>
+</div>
+</div>
+<!-- Dashboard Style Metrics -->
+<div class="grid grid-cols-4 gap-md">
+<div class="bg-surface border border-outline-variant p-md flex flex-col justify-between">
+<span class="text-label-caps text-secondary">Total Sales (MTD)</span>
+<div class="flex items-end justify-between mt-xs">
+<span class="text-headline-md font-headline-md">$142,850</span>
+<span class="text-primary font-bold text-xs flex items-center">+12%</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md flex flex-col justify-between">
+<span class="text-label-caps text-secondary">Active Quotes</span>
+<div class="flex items-end justify-between mt-xs">
+<span class="text-headline-md font-headline-md">24</span>
+<span class="text-secondary font-bold text-xs">Pending</span>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md flex flex-col justify-between">
+<span class="text-label-caps text-secondary">Conversion Rate</span>
+<div class="flex items-end justify-between mt-xs">
+<span class="text-headline-md font-headline-md">68%</span>
+<div class="w-16 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 68%"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-md flex flex-col justify-between">
+<span class="text-label-caps text-secondary">Avg. Order Value</span>
+<div class="flex items-end justify-between mt-xs">
+<span class="text-headline-md font-headline-md">$5,952</span>
+<span class="material-symbols-outlined text-secondary" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+</div>
+<!-- Dual View Section -->
+<div class="bg-surface border border-outline-variant flex flex-col min-h-[600px]">
+<!-- Tab Navigation -->
+<div class="flex border-b border-outline-variant">
+<button class="px-lg py-md font-bold text-primary border-b-2 border-primary transition-all flex items-center gap-sm" id="tab-sales" onclick="switchTab('sales')">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+                        Sales Orders
+                    </button>
+<button class="px-lg py-md font-bold text-secondary hover:text-on-surface transition-all flex items-center gap-sm" id="tab-quotes" onclick="switchTab('quotes')">
+<span class="material-symbols-outlined" data-icon="request_quote">request_quote</span>
+                        Active Quotes
+                    </button>
+</div>
+<!-- Dual List Content -->
+<div class="flex-1 overflow-hidden relative">
+<!-- Sales View -->
+<div class="absolute inset-0 block overflow-auto" id="view-sales">
+<table class="w-full text-left zebra-table border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-md py-sm font-label-caps text-secondary">Order ID</th>
+<th class="px-md py-sm font-label-caps text-secondary">Customer</th>
+<th class="px-md py-sm font-label-caps text-secondary">Date</th>
+<th class="px-md py-sm font-label-caps text-secondary">Total Amount</th>
+<th class="px-md py-sm font-label-caps text-secondary">Status</th>
+<th class="px-md py-sm font-label-caps text-secondary text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md">
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#ORD-9021</td>
+<td class="px-md py-sm">Premium Fleet Services Ltd.</td>
+<td class="px-md py-sm">Oct 24, 2023</td>
+<td class="px-md py-sm font-bold">$12,450.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-green-600"></span>
+<span>Completed</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="visibility">visibility</span></button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="print">print</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#ORD-9018</td>
+<td class="px-md py-sm">Autotech Solutions</td>
+<td class="px-md py-sm">Oct 23, 2023</td>
+<td class="px-md py-sm font-bold">$4,120.50</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Pending</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="visibility">visibility</span></button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="print">print</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#ORD-8994</td>
+<td class="px-md py-sm">Metro Transit Authority</td>
+<td class="px-md py-sm">Oct 22, 2023</td>
+<td class="px-md py-sm font-bold">$8,900.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-green-600"></span>
+<span>Completed</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="visibility">visibility</span></button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="print">print</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#ORD-8991</td>
+<td class="px-md py-sm">Rapid Parts Express</td>
+<td class="px-md py-sm">Oct 21, 2023</td>
+<td class="px-md py-sm font-bold">$1,250.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Cancelled</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="visibility">visibility</span></button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="print">print</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#ORD-8985</td>
+<td class="px-md py-sm">Global Logistics Hub</td>
+<td class="px-md py-sm">Oct 20, 2023</td>
+<td class="px-md py-sm font-bold">$15,670.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-green-600"></span>
+<span>Completed</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="visibility">visibility</span></button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="print">print</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Quotes View -->
+<div class="absolute inset-0 hidden overflow-auto" id="view-quotes">
+<table class="w-full text-left zebra-table border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-md py-sm font-label-caps text-secondary">Quote ID</th>
+<th class="px-md py-sm font-label-caps text-secondary">Customer</th>
+<th class="px-md py-sm font-label-caps text-secondary">Date</th>
+<th class="px-md py-sm font-label-caps text-secondary">Total Amount</th>
+<th class="px-md py-sm font-label-caps text-secondary">Status</th>
+<th class="px-md py-sm font-label-caps text-secondary text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md">
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#QTE-4451</td>
+<td class="px-md py-sm">Precision Engineering</td>
+<td class="px-md py-sm">Oct 25, 2023</td>
+<td class="px-md py-sm font-bold">$3,420.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Pending</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary px-2 py-1 border border-outline-variant rounded text-xs uppercase font-bold">Convert to Sale</button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#QTE-4439</td>
+<td class="px-md py-sm">Northern Trucking Co.</td>
+<td class="px-md py-sm">Oct 24, 2023</td>
+<td class="px-md py-sm font-bold">$18,200.00</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Pending</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary px-2 py-1 border border-outline-variant rounded text-xs uppercase font-bold">Convert to Sale</button>
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+</td>
+</tr>
+<tr>
+<td class="px-md py-sm font-data-mono text-primary font-bold">#QTE-4420</td>
+<td class="px-md py-sm">Skyline Logistics</td>
+<td class="px-md py-sm">Oct 23, 2023</td>
+<td class="px-md py-sm font-bold">$6,100.25</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>Cancelled</span>
+</div>
+</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary ml-sm"><span class="material-symbols-outlined" data-icon="history">history</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Contextual Information (Bento Style) -->
+<div class="grid grid-cols-12 gap-md">
+<!-- Recent Customers -->
+<div class="col-span-12 md:col-span-4 bg-surface border border-outline-variant p-md">
+<h3 class="font-label-caps text-secondary mb-md">Recent Customers</h3>
+<div class="space-y-sm">
+<div class="flex items-center justify-between p-sm hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-bold text-xs">PF</div>
+<span class="font-bold">Premium Fleet</span>
+</div>
+<span class="text-xs text-secondary">2h ago</span>
+</div>
+<div class="flex items-center justify-between p-sm hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center font-bold text-xs">AS</div>
+<span class="font-bold">Autotech Sol.</span>
+</div>
+<span class="text-xs text-secondary">5h ago</span>
+</div>
+</div>
+</div>
+<!-- Sales Distribution (Visual Element) -->
+<div class="col-span-12 md:col-span-8 bg-surface border border-outline-variant p-md relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-label-caps text-secondary mb-xs">Sales vs Targets</h3>
+<p class="font-headline-sm">Region: Northern Corridor</p>
+</div>
+<div class="bg-primary-container text-on-primary-container px-sm py-xs text-xs font-bold rounded">Live Update</div>
+</div>
+<!-- Decorative Graphic to simulate data density -->
+<div class="mt-md h-32 flex items-end gap-1">
+<div class="bg-primary flex-1 opacity-20" style="height: 40%"></div>
+<div class="bg-primary flex-1 opacity-40" style="height: 60%"></div>
+<div class="bg-primary flex-1 opacity-30" style="height: 35%"></div>
+<div class="bg-primary flex-1 opacity-50" style="height: 75%"></div>
+<div class="bg-primary flex-1 opacity-70" style="height: 85%"></div>
+<div class="bg-primary flex-1 opacity-90" style="height: 95%"></div>
+<div class="bg-primary flex-1" style="height: 80%"></div>
+<div class="bg-primary flex-1 opacity-60" style="height: 65%"></div>
+<div class="bg-primary flex-1 opacity-40" style="height: 50%"></div>
+<div class="bg-primary flex-1 opacity-30" style="height: 45%"></div>
+<div class="bg-primary flex-1 opacity-10" style="height: 20%"></div>
+<div class="bg-primary flex-1 opacity-20" style="height: 30%"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        function switchTab(view) {
+            const salesBtn = document.getElementById('tab-sales');
+            const quotesBtn = document.getElementById('tab-quotes');
+            const salesView = document.getElementById('view-sales');
+            const quotesView = document.getElementById('view-quotes');
+
+            if (view === 'sales') {
+                salesBtn.classList.add('text-primary', 'border-primary');
+                salesBtn.classList.remove('text-secondary');
+                quotesBtn.classList.remove('text-primary', 'border-primary');
+                quotesBtn.classList.add('text-secondary');
+                
+                salesView.classList.remove('hidden');
+                salesView.classList.add('block');
+                quotesView.classList.add('hidden');
+                quotesView.classList.remove('block');
+            } else {
+                quotesBtn.classList.add('text-primary', 'border-primary');
+                quotesBtn.classList.remove('text-secondary');
+                salesBtn.classList.remove('text-primary', 'border-primary');
+                salesBtn.classList.add('text-secondary');
+                
+                quotesView.classList.remove('hidden');
+                quotesView.classList.add('block');
+                salesView.classList.add('hidden');
+                salesView.classList.remove('block');
+            }
+        }
+
+        // Add micro-interactions for table rows
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.boxShadow = 'inset 4px 0 0 0 #ae001f';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

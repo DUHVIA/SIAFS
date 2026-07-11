@@ -1,0 +1,521 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AutoLogix Pro | Administration</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        /* Custom scrollbar for high-density industrial look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dbdbdb;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #926e6c;
+        }
+        .tab-transition {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .industrial-shadow {
+            box-shadow: 0 4px 8px -2px rgba(26, 26, 26, 0.05);
+        }
+    </style>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#f1f0f0",
+                        "surface-container-high": "#e8e8e8",
+                        "secondary": "#5f5e5e",
+                        "primary-fixed": "#ffdad8",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#e3e2e2",
+                        "surface-container": "#eeeeee",
+                        "outline-variant": "#e7bcba",
+                        "surface-dim": "#dadada",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "background": "#f9f9f9",
+                        "on-tertiary-fixed-variant": "#464747",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#930019",
+                        "error": "#ba1a1a",
+                        "on-surface": "#1a1c1c",
+                        "on-primary-container": "#ffeceb",
+                        "surface-container-low": "#f3f3f3",
+                        "on-background": "#1a1c1c",
+                        "on-secondary-container": "#636262",
+                        "tertiary-fixed-dim": "#c7c6c6",
+                        "on-surface-variant": "#5d3f3d",
+                        "primary": "#ae001f",
+                        "on-primary-fixed": "#410006",
+                        "tertiary-container": "#6d6d6d",
+                        "surface-bright": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "secondary-container": "#e2dfde",
+                        "inverse-primary": "#ffb3af",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#926e6c",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#ffb3af",
+                        "tertiary": "#545555",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "on-secondary-fixed-variant": "#474746",
+                        "surface-tint": "#bf0023",
+                        "primary-container": "#db052b",
+                        "inverse-surface": "#2f3131",
+                        "secondary-fixed": "#e5e2e1",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-variant": "#e2e2e2",
+                        "surface": "#f9f9f9",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "base": "8px",
+                        "margin-desktop": "32px",
+                        "xs": "4px",
+                        "lg": "40px",
+                        "margin-mobile": "16px",
+                        "sm": "12px",
+                        "gutter": "20px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[260px] flex flex-col bg-surface border-r border-outline-variant z-50">
+<div class="px-md py-lg flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-primary font-bold leading-tight">AutoLogix Pro</h1>
+<p class="font-label-caps text-[10px] text-secondary">Warehouse Management</p>
+</div>
+</div>
+<nav class="flex-1 px-sm space-y-xs">
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-md">Inventory</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md">Sales</span>
+</a>
+<!-- Active State: Users/Admin Context -->
+<a class="flex items-center gap-sm px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-bold" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md">Expenses</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:bg-surface-container-high transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md">Users</span>
+</a>
+</nav>
+<div class="p-md mt-auto border-t border-outline-variant">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="A professional close-up portrait of a warehouse logistics manager wearing a clean industrial uniform, set against a blurred background of a modern, well-lit automotive parts warehouse. The lighting is crisp and cool-toned, emphasizing efficiency and reliability. The aesthetic is clean, corporate, and highly professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoJR_6VdXlRdqUHZ6GNYvsmylcozFK3VXhRmlKlsjz-YL5xL-weOI3In2onoQfsvDuMS1Oq6qC8WTAjmAsB14NdmQd1u4zE4tfMng7RpDGO8NR6JwgyxGZXH9lSRZt5cF3aJ9qm3LS2wsgj1jL-D449LBlsTBcAeuORJcWz_IEzxQrk-il2lB6G1kekvkXLQoP_MyLwCkW9FieGFBA-ifoFsLyj7MVjHyizjFJYkLi2sjjjDcgU-twWCToTPf_WGC80STTnrMvtRQp">
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-bold truncate">Marcus Chen</p>
+<p class="text-[10px] text-secondary font-label-caps uppercase">System Administrator</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="ml-[260px] h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="h-16 flex items-center justify-between px-margin-desktop bg-surface border-b border-outline-variant w-full">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline focus:outline-none focus:ring-1 focus:ring-primary text-sm rounded" placeholder="Search system records..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<button class="px-md py-2 bg-primary text-white font-bold text-sm rounded hover:bg-primary-container active:scale-95 transition-all">
+                    Generate Report
+                </button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-desktop space-y-md">
+<!-- Page Header & Tabs -->
+<div class="flex flex-col gap-md">
+<div class="flex items-end justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Administrative Console</h2>
+<p class="text-secondary font-body-md">Manage organizational access and track operational overhead.</p>
+</div>
+<div class="flex items-center gap-xs bg-surface-container border border-outline-variant p-1 rounded-lg">
+<button class="px-md py-2 font-label-caps text-xs rounded bg-surface text-on-surface border border-outline shadow-sm transition-all duration-200" id="tab-btn-users" onclick="switchTab('users')">USERS</button>
+<button class="px-md py-2 font-label-caps text-xs rounded text-secondary hover:bg-surface-container-high transition-all duration-200" id="tab-btn-expenses" onclick="switchTab('expenses')">EXPENSES</button>
+</div>
+</div>
+</div>
+<!-- Content Area -->
+<div class="tab-content transition-opacity duration-300" id="users-panel">
+<div class="bg-white border border-outline-variant industrial-shadow rounded overflow-hidden">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-headline-sm text-headline-sm">User Management</h3>
+<button class="flex items-center gap-xs text-primary font-bold text-sm">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                            Add New User
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-md py-sm font-label-caps text-secondary">USER NAME</th>
+<th class="px-md py-sm font-label-caps text-secondary">ROLE</th>
+<th class="px-md py-sm font-label-caps text-secondary">EMAIL ADDRESS</th>
+<th class="px-md py-sm font-label-caps text-secondary">LAST LOGIN</th>
+<th class="px-md py-sm font-label-caps text-secondary text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-primary-fixed flex items-center justify-center font-bold text-primary">SC</div>
+<span class="font-bold">Sarah Connor</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[11px] font-bold rounded uppercase">Warehouse Lead</span>
+</td>
+<td class="px-md py-sm font-data-mono text-secondary">s.connor@autologix.com</td>
+<td class="px-md py-sm text-sm">Oct 24, 2023 · 14:22</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-secondary hover:text-error p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="px-md py-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-tertiary-fixed-dim flex items-center justify-center font-bold text-tertiary">JD</div>
+<span class="font-bold">John Doe</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="px-2 py-0.5 bg-surface-container-highest text-secondary text-[11px] font-bold rounded uppercase">Technician</span>
+</td>
+<td class="px-md py-sm font-data-mono text-secondary">j.doe@autologix.com</td>
+<td class="px-md py-sm text-sm">Oct 25, 2023 · 09:15</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-secondary hover:text-error p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center font-bold text-white">EM</div>
+<span class="font-bold">Ellen Moore</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="px-2 py-0.5 bg-primary-fixed text-primary text-[11px] font-bold rounded uppercase">Manager</span>
+</td>
+<td class="px-md py-sm font-data-mono text-secondary">e.moore@autologix.com</td>
+<td class="px-md py-sm text-sm">Oct 25, 2023 · 16:40</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-secondary hover:text-error p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="px-md py-sm">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded bg-secondary-fixed flex items-center justify-center font-bold text-secondary">RW</div>
+<span class="font-bold">Robert White</span>
+</div>
+</td>
+<td class="px-md py-sm">
+<span class="px-2 py-0.5 bg-surface-container-highest text-secondary text-[11px] font-bold rounded uppercase">Technician</span>
+</td>
+<td class="px-md py-sm font-data-mono text-secondary">r.white@autologix.com</td>
+<td class="px-md py-sm text-sm">Oct 23, 2023 · 11:05</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-1"><span class="material-symbols-outlined text-sm">edit</span></button>
+<button class="text-secondary hover:text-error p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-sm bg-surface-container-low flex justify-between items-center text-xs text-secondary font-label-caps">
+<span>Showing 1-4 of 24 Users</span>
+<div class="flex gap-xs">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant bg-white rounded"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant bg-primary text-white rounded">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant bg-white rounded">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant bg-white rounded"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Expenses Panel (Hidden by default) -->
+<div class="tab-content hidden opacity-0 transition-opacity duration-300" id="expenses-panel">
+<div class="grid grid-cols-12 gap-md">
+<!-- Sidebar: Summary -->
+<div class="col-span-12 lg:col-span-4 space-y-md">
+<div class="bg-white p-md border border-outline-variant industrial-shadow rounded">
+<h3 class="font-label-caps text-xs text-secondary mb-md uppercase">Monthly Overhead</h3>
+<div class="flex items-baseline gap-xs mb-xs">
+<span class="text-display-lg font-display-lg">$42,850.00</span>
+<span class="text-error text-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                                    12%
+                                </span>
+</div>
+<p class="text-secondary text-sm mb-lg">Fiscal period ending Oct 31</p>
+<div class="space-y-sm">
+<div class="flex justify-between items-center text-sm">
+<span class="text-secondary">Logistics &amp; Freight</span>
+<span class="font-data-mono font-bold">$18,400</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 45%"></div>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-secondary">Facility Maintenance</span>
+<span class="font-data-mono font-bold">$12,150</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-outline h-full" style="width: 30%"></div>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-secondary">IT Infrastructure</span>
+<span class="font-data-mono font-bold">$9,300</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 25%"></div>
+</div>
+</div>
+</div>
+<div class="bg-inverse-surface text-inverse-on-surface p-md rounded industrial-shadow border border-outline">
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-primary-fixed" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<h4 class="font-bold">Budget Alert</h4>
+</div>
+<p class="text-sm opacity-80 mb-md">Operational costs for "Facility Maintenance" have exceeded the quarterly projection by 8.4%. Audit required.</p>
+<button class="w-full py-2 bg-primary-container text-white font-bold text-sm rounded">View Audit Log</button>
+</div>
+</div>
+<!-- Main: List of Recent Expenses -->
+<div class="col-span-12 lg:col-span-8">
+<div class="bg-white border border-outline-variant industrial-shadow rounded h-full">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-headline-sm text-headline-sm">Operational Registry</h3>
+<div class="flex gap-sm">
+<button class="p-2 border border-outline-variant rounded hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+<button class="px-md py-2 bg-primary text-white font-bold text-sm rounded">Log Expense</button>
+</div>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Expense Item -->
+<div class="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">local_shipping</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Expedited Freight - Batch #8812</h4>
+<div class="flex items-center gap-sm text-[11px] font-label-caps text-secondary mt-1">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                                    LOGISTICS
+                                                </span>
+<span class="text-outline">•</span>
+<span>OCT 25, 2023</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-data-mono font-bold text-lg">-$2,450.00</div>
+<div class="text-[10px] text-secondary font-label-caps uppercase">PO: 994021</div>
+</div>
+</div>
+<!-- Expense Item -->
+<div class="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">power</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">HVAC System Repair - Zone B</h4>
+<div class="flex items-center gap-sm text-[11px] font-label-caps text-secondary mt-1">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                                    MAINTENANCE
+                                                </span>
+<span class="text-outline">•</span>
+<span>OCT 24, 2023</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-data-mono font-bold text-lg">-$820.00</div>
+<div class="text-[10px] text-secondary font-label-caps uppercase">REF: SR-812</div>
+</div>
+</div>
+<!-- Expense Item -->
+<div class="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">cloud</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Data Backup Services - Monthly Subscription</h4>
+<div class="flex items-center gap-sm text-[11px] font-label-caps text-secondary mt-1">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                                                    INFRASTRUCTURE
+                                                </span>
+<span class="text-outline">•</span>
+<span>OCT 22, 2023</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-data-mono font-bold text-lg">-$1,100.00</div>
+<div class="text-[10px] text-secondary font-label-caps uppercase">SUB: AUT-Q4</div>
+</div>
+</div>
+<!-- Expense Item -->
+<div class="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">inventory</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Packaging Materials Replenishment</h4>
+<div class="flex items-center gap-sm text-[11px] font-label-caps text-secondary mt-1">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                                    LOGISTICS
+                                                </span>
+<span class="text-outline">•</span>
+<span>OCT 21, 2023</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-data-mono font-bold text-lg">-$450.25</div>
+<div class="text-[10px] text-secondary font-label-caps uppercase">INV: PACK-091</div>
+</div>
+</div>
+</div>
+<div class="p-md text-center">
+<button class="font-label-caps text-xs text-secondary hover:text-primary underline decoration-dotted">LOAD MORE TRANSACTIONS</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Active State & Micro-interactions Script -->
+<script>
+        function switchTab(tab) {
+            const usersBtn = document.getElementById('tab-btn-users');
+            const expensesBtn = document.getElementById('tab-btn-expenses');
+            const usersPanel = document.getElementById('users-panel');
+            const expensesPanel = document.getElementById('expenses-panel');
+
+            if (tab === 'users') {
+                // Update Buttons
+                usersBtn.classList.add('bg-surface', 'text-on-surface', 'border', 'border-outline', 'shadow-sm');
+                usersBtn.classList.remove('text-secondary', 'hover:bg-surface-container-high');
+                expensesBtn.classList.remove('bg-surface', 'text-on-surface', 'border', 'border-outline', 'shadow-sm');
+                expensesBtn.classList.add('text-secondary', 'hover:bg-surface-container-high');
+
+                // Update Panels
+                expensesPanel.classList.add('hidden', 'opacity-0');
+                usersPanel.classList.remove('hidden');
+                setTimeout(() => usersPanel.classList.remove('opacity-0'), 10);
+            } else {
+                // Update Buttons
+                expensesBtn.classList.add('bg-surface', 'text-on-surface', 'border', 'border-outline', 'shadow-sm');
+                expensesBtn.classList.remove('text-secondary', 'hover:bg-surface-container-high');
+                usersBtn.classList.remove('bg-surface', 'text-on-surface', 'border', 'border-outline', 'shadow-sm');
+                usersBtn.classList.add('text-secondary', 'hover:bg-surface-container-high');
+
+                // Update Panels
+                usersPanel.classList.add('hidden', 'opacity-0');
+                expensesPanel.classList.remove('hidden');
+                setTimeout(() => expensesPanel.classList.remove('opacity-0'), 10);
+            }
+        }
+    </script>
+</body></html>

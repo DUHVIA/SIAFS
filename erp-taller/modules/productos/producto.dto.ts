@@ -7,6 +7,7 @@ export const CrearProductoSchema = z.object({
   categoria: z.nativeEnum(CategoriaProducto),
   precioVenta: z.string().regex(/^\d+(\.\d+)?$/, "El precio de venta debe ser un número positivo"),
   stock: z.string().regex(/^\d+$/, "El stock debe ser un número entero positivo"),
+  tipoAutoparteId: z.string().uuid("El tipoAutoparteId debe ser un UUID válido").optional().nullable(),
   detalles: z.record(z.string(), z.any()).optional().default({}),
 });
 

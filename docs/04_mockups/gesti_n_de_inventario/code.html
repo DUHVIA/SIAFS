@@ -1,0 +1,421 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Inventory Management | AutoLogix Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Hanken+Grotesk:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#f1f0f0",
+                    "surface-container-high": "#e8e8e8",
+                    "secondary": "#5f5e5e",
+                    "primary-fixed": "#ffdad8",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed": "#e3e2e2",
+                    "surface-container": "#eeeeee",
+                    "outline-variant": "#e7bcba",
+                    "surface-dim": "#dadada",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "background": "#f9f9f9",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#930019",
+                    "error": "#ba1a1a",
+                    "on-surface": "#1a1c1c",
+                    "on-primary-container": "#ffeceb",
+                    "surface-container-low": "#f3f3f3",
+                    "on-background": "#1a1c1c",
+                    "on-secondary-container": "#636262",
+                    "tertiary-fixed-dim": "#c7c6c6",
+                    "on-surface-variant": "#5d3f3d",
+                    "primary": "#ae001f",
+                    "on-primary-fixed": "#410006",
+                    "tertiary-container": "#6d6d6d",
+                    "surface-bright": "#f9f9f9",
+                    "inverse-on-surface": "#f1f1f1",
+                    "secondary-container": "#e2dfde",
+                    "inverse-primary": "#ffb3af",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#926e6c",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#ffb3af",
+                    "tertiary": "#545555",
+                    "on-tertiary-fixed": "#1b1c1c",
+                    "on-secondary-fixed-variant": "#474746",
+                    "surface-tint": "#bf0023",
+                    "primary-container": "#db052b",
+                    "inverse-surface": "#2f3131",
+                    "secondary-fixed": "#e5e2e1",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "surface-variant": "#e2e2e2",
+                    "surface": "#f9f9f9",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "base": "8px",
+                    "margin-desktop": "32px",
+                    "xs": "4px",
+                    "lg": "40px",
+                    "margin-mobile": "16px",
+                    "sm": "12px",
+                    "gutter": "20px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-caps": ["JetBrains Mono"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "data-mono": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .zebra-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .active-tab {
+            border-bottom: 2px solid #ae001f;
+            color: #ae001f;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen">
+<!-- SideNavBar (Execution from JSON) -->
+<aside class="fixed left-0 top-0 h-full w-[260px] flex flex-col bg-surface border-r border-outline-variant z-50">
+<div class="p-md flex items-center gap-sm">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">warehouse</span>
+</div>
+<div>
+<h1 class="text-headline-sm font-headline-sm font-bold text-primary">AutoLogix Pro</h1>
+<p class="text-label-caps font-label-caps text-secondary uppercase text-[10px]">Warehouse Management</p>
+</div>
+</div>
+<nav class="flex-1 px-sm mt-md space-y-xs">
+<!-- Dashboard -->
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<!-- Inventory (Active) -->
+<a class="flex items-center gap-sm px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-bold scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</a>
+<!-- Sales -->
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps">Sales</span>
+</a>
+<!-- Expenses -->
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-caps text-label-caps">Expenses</span>
+</a>
+<!-- Users -->
+<a class="flex items-center gap-sm px-md py-sm text-secondary hover:text-on-surface hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Users</span>
+</a>
+</nav>
+<div class="p-md border-t border-outline-variant">
+<div class="flex items-center gap-sm p-sm rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional warehouse manager portrait in a modern clean office setting with industrial blueprints on the wall. The lighting is bright and corporate, reflecting a high-efficiency environment. The manager is wearing a dark polo shirt with a subtle company logo, symbolizing reliability and authority in automotive logistics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDad2AJoVcrLLR-TF2uQKtXANqYmemiBshNv1thxNoj_LqP2c-C_mORB1hhhCF-ICcPOKr3_j5OdG9cme-0iu6J4JpvA5gYH--HD4WAhbogLmMkZKxGLmf7H9wb55fPPesPbzXepZV5f8GrgItderoEg7ss_VtEVzPPBCNAPe9yqkb-91vuRLYoXkVA0rBG7IJn97iEQ4es8C-wMdSk_dNa2hQYjpw-ud1iF36N46M-UraNfdHlZv5kZnV442-coFQxQX5FdCxHQzlX">
+<div class="overflow-hidden">
+<p class="font-bold text-body-md truncate">Marcus Vane</p>
+<p class="text-xs text-secondary truncate">Manager Profile</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-[260px] flex flex-col min-h-screen">
+<!-- TopNavBar (Execution from JSON) -->
+<header class="h-16 flex items-center justify-between px-margin-desktop bg-surface border-b border-outline-variant sticky top-0 z-40">
+<div class="flex items-center bg-surface-container-low rounded px-sm py-xs w-96 border border-outline-variant focus-within:ring-1 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-secondary mr-xs">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-full placeholder:text-secondary" placeholder="Search SKU, Part name, or Bin location..." type="text">
+</div>
+<div class="flex items-center gap-md">
+<button class="relative text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full border border-white"></span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Canvas Area -->
+<main class="p-margin-desktop space-y-md">
+<!-- Page Header & Main Action -->
+<div class="flex items-end justify-between">
+<div>
+<h2 class="text-display-lg font-display-lg text-on-surface">Inventory Management</h2>
+<p class="text-body-lg text-secondary">Real-time tracking of 4,281 active components.</p>
+</div>
+<button class="bg-primary text-white px-md py-sm rounded flex items-center gap-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm">
+<span class="material-symbols-outlined">add</span>
+                    Add New Part
+                </button>
+</div>
+<!-- Dashboard Stats Quick View (Bento Grid Style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="bg-white border border-outline-variant p-md rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-label-caps font-label-caps text-secondary mb-xs">TOTAL SKUS</p>
+<p class="text-headline-md font-headline-md">4,281</p>
+<div class="mt-xs text-[10px] text-green-600 font-bold">+12 this week</div>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-label-caps font-label-caps text-secondary mb-xs">OUT OF STOCK</p>
+<p class="text-headline-md font-headline-md text-primary">24</p>
+<div class="mt-xs text-[10px] text-primary font-bold">Priority Restock</div>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-label-caps font-label-caps text-secondary mb-xs">LOW STOCK</p>
+<p class="text-headline-md font-headline-md text-orange-500">156</p>
+<div class="mt-xs text-[10px] text-secondary font-bold">Reviewing leads</div>
+</div>
+<div class="bg-white border border-outline-variant p-md rounded shadow-sm hover:shadow-md transition-shadow">
+<p class="text-label-caps font-label-caps text-secondary mb-xs">VALUE</p>
+<p class="text-headline-md font-headline-md">$1.2M</p>
+<div class="mt-xs text-[10px] text-secondary font-bold">Last audit 2d ago</div>
+</div>
+</div>
+<!-- Secondary Tabs & Filters -->
+<div class="bg-white border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+<div class="flex items-center justify-between border-b border-outline-variant px-md">
+<div class="flex gap-lg">
+<button class="py-md px-xs font-label-caps text-label-caps active-tab hover:text-primary transition-colors">AUTO PARTS</button>
+<button class="py-md px-xs font-label-caps text-label-caps text-secondary hover:text-primary transition-colors">ENGINES</button>
+<button class="py-md px-xs font-label-caps text-label-caps text-secondary hover:text-primary transition-colors">PART TYPES</button>
+<button class="py-md px-xs font-label-caps text-label-caps text-secondary hover:text-primary transition-colors">RESTOCKING</button>
+</div>
+<div class="flex items-center gap-sm py-sm">
+<select class="bg-surface-container-low border border-outline-variant rounded px-sm py-xs text-body-md focus:ring-1 focus:ring-primary outline-none">
+<option>All Categories</option>
+<option>Braking System</option>
+<option>Suspension</option>
+<option>Electrical</option>
+<option>Transmission</option>
+</select>
+<button class="flex items-center gap-xs text-secondary border border-outline-variant rounded px-sm py-xs hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span class="text-body-md">Advanced Filters</span>
+</button>
+</div>
+</div>
+<!-- High-Density Data Table -->
+<div class="overflow-x-auto scrollbar-hide">
+<table class="w-full border-collapse zebra-table">
+<thead>
+<tr class="text-left border-b border-outline-variant bg-surface-container-low">
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">ITEM NAME</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">SKU/CODE</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">CATEGORY</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">STOCK LEVEL</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary">PRICE</th>
+<th class="px-md py-sm font-label-caps text-label-caps text-secondary text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="text-body-md">
+<!-- Row 1 (Normal) -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-md py-sm flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container-high rounded flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, isolated product shot of a high-performance ceramic brake disc on a neutral light gray background. The lighting is sharp and industrial, highlighting the metallic texture and precision engineering of the component. The overall aesthetic is professional and utilitarian, suitable for a high-end automotive inventory system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6ilHWVQlnksWft4uZYUlYbyFgJB9PLYecmql3iSbrb39248B4V8SYtbIimKb-UVyR2bZzQdK2fcRvmFTqZ9gicjZD4JgZ-4fR_E5WbSq2olkmoFHEXt1MwCS0QHczDlFkdvmyM2hwPHCm62KMWfyV7AcBTuIdWvXgBl0SeF6kChTBTdDK_OMP2VDa4Mhtv273efE5BzRTi0z8F41n5LgSOyohvi8KQnYZTftnj2JPNgc9evbn2G6MzGUXF598VO0gi9oiU5tu-KGx">
+</div>
+<span class="font-bold">Ceramic Brake Pad Set</span>
+</td>
+<td class="px-md py-sm"><span class="font-data-mono text-data-mono bg-secondary-container px-xs rounded">BRK-990-22</span></td>
+<td class="px-md py-sm">Braking System</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span>42 units</span>
+</div>
+</td>
+<td class="px-md py-sm font-bold">$189.50</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 2 (Low Stock Highlighted) -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors bg-red-50/30">
+<td class="px-md py-sm flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container-high rounded flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A detailed macro shot of a heavy-duty fuel injector for a diesel engine, presented in a crisp, industrial studio lighting setup. The metal surface shows fine precision details and a clean finish. The background is a flat corporate light gray, maintaining a minimalist and modern technical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6Q0MHh-uXGkq__llCMY9iOL79tpd0e8zJQu5IT8dv6t3sku8XLlfzA6Eu_fSPUiIhDDiWFIfPfQ7Vtq0mVe3IvgcL6RBJ3Qc8z-YXGpJjmBwfi3VgYziN0Qjg9-eLa8PUjxoCDdqRGj_kouY7L0WivZstNlZUj1-OrgQOQLQ8c1KCKpCanwmMA0eXlhHC22Jpm2H1k_IoHF0kbibiY3mPbGJMXw8veZHE8YsbHXOtFitDsum0hdm_IjKcGoo7X98NZJdr6AH4hrR6">
+</div>
+<span class="font-bold">Fuel Injector Gen-3</span>
+</td>
+<td class="px-md py-sm"><span class="font-data-mono text-data-mono bg-secondary-container px-xs rounded">FL-INJ-004</span></td>
+<td class="px-md py-sm">Engine Components</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs font-bold text-primary">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span>3 units (Critical)</span>
+</div>
+</td>
+<td class="px-md py-sm font-bold">$340.00</td>
+<td class="px-md py-sm text-right">
+<button class="bg-primary text-white px-sm py-1 rounded text-xs font-bold mr-xs">RESTOCK</button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-md py-sm flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container-high rounded flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional product photograph of a modern vehicle LED headlight assembly, showcasing the intricate glass lenses and internal reflector geometry. The lighting is cold and precise, emphasizing technological sophistication. Set against a clean industrial background with a light-mode color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjPj5wkKR9eMKCt8iY-fBJXlMqO_qheQ1s0o0q6PxEVNi8VG4wFQM08DsxaoBa0JDHDcbRjpf31-jbNUlVmMEOjta7zAvdsAJG6OkqHWfRB0Q1D7vga4sROWAPJxWUW3eYgmiYKix8im9qlUC6w7BtRsEJkXNMI_f0lNnEH9LnmhsF_CUHBboN71H01yrX7OGq56DnFpWxZJzKEawL-0rK3Ln6nqnPRhaMzeQOv4iz4Cq1IzApUyn01I4BR__mv2d1j2Mw5XQ1a-sN">
+</div>
+<span class="font-bold">LED Headlight Assembly</span>
+</td>
+<td class="px-md py-sm"><span class="font-data-mono text-data-mono bg-secondary-container px-xs rounded">LGT-LED-88</span></td>
+<td class="px-md py-sm">Electrical</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span>12 units</span>
+</div>
+</td>
+<td class="px-md py-sm font-bold">$720.00</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-md py-sm flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container-high rounded flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="An industrial-style product photo of a heavy-duty radiator for a truck engine. The cooling fins are perfectly aligned and clean, with the aluminum casting showing high-quality manufacturing. The shot is bright and clean, centered on a neutral white-gray surface to match a professional inventory UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ45jHv0HC2yFuA-9fN6nAzgCQyM7PaMGSsIeyXJdUpmgXZbGBElmcPrZDNiTBDQ6Wla8vzvijZ5TmQXxxcq4fU2wiNzwNZoIdHTa3H6o3ROk_o5vqe-hbnNkeI680rJOdYp84uoBTP3a2lo6zdHLeqrR_p5k3DMQUN4kFQd1VzaPsI2IOZDauS9uKR5z0grGThd9rqVdIlmf34hOXJxRrSxtcTfc473a7cikIr4kmcBiqP5034rzDiuliqLBmYE8VMcmcYEIrDfAr">
+</div>
+<span class="font-bold">Heavy Duty Radiator</span>
+</td>
+<td class="px-md py-sm"><span class="font-data-mono text-data-mono bg-secondary-container px-xs rounded">RAD-TRK-771</span></td>
+<td class="px-md py-sm">Cooling System</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-orange-500"></div>
+<span>8 units</span>
+</div>
+</td>
+<td class="px-md py-sm font-bold">$1,250.00</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-high transition-colors">
+<td class="px-md py-sm flex items-center gap-sm">
+<div class="w-10 h-10 bg-surface-container-high rounded flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, studio-lit photo of an automotive timing belt, displayed in a circular arrangement to show its durable rubber texture and teeth. The image is bright with high contrast, set against a pristine light gray background that emphasizes industrial quality and precision tracking." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA79oJxLqUHhXo86KCusxkivvAacZsEGFv_Kxo25RLqBvoWTcnWnYoj4i3v1XzpWoouSG01Jq8wTwegZC9YoN0MIVVvMP2kh5RikwSjR0dOYEuyQw6FS51f27BSxpn-DLh9txSz0mInJdzM2kPA9CdYm_VKJQHFL0P4AzlvrJhA82407Qb5rE9zDEw4lpTImbbUhLfwb__g4jOc5N2e647zx8ecdtBy4uelGckNxld0zbgbl2nJlWM8uDhccHlHq-t9IimugNUUv0vO">
+</div>
+<span class="font-bold">Rubber Timing Belt</span>
+</td>
+<td class="px-md py-sm"><span class="font-data-mono text-data-mono bg-secondary-container px-xs rounded">BELT-TM-01</span></td>
+<td class="px-md py-sm">Engine Components</td>
+<td class="px-md py-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span>156 units</span>
+</div>
+</td>
+<td class="px-md py-sm font-bold">$45.00</td>
+<td class="px-md py-sm text-right">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="p-md flex items-center justify-between bg-surface-container-low border-t border-outline-variant">
+<p class="text-body-md text-secondary">Showing <span class="font-bold text-on-surface">1 - 25</span> of 4,281 items</p>
+<div class="flex gap-xs">
+<button class="w-10 h-10 border border-outline-variant rounded flex items-center justify-center hover:bg-white transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 border border-primary bg-primary text-white rounded flex items-center justify-center">1</button>
+<button class="w-10 h-10 border border-outline-variant rounded flex items-center justify-center hover:bg-white transition-colors">2</button>
+<button class="w-10 h-10 border border-outline-variant rounded flex items-center justify-center hover:bg-white transition-colors">3</button>
+<span class="flex items-center px-xs">...</span>
+<button class="w-10 h-10 border border-outline-variant rounded flex items-center justify-center hover:bg-white transition-colors">172</button>
+<button class="w-10 h-10 border border-outline-variant rounded flex items-center justify-center hover:bg-white transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Quick Restock Advisory (Floating Note Style) -->
+<div class="bg-primary-fixed text-on-primary-fixed p-md rounded-xl border-l-4 border-primary flex items-start gap-md">
+<span class="material-symbols-outlined text-primary scale-125">info</span>
+<div class="flex-1">
+<h4 class="font-bold text-body-lg">Low Stock Advisory</h4>
+<p class="text-body-md opacity-90">AutoLogix Pro AI has detected 14 items trending towards zero stock within 48 hours based on recent order velocity. We recommend reviewing the "Restocking" tab immediately to prevent supply chain disruption.</p>
+</div>
+<button class="px-md py-sm bg-primary text-white rounded font-bold hover:brightness-110">Review Recommendations</button>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('.zebra-table tr').forEach(row => {
+            row.addEventListener('click', () => {
+                // Potential implementation for row selection
+            });
+        });
+
+        // Search Bar Focus Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('border-primary');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('border-primary');
+        });
+    </script>
+</body></html>

@@ -8,6 +8,9 @@ export const ProductoService = {
   async obtenerTodos() {
     const productos = await prisma.producto.findMany({
       where: { isActive: true },
+      include: {
+        tipoAutoparte: true,
+      },
     });
 
     return productos.map(producto => ({
@@ -38,6 +41,7 @@ export const ProductoService = {
           stockCifrado,
           rangoStock: isNaN(rangoStock) ? 0 : rangoStock,
           detallesCifrados,
+          tipoAutoparteId: data.tipoAutoparteId,
         },
       });
 
@@ -115,6 +119,9 @@ export const ProductoService = {
       if (data.detalles !== undefined) {
         updateData.detallesCifrados = cifrarTexto(JSON.stringify(data.detalles));
       }
+      if (data.tipoAutoparteId !== undefined) {
+        updateData.tipoAutoparteId = data.tipoAutoparteId;
+      }
 
       if ((nombreCambio || precioCambio || stockCambio) && !data.usuarioId) {
         throw new Error("El campo usuarioId es requerido para mantener el historial de cambios.");
@@ -160,6 +167,42 @@ export const ProductoService = {
       }
 
       return productoActualizado;
+    });
+  },
+
+  async registrarReposicion(id: string, data: { cantidad: string; motivo: string; usuarioId: string }) {
+    return await prisma.$transaction(async (tx) => {
+      const productoActual = await tx.producto.findUniqueOrThrow({ where: { id } });
+      const stockActual = parseInt(descifrarTexto(productoActual.stockCifrado), 10);
+      const cantidadAnadir = parseInt(data.cantidad, 10);
+      const nuevoStock = stockActual + cantidadAnadir;
+
+      const stockCifrado = cifrarTexto(nuevoStock.toString());
+      const productoActualizado = await tx.producto.update({
+        where: { id },
+        data: {
+          stockCifrado,
+          rangoStock: nuevoStock,
+        },
+      });
+
+      await tx.kardex.create({
+        data: {
+          productoId: id,
+          usuarioId: data.usuarioId,
+          tipoMovimiento: 'INGRESO',
+          cantidadCifrada: cifrarTexto(data.cantidad),
+          motivoCifrado: cifrarTexto(data.motivo),
+        }
+      });
+
+      return {
+        ...productoActualizado,
+        nombre: descifrarTexto(productoActualizado.nombreCifrado),
+        precioVenta: descifrarTexto(productoActualizado.precioVentaCifrado),
+        stock: nuevoStock.toString(),
+        detalles: JSON.parse(descifrarTexto(productoActualizado.detallesCifrados)),
+      };
     });
   },
 

@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Moon, Sun } from 'lucide-react';
+import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
 
-export function Navbar() {
+interface NavbarProps {
+    onMenuClick: () => void;
+}
+
+export function Navbar({ onMenuClick }: NavbarProps) {
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
@@ -20,6 +24,15 @@ export function Navbar() {
 
     return (
         <header className="sticky top-4 z-40 mx-4 h-16 bg-white/70 backdrop-blur-xl rounded-full shadow-soft flex items-center justify-between px-6 transition-all duration-300">
+
+            {/* Hamburger Menu Button */}
+            <button
+                onClick={onMenuClick}
+                className="lg:hidden p-2 rounded-full text-tertiary hover:bg-neutral-light transition-colors mr-2"
+                aria-label="Abrir menú"
+            >
+                <Menu className="w-5 h-5" />
+            </button>
 
             {/* Search Bar - Soft UI */}
             <div className="flex-1 max-w-md flex items-center bg-neutral-light rounded-full px-4 py-2 transition-all duration-300 focus-within:shadow-sm focus-within:bg-white ">
