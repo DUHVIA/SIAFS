@@ -87,5 +87,134 @@ export const IngresoService = {
 
       return nuevoIngreso;
     });
+  },
+
+  async obtenerTodosFiltrados(params: {
+    search?: string;
+    page: number;
+    limit: number;
+  }) {
+    const todas = await prisma.ingreso.findMany({
+      orderBy: { fechaIngreso: 'desc' },
+      include: {
+        usuario: { select: { nombre: true } },
+        detalles: {
+          include: { producto: true }
+        }
+      }
+    });
+
+    const descifradas = todas.map(ingreso => {
+      const total = descifrarTexto(ingreso.totalCifrado);
+      const descripcion = ingreso.descripcionCifrada ? descifrarTexto(ingreso.descripcionCifrada) : '';
+      
+      const detallesDescifrados = ingreso.detalles.map(d => {
+        const cantidad = parseInt(descifrarTexto(d.cantidadCifrada), 10);
+        const costoUnitario = parseFloat(descifrarTexto(d.costoUnitarioCifrado));
+        const productoNombre = descifrarTexto(d.producto.nombreCifrado);
+        return {
+          ...d,
+          cantidad,
+          costoUnitario,
+          productoNombre,
+        };
+      });
+
+      return {
+        ...ingreso,
+        total,
+        descripcion,
+        usuarioNombre: ingreso.usuario.nombre,
+        detalles: detallesDescifrados,
+        cantidadItems: detallesDescifrados.length,
+      };
+    });
+
+    // Calcular métricas del mes en curso
+    const inicioMes = new Date();
+    inicioMes.setDate(1);
+    inicioMes.setHours(0, 0, 0, 0);
+
+    const ingresosMes = descifradas.filter(i => new Date(i.fechaIngreso) >= inicioMes);
+    const totalComprasMes = ingresosMes.reduce((s, i) => s + parseFloat(i.total || '0'), 0);
+    const cantidadLotes = ingresosMes.length;
+    const lotePromedio = cantidadLotes > 0 ? totalComprasMes / cantidadLotes : 0;
+    
+    const totalProductosIngresados = ingresosMes.reduce((s, i) => 
+      s + i.detalles.reduce((sd, d) => sd + d.cantidad, 0)
+    , 0);
+
+    // Filtros
+    let filtradas = [...descifradas];
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      filtradas = filtradas.filter(i =>
+        i.descripcion?.toLowerCase().includes(q) ||
+        i.usuarioNombre?.toLowerCase().includes(q) ||
+        i.detalles.some(d => d.productoNombre.toLowerCase().includes(q)) ||
+        i.id.toLowerCase().includes(q)
+      );
+    }
+
+    // Paginación
+    const total = filtradas.length;
+    const totalPages = Math.ceil(total / params.limit) || 1;
+    const offset = (params.page - 1) * params.limit;
+    const items = filtradas.slice(offset, offset + params.limit);
+
+    // Simplificamos los items para la lista para evitar transferir payloads muy pesados
+    const itemsSimplificados = items.map(i => ({
+      id: i.id,
+      fechaIngreso: i.fechaIngreso,
+      usuarioNombre: i.usuarioNombre,
+      descripcion: i.descripcion,
+      total: i.total,
+      cantidadItems: i.cantidadItems,
+    }));
+
+    return {
+      items: itemsSimplificados,
+      pagination: { total, page: params.page, limit: params.limit, totalPages },
+      metrics: { totalComprasMes, cantidadLotes, lotePromedio, totalProductosIngresados }
+    };
+  },
+
+  async obtenerPorId(id: string) {
+    const ingreso = await prisma.ingreso.findUniqueOrThrow({
+      where: { id },
+      include: {
+        usuario: { select: { nombre: true } },
+        detalles: {
+          include: { producto: true }
+        }
+      }
+    });
+
+    const total = descifrarTexto(ingreso.totalCifrado);
+    const descripcion = ingreso.descripcionCifrada ? descifrarTexto(ingreso.descripcionCifrada) : '';
+
+    const detallesDescifrados = ingreso.detalles.map(d => {
+      const cantidad = parseInt(descifrarTexto(d.cantidadCifrada), 10);
+      const costoUnitario = parseFloat(descifrarTexto(d.costoUnitarioCifrado));
+      const productoNombre = descifrarTexto(d.producto.nombreCifrado);
+      return {
+        id: d.id,
+        productoId: d.productoId,
+        cantidad,
+        costoUnitario,
+        productoNombre,
+        subtotal: cantidad * costoUnitario,
+      };
+    });
+
+    return {
+      id: ingreso.id,
+      fechaIngreso: ingreso.fechaIngreso,
+      usuarioNombre: ingreso.usuario.nombre,
+      descripcion,
+      total,
+      detalles: detallesDescifrados,
+    };
   }
 };
+

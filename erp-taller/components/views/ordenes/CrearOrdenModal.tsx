@@ -79,7 +79,13 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                     fetch('/api/productos?limit=999'),
                     fetch('/api/metodos-pago'),
                 ]);
-                if (cRes.ok) setClientes(await cRes.json());
+                // ==== CORRECION (Validación inteligente):
+                if (cRes.ok) {
+                    const cData = await cRes.json();
+                    // Si es un array directo, lo guarda. Si es un objeto, busca la propiedad '.items' o '.clientes'
+                    const arrayClientes = Array.isArray(cData) ? cData : (cData.items || cData.clientes || []);
+                    setClientes(arrayClientes);
+                }
                 if (pRes.ok) { const d = await pRes.json(); setProductos(d.items || []); }
                 if (mRes.ok) setMetodosPago(await mRes.json());
             } catch {

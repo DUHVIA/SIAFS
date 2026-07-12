@@ -3,9 +3,9 @@
 > **⚠️ INSTRUCCIÓN PARA MODELOS DE IA:**
 > Este archivo es la **fuente de verdad única** del proyecto. Léelo en su totalidad antes de tocar cualquier archivo del codebase. Contiene el estado actual del desarrollo, la arquitectura, las convenciones y el backlog. Todo lo que necesitas para continuar el desarrollo sin interrupciones está aquí.
 
-**Última actualización:** 2026-07-11  
-**Actualizado por:** Antigravity AI (Claude Sonnet 4.6)  
-**Sesiones de IA referenciadas:** `e34c681c` (Inventory Module), `f0fe5a16` (Architecture Analysis), `maxs-branch` (Sales & Quotes Module)
+**Última actualización:** 2026-07-12  
+**Actualizado por:** Antigravity AI (Gemini 3.5 Flash)  
+**Sesiones de IA referenciadas:** `e34c681c` (Inventory Module), `f0fe5a16` (Architecture Analysis), `maxs-branch` (Sales & Quotes Module), `9691dd73` (Purchases & Batches Module)
 
 ---
 
@@ -469,6 +469,17 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [X] **`PATCH /api/ordenes/[id]`** — acciones `anular` y `convertirAVenta` (transaccionales, ajustan Kardex)
 - [X] **`GET /api/metodos-pago`** — auto-seed de métodos por defecto (Efectivo, Yape, Plin, etc.)
 - [X] Descuento/reposición de stock integrado directamente en `orden.service.ts` (transacciones Prisma)
+ 
+#### PRIORIDAD MEDIA — Módulo de Ingresos/Compras (Lotes) ✅ COMPLETADO
+
+**HUs referenciadas:** HU-006 (Registrar reposición), HU-019, HU-020
+
+- [X] **`IngresosView.tsx`** creado — Bento Grid de KPIs (Compras del Mes, Lotes Recibidos, Lote Promedio, Productos Ingresados), buscador dinámico y tabla paginada.
+- [X] **`CrearIngresoModal.tsx`** creado — Formulario interactivo con combobox de productos, tabla dinámica de items (cantidad, costo, nuevo precio venta opcional) y cálculo del total en tiempo real.
+- [X] **`VerIngresoModal.tsx`** creado — Ficha del lote que detalla notas, fecha, usuario responsable y desglose de items.
+- [X] **`GET /api/ingresos`** e **`api/ingresos/[id]`** integrados en el backend, incluyendo descifrado en memoria y cálculo de métricas.
+- [X] Permisos `VER_INGRESOS` registrados en `proxy.ts` para seguridad RBAC.
+- [X] **Pruebas unitarias** completadas y validadas con 100% de éxito.
 
 #### ~~PRIORIDAD ALTA — Módulo de Clientes~~ ✅ COMPLETADO
 
@@ -481,13 +492,7 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [X] **`GET /api/clientes`** actualizado — soporte para `search`, `page`, `limit` + métricas (totalClientes, nuevosEsteMes)
 - [X] **`GET /api/ordenes`** actualizado — nuevo parámetro `clienteId` para filtrar órdenes por cliente
 
-#### PRIORIDAD MEDIA — Módulo de Ingresos/Compras (Lotes)
 
-**HUs referenciadas:** HU-006 (Registrar reposición), HU-019, HU-020
-
-- [ ] **Crear `IngresosView.tsx`** — Vista de historial de compras por lotes
-- [ ] **Crear `CrearIngresoModal.tsx`** — Formulario para registrar un lote de compra con múltiples productos, cantidades y costo unitario
-- [ ] Integrar con `/api/ingresos` y `/api/ingresos/[id]/`
 
 #### PRIORIDAD MEDIA — Módulo de Finanzas / Gastos
 

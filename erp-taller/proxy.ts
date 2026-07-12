@@ -10,11 +10,13 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   '/clientes': 'VER_CLIENTES',
   '/usuarios': 'GESTIONAR_USUARIOS',
   '/finanzas': 'VER_GASTOS',
+  '/ingresos': 'VER_INGRESOS',
   '/api/productos': 'VER_PRODUCTOS',
   '/api/ordenes': 'VER_ORDENES',
   '/api/clientes': 'VER_CLIENTES',
   '/api/usuarios': 'GESTIONAR_USUARIOS',
   '/api/gastos': 'VER_GASTOS',
+  '/api/ingresos': 'VER_INGRESOS',
 };
 
 export async function proxy(request: NextRequest) {
