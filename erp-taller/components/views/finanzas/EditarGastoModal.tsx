@@ -4,17 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Wallet, Loader2, Calendar } from 'lucide-react';
+import { Wallet, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 
-interface CrearGastoModalProps {
+interface EditarGastoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  gasto: any | null;
 }
 
-export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalProps) {
+export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGastoModalProps) {
   const { user } = useAuth();
   const toast = useToast();
 
@@ -24,23 +25,26 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Inicializar fecha con el día de hoy
+  // Cargar datos del gasto al abrir
   useEffect(() => {
-    if (isOpen) {
-      setMotivo('');
-      setMonto('');
+    if (isOpen && gasto) {
+      setMotivo(gasto.motivo || '');
+      setMonto(gasto.monto || '');
       setError(null);
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
+      
+      const gastoDate = new Date(gasto.fecha);
+      const yyyy = gastoDate.getFullYear();
+      const mm = String(gastoDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(gastoDate.getDate()).padStart(2, '0');
       setFecha(`${yyyy}-${mm}-${dd}`);
     }
-  }, [isOpen]);
+  }, [isOpen, gasto]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!gasto) return;
 
     if (!user) {
       setError('Sesión de usuario no válida');
@@ -55,8 +59,8 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
 
     setLoading(true);
     try {
-      const res = await fetch('/api/gastos', {
-        method: 'POST',
+      const res = await fetch(`/api/gastos/${gasto.id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           usuarioId: user.id,
@@ -67,11 +71,11 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
       });
 
       if (res.ok) {
-        toast.success('Gasto registrado exitosamente');
+        toast.success('Gasto actualizado exitosamente');
         onSuccess();
       } else {
         const err = await res.json();
-        setError(err.error || 'Error al registrar el gasto');
+        setError(err.error || 'Error al actualizar el gasto');
       }
     } catch (err) {
       console.error(err);
@@ -82,7 +86,7 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Registrar Gasto Interno" maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title="Editar Gasto Interno" maxWidth="sm">
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
           <label className="text-xs text-tertiary font-medium mb-1.5 block">Motivo del Gasto</label>
@@ -112,15 +116,13 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
 
           <div>
             <label className="text-xs text-tertiary font-medium mb-1.5 block">Fecha</label>
-            <div className="relative">
-              <Input
-                required
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+            <Input
+              required
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              disabled={loading}
+            />
           </div>
         </div>
 
@@ -138,10 +140,10 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
             <Button type="submit" variant="primary" icon={loading ? undefined : Wallet} disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> Registrando...
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> Guardando...
                 </>
               ) : (
-                'Registrar Gasto'
+                'Guardar Cambios'
               )}
             </Button>
           </div>

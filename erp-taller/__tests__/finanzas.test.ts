@@ -59,5 +59,74 @@ describe('Módulo de Finanzas (Gastos Internos)', () => {
       expect(updateArgs.where.id).toBe('uuid-gasto');
       expect(updateArgs.data.isActive).toBe(false);
     });
+
+    it('debe obtener todos los gastos filtrados y descifrados con métricas', async () => {
+      const mockGastos = [
+        {
+          id: 'uuid-gasto-1',
+          motivoCifrado: cifrarTexto('Suministros'),
+          montoCifrado: cifrarTexto('120'),
+          fecha: new Date(),
+          isActive: true,
+          usuario: { nombre: 'Colaborador A', email: 'colab@a.com' }
+        },
+        {
+          id: 'uuid-gasto-2',
+          motivoCifrado: cifrarTexto('Servicio de Luz'),
+          montoCifrado: cifrarTexto('280'),
+          fecha: new Date(),
+          isActive: true,
+          usuario: { nombre: 'Admin', email: 'admin@duhvia.com' }
+        }
+      ];
+
+      prismaMock.gastoInterno.findMany.mockResolvedValue(mockGastos);
+
+      const res = await GastoService.obtenerTodosFiltrados({
+        page: 1,
+        limit: 15
+      });
+
+      expect(res.items).toHaveLength(2);
+      expect(res.items[0].motivo).toBe('Suministros');
+      expect(res.items[1].motivo).toBe('Servicio de Luz');
+      expect(res.items[0].monto).toBe('120');
+
+      expect(res.metrics.totalGastadoMes).toBe(400); // 120 + 280
+      expect(res.metrics.totalTransacciones).toBe(2);
+      expect(res.metrics.gastoPromedioDiario).toBeGreaterThan(0);
+    });
+
+    it('debe filtrar los gastos correctamente en memoria', async () => {
+      const mockGastos = [
+        {
+          id: 'uuid-gasto-1',
+          motivoCifrado: cifrarTexto('Servicios básicos'),
+          montoCifrado: cifrarTexto('100'),
+          fecha: new Date(),
+          isActive: true,
+          usuario: { nombre: 'Vendedor' }
+        },
+        {
+          id: 'uuid-gasto-2',
+          motivoCifrado: cifrarTexto('Movilidad'),
+          montoCifrado: cifrarTexto('30'),
+          fecha: new Date(),
+          isActive: true,
+          usuario: { nombre: 'Repartidor' }
+        }
+      ];
+
+      prismaMock.gastoInterno.findMany.mockResolvedValue(mockGastos);
+
+      const res = await GastoService.obtenerTodosFiltrados({
+        search: 'movilidad',
+        page: 1,
+        limit: 15
+      });
+
+      expect(res.items).toHaveLength(1);
+      expect(res.items[0].motivo).toBe('Movilidad');
+    });
   });
 });

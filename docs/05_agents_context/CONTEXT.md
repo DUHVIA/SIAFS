@@ -5,7 +5,7 @@
 
 **Última actualización:** 2026-07-12  
 **Actualizado por:** Antigravity AI (Gemini 3.5 Flash)  
-**Sesiones de IA referenciadas:** `e34c681c` (Inventory Module), `f0fe5a16` (Architecture Analysis), `maxs-branch` (Sales & Quotes Module), `9691dd73` (Purchases & Batches Module)
+**Sesiones de IA referenciadas:** `e34c681c` (Inventory Module), `f0fe5a16` (Architecture Analysis), `maxs-branch` (Sales & Quotes Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module)
 
 ---
 
@@ -481,6 +481,18 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [X] Permisos `VER_INGRESOS` registrados en `proxy.ts` para seguridad RBAC.
 - [X] **Pruebas unitarias** completadas y validadas con 100% de éxito.
 
+#### PRIORIDAD MEDIA — Módulo de Finanzas / Gastos ✅ COMPLETADO
+
+**HUs referenciadas:** HU-021 a HU-023 (Gastos internos, caja chica)  
+**Mockup:** `docs/04_mockups/administraci_n_usuarios_y_gastos/screen.png`
+
+- [X] **`GastosView.tsx`** rediseñado por completo — Bento Grid de KPIs (Gastado en el Mes, Promedio Diario, Transacciones del Mes), buscador dinámico con debounce y tabla con columna de acciones.
+- [X] **`CrearGastoModal.tsx`** completado — Formulario con campo Fecha, obtención del `usuarioId` activo del contexto de sesión y llamada a `POST /api/gastos`.
+- [X] **`EditarGastoModal.tsx`** creado — Modal para editar cualquier gasto registrado en caliente (`PATCH /api/gastos/[id]`).
+- [X] **`ConfirmAnularGastoModal.tsx`** creado — Modal para confirmación y soft-delete de gastos (`DELETE /api/gastos/[id]`).
+- [X] **`GET /api/gastos`** actualizado — Carga de gastos con soporte para paginación y búsqueda real.
+- [X] **Pruebas unitarias** extendidas en `finanzas.test.ts` con cobertura completa (100% aprobado).
+
 #### ~~PRIORIDAD ALTA — Módulo de Clientes~~ ✅ COMPLETADO
 
 **HUs referenciadas:** HU-007, HU-008, HU-009
@@ -494,15 +506,7 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 
 
-#### PRIORIDAD MEDIA — Módulo de Finanzas / Gastos
 
-**HUs referenciadas:** HU-021 a HU-023 (Gastos internos, caja chica)  
-**Mockup:** `docs/04_mockups/administraci_n_usuarios_y_gastos/screen.png`
-
-- [ ] **Reescribir `GastosView.tsx`** con integración completa:
-  - [ ] Tabla de gastos con paginación y filtro por fecha
-  - [ ] Métricas: Total gastado en el mes, gasto promedio diario
-- [ ] **Completar `CrearGastoModal.tsx`** con validación y manejo de errores
 
 #### PRIORIDAD MEDIA — Módulo de Kardex
 
