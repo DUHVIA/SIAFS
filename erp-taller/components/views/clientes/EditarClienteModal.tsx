@@ -4,28 +4,37 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { UserPlus, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 
-interface CrearClienteModalProps {
+interface EditarClienteModalProps {
     isOpen: boolean;
+    cliente: any | null;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-const EMPTY = { nombre: '', documento: '', telefono: '', correo: '', direccion: '' };
-
-export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteModalProps) {
+export function EditarClienteModal({ isOpen, cliente, onClose, onSuccess }: EditarClienteModalProps) {
     const toast = useToast();
-    const [form, setForm] = useState(EMPTY);
+    const [form, setForm] = useState({ nombre: '', documento: '', telefono: '', correo: '', direccion: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Pre-llenar formulario cuando llega el cliente
     useEffect(() => {
-        if (isOpen) { setForm(EMPTY); setError(null); }
-    }, [isOpen]);
+        if (isOpen && cliente) {
+            setForm({
+                nombre:    cliente.nombre    || '',
+                documento: cliente.documento || '',
+                telefono:  cliente.telefono  || '',
+                correo:    cliente.correo    || '',
+                direccion: cliente.direccion || '',
+            });
+            setError(null);
+        }
+    }, [isOpen, cliente]);
 
-    const set = (field: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
         setForm(f => ({ ...f, [field]: e.target.value }));
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,32 +47,33 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
             setError('El correo electrónico no tiene un formato válido');
             return;
         }
+        if (!cliente) return;
 
         setLoading(true);
         try {
             const body: any = {
-                nombre: form.nombre.trim(),
+                nombre:    form.nombre.trim(),
                 documento: form.documento.trim(),
+                telefono:  form.telefono.trim() || null,
+                correo:    form.correo.trim()    || null,
+                direccion: form.direccion.trim() || null,
             };
-            if (form.telefono.trim()) body.telefono = form.telefono.trim();
-            if (form.correo.trim()) body.correo = form.correo.trim();
-            if (form.direccion.trim()) body.direccion = form.direccion.trim();
 
-            const res = await fetch('/api/clientes', {
-                method: 'POST',
+            const res = await fetch(`/api/clientes/${cliente.id}`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
 
             if (res.ok) {
-                toast.success(`Cliente "${form.nombre}" registrado exitosamente`);
+                toast.success('Cliente actualizado correctamente');
                 onSuccess();
             } else {
                 const err = await res.json();
                 if (err.errors) {
                     setError(err.errors.map((e: any) => e.message).join(', '));
                 } else {
-                    setError(err.error || 'Error al guardar el cliente');
+                    setError(err.error || 'Error al actualizar el cliente');
                 }
             }
         } catch {
@@ -74,8 +84,15 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Registrar Nuevo Cliente" maxWidth="2xl">
+        <Modal isOpen={isOpen} onClose={onClose} title="Editar Cliente" maxWidth="2xl">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {cliente && (
+                    <div className="px-3 py-2 bg-neutral-light/60 rounded-xl border border-white/20">
+                        <p className="text-xs text-tertiary">Editando cliente:</p>
+                        <p className="font-headline font-bold text-secondary">{cliente.nombre}</p>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                         <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-1.5">
@@ -83,7 +100,6 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                         </label>
                         <Input
                             required
-                            placeholder="Ej. A&F Samfor S.A.C."
                             value={form.nombre}
                             onChange={set('nombre')}
                             disabled={loading}
@@ -96,7 +112,6 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                         </label>
                         <Input
                             required
-                            placeholder="Ej. 20123456789"
                             value={form.documento}
                             onChange={set('documento')}
                             disabled={loading}
@@ -109,7 +124,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                         </label>
                         <Input
                             type="tel"
-                            placeholder="Ej. 999 888 777"
+                            placeholder="Opcional"
                             value={form.telefono}
                             onChange={set('telefono')}
                             disabled={loading}
@@ -122,7 +137,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                         </label>
                         <Input
                             type="email"
-                            placeholder="Ej. contacto@empresa.com"
+                            placeholder="Opcional"
                             value={form.correo}
                             onChange={set('correo')}
                             disabled={loading}
@@ -134,7 +149,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                             Dirección
                         </label>
                         <Input
-                            placeholder="Ej. Av. Principal 123, Arequipa"
+                            placeholder="Opcional"
                             value={form.direccion}
                             onChange={set('direccion')}
                             disabled={loading}
@@ -156,7 +171,7 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
                         {loading ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
                         ) : (
-                            <><UserPlus className="w-4 h-4" /> Guardar Cliente</>
+                            <><Save className="w-4 h-4" /> Guardar Cambios</>
                         )}
                     </Button>
                 </div>
