@@ -67,7 +67,7 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
         >
             <div className="mt-4">
                 <div className="w-full border border-white/20 rounded-2xl overflow-hidden bg-neutral-light/30">
-                    <div className="overflow-x-auto custom-scrollbar max-h-[60vh]">
+                    <div className="overflow-x-auto custom-scrollbar max-h-[75vh]">
                         <table className="w-full text-left border-collapse relative">
                             <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur-md shadow-sm">
                                 <tr className="border-b border-white/40">
@@ -125,6 +125,17 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
                                     ))
                                 )}
                             </tbody>
+                            <tfoot className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-md shadow-[0_-2px_4px_rgba(0,0,0,0.02)] border-t border-white/60">
+                                <tr>
+                                    <td colSpan={3} className="px-5 py-4 font-headline text-sm font-bold text-secondary text-right">
+                                        Stock Actual Total:
+                                    </td>
+                                    <td className="px-5 py-4 font-headline text-lg font-bold text-blue-600 text-right">
+                                        {producto?.stock || 0}
+                                    </td>
+                                    <td className="px-5 py-4"></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
