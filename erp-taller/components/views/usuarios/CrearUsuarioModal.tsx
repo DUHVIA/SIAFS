@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
