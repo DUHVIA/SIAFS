@@ -13,7 +13,8 @@ import {
   Users,
   Wallet,
   UserCog,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -100,8 +101,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="p-6 text-center text-xs text-tertiary opacity-60">
-          v1.0.0
+        <div className="p-6 flex flex-col gap-4">
+          <button
+            onClick={async () => {
+              try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 transition-colors font-headline font-bold text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Cerrar Sesión
+          </button>
+          <div className="text-center text-xs text-tertiary opacity-60">
+            v1.0.0
+          </div>
         </div>
       </aside>
     </>

@@ -532,6 +532,13 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [ ] **Página `unauthorized/`** — Revisar y mejorar la pantalla de acceso denegado
 - [ ] **Exportación de datos** — Botón de exportar tabla a CSV en los módulos de Inventario, Órdenes y Kardex
 
+#### PRIORIDAD MEDIA — Generación de Documentos
+- [ ] **Generar PDF de Cotizaciones** — Opcíon para exportar una cotización a formato PDF tamaño A4, con diseño formateado y lista detallada de lo solicitado por el cliente.
+
+#### PRIORIDAD ALTA — Migración de Datos Inicial
+- [ ] **Importación desde Excel** — Crear una sección/herramienta para migrar el inventario actual del dueño desde Excel hacia el nuevo sistema.
+  - El modelo de datos a seguir se encuentra en `docs/data/Control_Inventario_Automotores.xlsx`.
+
 ---
 
 ## 5. Guía de Inicio Rápido para Agentes de IA
