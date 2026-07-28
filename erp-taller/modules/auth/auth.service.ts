@@ -32,6 +32,7 @@ export const AuthService = {
     const token = await new SignJWT({
       usuarioId: usuario.id,
       rolId: usuario.rolId,
+      rolNombre: usuario.rol.nombre,
       nombre: usuario.nombre,
       permisos: Array.from(permisosSet)
     })

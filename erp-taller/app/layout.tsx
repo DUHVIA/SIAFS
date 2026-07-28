@@ -39,6 +39,7 @@ export default async function RootLayout({
       user = { 
         id: payload.usuarioId as string, 
         rolId: payload.rolId as string,
+        rolNombre: payload.rolNombre as string || 'Usuario',
         nombre: payload.nombre as string || 'Usuario' 
       };
       permisos = (payload.permisos as string[]) || [];

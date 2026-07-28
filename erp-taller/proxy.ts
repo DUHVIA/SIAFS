@@ -50,6 +50,18 @@ export async function proxy(request: NextRequest) {
       const permisosUsuario = (payload.permisos as string[]) || [];
 
       // Validar el permiso si la ruta está en el diccionario ROUTE_PERMISSIONS
+      // Si la ruta es '/', y el usuario NO tiene VER_DASHBOARD, buscar la primera ruta permitida
+      if (pathname === '/' && !permisosUsuario.includes('VER_DASHBOARD')) {
+        const fallbackRoute = Object.entries(ROUTE_PERMISSIONS).find(
+          ([route, perm]) => !route.startsWith('/api') && permisosUsuario.includes(perm)
+        );
+        if (fallbackRoute) {
+          return NextResponse.redirect(new URL(fallbackRoute[0], request.url));
+        } else {
+          return NextResponse.redirect(new URL('/unauthorized', request.url));
+        }
+      }
+
       const requiredPermission = ROUTE_PERMISSIONS[pathname];
       if (requiredPermission && !permisosUsuario.includes(requiredPermission)) {
         if (isApiRoute) {
