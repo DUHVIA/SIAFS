@@ -64,6 +64,7 @@ export async function proxy(request: NextRequest) {
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-usuario-id', payload.usuarioId as string);
       requestHeaders.set('x-rol-id', payload.rolId as string);
+      requestHeaders.set('x-user-permissions', JSON.stringify(permisosUsuario));
 
       return NextResponse.next({
         request: {
