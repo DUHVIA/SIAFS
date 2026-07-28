@@ -5,6 +5,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 export interface UserSession {
   id: string;
   rolId: string;
+  nombre?: string;
 }
 
 interface AuthContextType {

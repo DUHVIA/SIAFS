@@ -34,7 +34,15 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { permisos } = useAuth();
+  const { user, permisos } = useAuth();
+
+  // Función simple para mapear el ID de rol a un nombre corto
+  const getRoleName = (rolId: string) => {
+    if (rolId.includes('dueno') || rolId.includes('admin')) return 'Admin';
+    if (rolId.includes('vendedor')) return 'Ventas';
+    if (rolId.includes('tecnico')) return 'Taller';
+    return 'Usuario';
+  };
 
   return (
     <>
@@ -101,7 +109,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer del Sidebar */}
-        <div className="p-6 flex flex-col gap-4">
+        <div className="p-5 flex flex-col gap-4 border-t border-black/5 bg-white/50">
+          
+          {user && (
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner">
+                {user.nombre?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-sm font-bold text-secondary truncate">{user.nombre}</span>
+                <span className="text-xs text-tertiary bg-black/5 px-2 py-0.5 rounded-full w-max">{getRoleName(user.rolId)}</span>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={async () => {
               try {

@@ -24,15 +24,15 @@ export const AuthService = {
       throw new Error("Credenciales inválidas o usuario inactivo");
     }
 
-    // Combinar permisos del rol base y permisos directos
+    // Los permisos se gestionan 100% desde los permisos individuales del usuario
+    // (el rol actuó solo como plantilla inicial)
     const permisosSet = new Set<string>();
-    
-    usuario.rol.permisos.forEach(rp => permisosSet.add(rp.permiso.codigo));
     usuario.permisos.forEach(up => permisosSet.add(up.permiso.codigo));
 
     const token = await new SignJWT({
       usuarioId: usuario.id,
       rolId: usuario.rolId,
+      nombre: usuario.nombre,
       permisos: Array.from(permisosSet)
     })
       .setProtectedHeader({ alg: 'HS256' })

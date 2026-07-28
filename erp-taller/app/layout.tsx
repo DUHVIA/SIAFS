@@ -36,7 +36,11 @@ export default async function RootLayout({
   if (token) {
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET);
-      user = { id: payload.usuarioId as string, rolId: payload.rolId as string };
+      user = { 
+        id: payload.usuarioId as string, 
+        rolId: payload.rolId as string,
+        nombre: payload.nombre as string || 'Usuario' 
+      };
       permisos = (payload.permisos as string[]) || [];
     } catch (e) {
       // Token inválido o expirado

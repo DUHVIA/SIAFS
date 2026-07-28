@@ -30,8 +30,22 @@ export const UsuarioService = {
         accesoSistema: true,
         isActive: true,
       },
-      include: { rol: true },
+      include: { 
+        rol: {
+          include: { permisos: true }
+        }
+      },
     });
+
+    // Clonar los permisos del rol como permisos individuales del usuario (Rol como plantilla)
+    if (nuevoUsuario.rol.permisos.length > 0) {
+      await prisma.usuarioPermiso.createMany({
+        data: nuevoUsuario.rol.permisos.map(rp => ({
+          usuarioId: nuevoUsuario.id,
+          permisoId: rp.permisoId
+        }))
+      });
+    }
 
     const { passwordHash: _ph, salt: _s, ...safeUser } = nuevoUsuario;
     return safeUser;
