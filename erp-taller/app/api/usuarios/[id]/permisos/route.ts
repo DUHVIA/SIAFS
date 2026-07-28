@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { requirePermission } from '@/lib/serverAuth';
 
 const PermisosArraySchema = z.array(z.string());
 
 export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const auth = await requirePermission('GESTIONAR_USUARIOS');
+        if (auth.error) return auth.error;
+
         const { id } = await props.params;
         const usuarioPermisos = await prisma.usuarioPermiso.findMany({
             where: { usuarioId: id },
@@ -22,6 +26,9 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
 
 export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const auth = await requirePermission('GESTIONAR_USUARIOS');
+        if (auth.error) return auth.error;
+
         const { id } = await props.params;
         const json = await request.json();
         const permisosIds = PermisosArraySchema.parse(json.permisosIds);

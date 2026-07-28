@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CrearUsuarioSchema } from '@/modules/usuarios/usuario.dto';
 import { UsuarioService } from '@/modules/usuarios/usuario.service';
+import { requirePermission } from '@/lib/serverAuth';
 
 export async function GET() {
   try {
@@ -15,6 +16,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requirePermission('GESTIONAR_USUARIOS');
+    if (auth.error) return auth.error;
+
     const json = await request.json();
     const data = CrearUsuarioSchema.parse(json);
     
