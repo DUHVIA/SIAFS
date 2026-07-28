@@ -17,6 +17,7 @@ import { CrearProductoModal } from './CrearProductoModal';
 import { EditarProductoModal } from './EditarProductoModal';
 import { RestockModal } from './RestockModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { VerKardexModal } from './VerKardexModal';
 
 interface TipoAutoparte {
     id: string;
@@ -57,6 +58,7 @@ export function InventarioView() {
     const [isEditarOpen, setIsEditarOpen] = useState(false);
     const [isRestockOpen, setIsRestockOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [selectedProducto, setSelectedProducto] = useState<any | null>(null);
 
     // Efecto para el debounce de la búsqueda (300ms)
@@ -242,6 +244,18 @@ export function InventarioView() {
                                 RESTOCK
                             </Button>
                         )}
+                        <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="p-1.5 rounded-full hover:bg-blue-500/10 text-blue-500"
+                            onClick={() => {
+                                setSelectedProducto(row);
+                                setIsKardexOpen(true);
+                            }}
+                            title="Ver Kardex"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                        </Button>
                         <Button 
                             size="sm" 
                             variant="ghost" 
@@ -628,6 +642,15 @@ export function InventarioView() {
                     setSelectedProducto(null);
                 }}
                 onSuccess={handleRefresh}
+                producto={selectedProducto}
+            />
+
+            <VerKardexModal
+                isOpen={isKardexOpen}
+                onClose={() => {
+                    setIsKardexOpen(false);
+                    setSelectedProducto(null);
+                }}
                 producto={selectedProducto}
             />
         </ModuleTemplate>

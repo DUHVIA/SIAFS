@@ -30,6 +30,11 @@ export const KardexService = {
     const historial = await prisma.kardex.findMany({
       where: { productoId },
       orderBy: { fechaMovimiento: 'desc' },
+      include: {
+        usuario: {
+          select: { nombre: true, email: true }
+        }
+      }
     });
 
     return historial.map((movimiento) => ({

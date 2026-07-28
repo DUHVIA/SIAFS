@@ -18,3 +18,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const productoId = searchParams.get('productoId');
+
+    if (!productoId) {
+      return NextResponse.json({ error: 'productoId es requerido' }, { status: 400 });
+    }
+
+    const historial = await KardexService.obtenerHistorialPorProducto(productoId);
+    return NextResponse.json(historial);
+  } catch (error: any) {
+    console.error('Error en GET /api/kardex:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  }
+}
