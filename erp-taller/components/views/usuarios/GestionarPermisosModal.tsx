@@ -78,22 +78,25 @@ export function GestionarPermisosModal({ isOpen, usuario, onClose }: GestionarPe
         }
     };
 
-    // Agrupar permisos de forma sencilla adivinando el prefijo del código (ej. VER_DASHBOARD -> DASHBOARD)
-    const agrupados = permisosGlobales.reduce((acc, permiso) => {
-        const partes = permiso.codigo.split('_');
-        const modulo = partes.length > 1 ? partes[partes.length - 1] : 'GENERAL';
-        
-        if (!acc[modulo]) acc[modulo] = [];
-        acc[modulo].push(permiso);
-        return acc;
-    }, {} as Record<string, any[]>);
+    // Solo mostramos los permisos asociados a las vistas (pantallas del sidebar)
+    const viewPermissionsMap: Record<string, string> = {
+        'VER_DASHBOARD': 'Dashboard Principal',
+        'VER_PRODUCTOS': 'Módulo de Inventario',
+        'VER_ORDENES': 'Módulo de Ventas',
+        'VER_INGRESOS': 'Módulo de Compras',
+        'VER_CLIENTES': 'Módulo de Clientes',
+        'VER_GASTOS': 'Módulo de Gastos / Finanzas',
+        'GESTIONAR_USUARIOS': 'Módulo de Personal'
+    };
+
+    const viewPermisos = permisosGlobales.filter(p => viewPermissionsMap[p.codigo]);
 
     return (
         <Modal 
             isOpen={isOpen} 
             onClose={onClose} 
-            title={usuario ? `Permisos: ${usuario.nombre}` : 'Gestionar Permisos'} 
-            maxWidth="3xl"
+            title={usuario ? `Accesos de Pantalla: ${usuario.nombre}` : 'Gestionar Accesos'} 
+            maxWidth="2xl"
         >
             {loadingData ? (
                 <div className="flex justify-center items-center py-20">
@@ -102,40 +105,30 @@ export function GestionarPermisosModal({ isOpen, usuario, onClose }: GestionarPe
             ) : (
                 <div className="flex flex-col gap-6">
                     <p className="text-sm text-tertiary">
-                        Activa o desactiva los módulos a los que este usuario tiene acceso. 
-                        Estos permisos son individuales y sobrescriben las reglas de su rol.
+                        Controla a qué pantallas del sistema (Sidebar) puede acceder este usuario.
                     </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-                        {Object.entries(agrupados).map(([modulo, permisosLista]) => (
-                            <div key={modulo} className="bg-neutral-light/30 border border-white/20 rounded-2xl p-4">
-                                <h3 className="font-headline font-bold text-secondary mb-3 pb-2 border-b border-white/30 text-sm">
-                                    MÓDULO: {modulo}
-                                </h3>
-                                <div className="flex flex-col gap-3">
-                                    {permisosLista.map(permiso => {
-                                        const hasPerm = permisosUsuario.includes(permiso.id);
-                                        return (
-                                            <label key={permiso.id} className="flex items-center justify-between cursor-pointer group">
-                                                <span className="text-sm font-medium text-secondary group-hover:text-primary transition-colors">
-                                                    {permiso.codigo.replace(/_/g, ' ')}
-                                                </span>
-                                                
-                                                <div className="relative inline-flex items-center">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        className="sr-only peer" 
-                                                        checked={hasPerm}
-                                                        onChange={() => handleToggle(permiso.id)}
-                                                    />
-                                                    <div className="w-11 h-6 bg-white/60 border border-white/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                                </div>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
+                    <div className="bg-neutral-light/30 border border-white/20 rounded-2xl p-4 flex flex-col gap-4">
+                        {viewPermisos.map(permiso => {
+                            const hasPerm = permisosUsuario.includes(permiso.id);
+                            return (
+                                <label key={permiso.id} className="flex items-center justify-between cursor-pointer group py-2 border-b border-white/20 last:border-0">
+                                    <span className="text-sm font-medium text-secondary group-hover:text-primary transition-colors">
+                                        Acceso a {viewPermissionsMap[permiso.codigo]}
+                                    </span>
+                                    
+                                    <div className="relative inline-flex items-center">
+                                        <input 
+                                            type="checkbox" 
+                                            className="sr-only peer" 
+                                            checked={hasPerm}
+                                            onChange={() => handleToggle(permiso.id)}
+                                        />
+                                        <div className="w-11 h-6 bg-white/60 border border-white/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                    </div>
+                                </label>
+                            );
+                        })}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-white/20">

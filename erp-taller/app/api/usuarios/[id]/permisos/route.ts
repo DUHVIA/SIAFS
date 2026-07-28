@@ -4,10 +4,11 @@ import { z } from 'zod';
 
 const PermisosArraySchema = z.array(z.string());
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await props.params;
         const usuarioPermisos = await prisma.usuarioPermiso.findMany({
-            where: { usuarioId: params.id },
+            where: { usuarioId: id },
             include: { permiso: true }
         });
         
@@ -19,8 +20,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const { id } = await props.params;
         const json = await request.json();
         const permisosIds = PermisosArraySchema.parse(json.permisosIds);
 
@@ -28,14 +30,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         await prisma.$transaction(async (tx) => {
             // Eliminar los permisos actuales del usuario
             await tx.usuarioPermiso.deleteMany({
-                where: { usuarioId: params.id }
+                where: { usuarioId: id }
             });
 
             // Insertar los nuevos permisos
             if (permisosIds.length > 0) {
                 await tx.usuarioPermiso.createMany({
                     data: permisosIds.map(permisoId => ({
-                        usuarioId: params.id,
+                        usuarioId: id,
                         permisoId: permisoId
                     }))
                 });
