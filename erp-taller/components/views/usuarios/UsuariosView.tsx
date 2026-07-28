@@ -5,8 +5,9 @@ import { ModuleTemplate } from '@/components/templates/ModuleTemplate';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Shield } from 'lucide-react';
 import { CrearUsuarioModal } from './CrearUsuarioModal';
+import { GestionarPermisosModal } from './GestionarPermisosModal';
 
 interface UsuariosViewProps {
     usuarios: any[];
@@ -16,6 +17,8 @@ interface UsuariosViewProps {
 export function UsuariosView({ usuarios, roles }: UsuariosViewProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPermisosOpen, setIsPermisosOpen] = useState(false);
+    const [selectedUsuario, setSelectedUsuario] = useState<any>(null);
 
     const filteredData = usuarios.filter(u =>
         u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,6 +42,22 @@ export function UsuariosView({ usuarios, roles }: UsuariosViewProps) {
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${row.accesoSistema ? 'bg-green-100 text-green-700 ' : 'bg-red-100 text-red-700 '}`}>
                     {row.accesoSistema ? 'Concedido' : 'Revocado'}
                 </span>
+            )
+        },
+        {
+            key: 'permisos', header: 'Permisos',
+            render: (row: any) => (
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    icon={Shield} 
+                    onClick={() => {
+                        setSelectedUsuario(row);
+                        setIsPermisosOpen(true);
+                    }}
+                >
+                    Configurar
+                </Button>
             )
         }
     ];
@@ -76,6 +95,15 @@ export function UsuariosView({ usuarios, roles }: UsuariosViewProps) {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 roles={roles}
+            />
+
+            <GestionarPermisosModal
+                isOpen={isPermisosOpen}
+                usuario={selectedUsuario}
+                onClose={() => {
+                    setIsPermisosOpen(false);
+                    setSelectedUsuario(null);
+                }}
             />
         </>
     );
