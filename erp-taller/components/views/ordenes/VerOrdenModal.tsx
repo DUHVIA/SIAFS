@@ -5,9 +5,10 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ShoppingCart, FileText, Ban, CheckCircle, User, Calendar, Package, Loader2, CreditCard } from 'lucide-react';
+import { ShoppingCart, FileText, Ban, CheckCircle, User, Calendar, Package, Loader2, CreditCard, Download } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
+import { generarCotizacionPDF } from '@/lib/pdfGenerator';
 
 interface VerOrdenModalProps {
     isOpen: boolean;
@@ -292,7 +293,25 @@ export function VerOrdenModal({ isOpen, ordenId, onClose, onSuccess }: VerOrdenM
                     )}
 
                     {/* Footer de cierre */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
+                        {orden.tipo === 'COTIZACION' && (
+                            <Button 
+                                variant="outline" 
+                                icon={Download}
+                                onClick={() => {
+                                    generarCotizacionPDF({
+                                        numeroOrden: orden.numeroOrden,
+                                        clienteNombre: orden.clienteNombre,
+                                        clienteDocumento: orden.clienteDocumento,
+                                        fecha: orden.createdAt,
+                                        detalles: orden.detalles,
+                                        total: orden.total
+                                    });
+                                }}
+                            >
+                                Exportar PDF
+                            </Button>
+                        )}
                         <Button variant="secondary" onClick={onClose}>
                             Cerrar
                         </Button>
