@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface ItemCotizacion {
     productoNombre: string;
@@ -9,6 +9,7 @@ interface ItemCotizacion {
 }
 
 interface DatosCotizacion {
+    tipo: 'COTIZACION' | 'VENTA';
     numeroOrden: string | number;
     clienteNombre: string;
     clienteDocumento?: string;
@@ -52,7 +53,8 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.text('COTIZACIÓN', 165, 23, { align: 'center' });
+    const titulo = datos.tipo === 'VENTA' ? 'NOTA DE PEDIDO' : 'COTIZACIÓN';
+    doc.text(titulo, 165, 23, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
@@ -100,8 +102,8 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
         fmtCurrency(item.subtotal)
     ]);
 
-    // Usando autoTable
-    (doc as any).autoTable({
+    // Usando autoTable de forma correcta
+    autoTable(doc, {
         startY: 75,
         head: [columnas],
         body: filas,
@@ -153,9 +155,19 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
     doc.setTextColor(colorSecundario[0], colorSecundario[1], colorSecundario[2]);
+    
+    if (datos.tipo === 'VENTA') {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(220, 38, 38); // red-600
+        doc.text('Este documento no es válido para efectos tributarios, exija su boleta o factura', 105, pageHeight - 20, { align: 'center' });
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(colorSecundario[0], colorSecundario[1], colorSecundario[2]);
+    }
+    
     doc.text('Documento generado automáticamente por A8F Samfor - SIAFS', 105, pageHeight - 15, { align: 'center' });
     doc.text('Los precios incluyen IGV y están sujetos a cambios sin previo aviso.', 105, pageHeight - 10, { align: 'center' });
 
     // Guardar el PDF
-    doc.save(`Cotizacion_N${String(datos.numeroOrden).padStart(4, '0')}.pdf`);
+    const prefijo = datos.tipo === 'VENTA' ? 'NotaPedido' : 'Cotizacion';
+    doc.save(`${prefijo}_N${String(datos.numeroOrden).padStart(4, '0')}.pdf`);
 }

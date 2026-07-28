@@ -8,11 +8,12 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import {
     Plus, Search, ShoppingCart, FileText, RefreshCw,
     ChevronLeft, ChevronRight, Eye, Ban, TrendingUp,
-    Clock, BarChart2, DollarSign
+    Clock, BarChart2, DollarSign, Download, Loader2
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
+import { generarCotizacionPDF } from '@/lib/pdfGenerator';
 
 type Tab = 'ventas' | 'cotizaciones' | 'anuladas';
 
@@ -101,6 +102,33 @@ export function OrdenesView() {
     const handleNueva = (tipo: 'VENTA' | 'COTIZACION') => {
         setTipoNueva(tipo);
         setIsCrearOpen(true);
+    };
+
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+    const handleDescargarPDF = async (id: string) => {
+        setDownloadingId(id);
+        try {
+            const res = await fetch(`/api/ordenes/${id}`);
+            if (res.ok) {
+                const orden = await res.json();
+                generarCotizacionPDF({
+                    tipo: orden.tipo as 'COTIZACION' | 'VENTA',
+                    numeroOrden: orden.numeroOrden,
+                    clienteNombre: orden.clienteNombre,
+                    clienteDocumento: orden.clienteDocumento,
+                    fecha: orden.createdAt,
+                    detalles: orden.detalles,
+                    total: orden.total
+                });
+            } else {
+                toast.error('Error al descargar la orden');
+            }
+        } catch {
+            toast.error('Error de conexión al descargar PDF');
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     const fmtCurrency = (v: number) =>
@@ -330,15 +358,25 @@ export function OrdenesView() {
                                             {renderEstadoBadge(orden.estado)}
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                icon={Eye}
-                                                onClick={() => handleVerOrden(orden.id)}
-                                                title="Ver detalle"
-                                            >
-                                                Ver
-                                            </Button>
+                                            <div className="flex justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    icon={downloadingId === orden.id ? Loader2 : Download}
+                                                    onClick={() => handleDescargarPDF(orden.id)}
+                                                    title="Descargar PDF"
+                                                    disabled={downloadingId === orden.id}
+                                                />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    icon={Eye}
+                                                    onClick={() => handleVerOrden(orden.id)}
+                                                    title="Ver detalle"
+                                                >
+                                                    Ver
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

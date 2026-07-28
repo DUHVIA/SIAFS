@@ -294,24 +294,23 @@ export function VerOrdenModal({ isOpen, ordenId, onClose, onSuccess }: VerOrdenM
 
                     {/* Footer de cierre */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
-                        {orden.tipo === 'COTIZACION' && (
-                            <Button 
-                                variant="outline" 
-                                icon={Download}
-                                onClick={() => {
-                                    generarCotizacionPDF({
-                                        numeroOrden: orden.numeroOrden,
-                                        clienteNombre: orden.clienteNombre,
-                                        clienteDocumento: orden.clienteDocumento,
-                                        fecha: orden.createdAt,
-                                        detalles: orden.detalles,
-                                        total: orden.total
-                                    });
-                                }}
-                            >
-                                Exportar PDF
-                            </Button>
-                        )}
+                        <Button 
+                            variant="outline" 
+                            icon={Download}
+                            onClick={() => {
+                                generarCotizacionPDF({
+                                    tipo: orden.tipo as 'COTIZACION' | 'VENTA',
+                                    numeroOrden: orden.numeroOrden,
+                                    clienteNombre: orden.clienteNombre,
+                                    clienteDocumento: orden.clienteDocumento,
+                                    fecha: orden.createdAt,
+                                    detalles: orden.detalles,
+                                    total: orden.total
+                                });
+                            }}
+                        >
+                            Exportar PDF
+                        </Button>
                         <Button variant="secondary" onClick={onClose}>
                             Cerrar
                         </Button>
