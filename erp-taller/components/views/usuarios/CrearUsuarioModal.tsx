@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { UserPlus, Eye, EyeOff, ChevronDown, Check } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/providers/ToastProvider';
+import { useRouter } from 'next/navigation';
 
 interface CrearUsuarioModalProps {
     isOpen: boolean;
@@ -19,13 +18,47 @@ export function CrearUsuarioModal({ isOpen, onClose, roles }: CrearUsuarioModalP
     const [rolId, setRolId] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [isSelectOpen, setIsSelectOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const toast = useToast();
+    const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Aquí se conectaría la Server Action para crear el usuario
-        alert(`Usuario ${nombre} creado existosamente.`);
-        onClose();
+        
+        if (!rolId) {
+            toast.error('Por favor, selecciona un rol');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await fetch('/api/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre,
+                    email,
+                    password,
+                    rolId,
+                    accesoSistema: true,
+                    isActive: true
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                toast.error(errData.error || 'Error al crear el usuario');
+            } else {
+                toast.success(`Usuario ${nombre} creado exitosamente.`);
+                router.refresh();
+                onClose();
+            }
+        } catch (error) {
+            toast.error('Error de conexión al crear usuario');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -76,42 +109,33 @@ export function CrearUsuarioModal({ isOpen, onClose, roles }: CrearUsuarioModalP
                         </div>
                     </div>
 
-                    <div className="md:col-span-2 relative">
-                        <label className="text-xs text-tertiary font-medium mb-1 block">Rol de Sistema</label>
-                        <div className="relative">
-                            <button
-                                type="button"
-                                className="w-full flex items-center justify-between bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-sm px-4 py-3 font-body text-sm text-secondary outline-none focus:border-primary/50"
-                                onClick={() => setIsSelectOpen(!isSelectOpen)}
-                            >
-                                {rolId ? roles.find(r => r.id === rolId)?.nombre : <span className="text-tertiary">Seleccionar rol...</span>}
-                                <ChevronDown className="w-4 h-4 text-tertiary" />
-                            </button>
-                            {isSelectOpen && (
-                                <div className="absolute top-full left-0 w-full mt-2 bg-white/95 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg overflow-hidden z-50 p-1">
-                                    {roles.map(r => (
-                                        <button
-                                            key={r.id}
-                                            type="button"
-                                            className={`w-full text-left px-4 py-3 text-sm font-medium rounded-xl flex items-center justify-between transition-colors ${rolId === r.id ? 'bg-primary/10 text-primary' : 'text-secondary hover:bg-neutral-light'}`}
-                                            onClick={() => { setRolId(r.id); setIsSelectOpen(false); }}
-                                        >
-                                            {r.nombre}
-                                            {rolId === r.id && <Check className="w-4 h-4 text-primary" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                    <div className="md:col-span-2">
+                        <label className="text-xs text-tertiary font-medium mb-3 block">Rol de Sistema (Permisos Base)</label>
+                        <div className="flex flex-wrap gap-3">
+                            {roles.map(r => (
+                                <button
+                                    key={r.id}
+                                    type="button"
+                                    onClick={() => setRolId(r.id)}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                                        rolId === r.id 
+                                        ? 'bg-primary/20 border-primary text-primary shadow-sm shadow-primary/20' 
+                                        : 'bg-white/50 border-white/40 text-tertiary hover:bg-white/80 hover:text-secondary'
+                                    }`}
+                                >
+                                    {r.nombre}
+                                </button>
+                            ))}
                         </div>
-                        {/* Hidden input to ensure required validation passes if using native form submission */}
-                        <input type="hidden" required value={rolId} onChange={() => {}} />
                     </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-white/20 ">
                     <div className="flex gap-3">
-                        <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-                        <Button type="submit" variant="primary" icon={UserPlus}>Crear Usuario</Button>
+                        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>Cancelar</Button>
+                        <Button type="submit" variant="primary" icon={isSubmitting ? Loader2 : UserPlus} disabled={isSubmitting}>
+                            {isSubmitting ? 'Creando...' : 'Crear Usuario'}
+                        </Button>
                     </div>
                 </div>
             </form>
