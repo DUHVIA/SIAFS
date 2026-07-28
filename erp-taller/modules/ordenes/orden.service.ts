@@ -37,6 +37,7 @@ export const OrdenService = {
       const nuevaOrden = await tx.orden.create({
         data: {
           tipo: data.tipo,
+          estado: data.tipo === 'VENTA' ? 'COMPLETADA' : 'PENDIENTE',
           clienteId: data.clienteId,
           usuarioId: data.usuarioId,
           metodoPagoId: data.metodoPagoId,
