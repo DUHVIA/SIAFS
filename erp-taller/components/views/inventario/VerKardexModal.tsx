@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Activity, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Activity, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle, Download } from 'lucide-react';
+import { exportToCSV } from '@/lib/csvExport';
 
 interface VerKardexModalProps {
     isOpen: boolean;
@@ -54,6 +55,18 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
             day: '2-digit', month: 'short', year: 'numeric', 
             hour: '2-digit', minute: '2-digit' 
         });
+    };
+
+    const handleExportKardexCSV = () => {
+        const headers = ['Fecha', 'Usuario', 'Movimiento', 'Cantidad', 'Motivo / Origen'];
+        const rows = historial.map(m => [
+            formatFecha(m.fechaMovimiento),
+            m.usuario?.nombre || 'Sistema',
+            m.tipoMovimiento || '',
+            m.cantidad || '0',
+            m.motivo || ''
+        ]);
+        exportToCSV(`Kardex_${(producto?.nombre || 'producto').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     };
 
     return (
@@ -141,7 +154,14 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
                 </div>
             </div>
             
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-between items-center mt-6">
+                <button
+                    onClick={handleExportKardexCSV}
+                    disabled={loading || historial.length === 0}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full font-headline font-semibold text-xs bg-white text-secondary hover:bg-neutral-light transition-all border border-white/30 shadow-sm disabled:opacity-40"
+                >
+                    <Download className="w-4 h-4 text-tertiary" /> Exportar Kardex CSV
+                </button>
                 <button
                     onClick={onClose}
                     className="px-6 py-2.5 rounded-full font-headline font-bold text-sm bg-neutral-light text-secondary hover:bg-neutral-light/80 transition-all border border-white/20 shadow-sm"

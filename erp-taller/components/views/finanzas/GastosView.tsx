@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
   Plus, Search, RefreshCw, Edit2, Trash2, Wallet,
-  Calendar, DollarSign, TrendingDown, ClipboardList
+  Calendar, DollarSign, TrendingDown, ClipboardList, Download
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearGastoModal } from './CrearGastoModal';
 import { EditarGastoModal } from './EditarGastoModal';
 import { ConfirmAnularGastoModal } from './ConfirmAnularGastoModal';
+import { exportToCSV } from '@/lib/csvExport';
 
 export function GastosView() {
   const toast = useToast();
@@ -109,15 +110,31 @@ export function GastosView() {
       </tr>
     ));
 
+  const handleExportGastosCSV = () => {
+      const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado Por'];
+      const rows = items.map(g => [
+        new Date(g.fecha).toLocaleDateString('es-PE'),
+        g.motivo || '',
+        parseFloat(g.monto || '0').toFixed(2),
+        g.usuario?.nombre || 'Sistema'
+      ]);
+      exportToCSV(`Gastos_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
   return (
     <>
       <ModuleTemplate
         title="Gastos de Caja Chica"
         description="Lleva el control detallado de los gastos internos de la empresa."
         actions={
-          <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
-            Registrar Gasto
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" icon={Download} onClick={handleExportGastosCSV} disabled={loading || items.length === 0}>
+              Exportar CSV
+            </Button>
+            <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
+              Registrar Gasto
+            </Button>
+          </div>
         }
       >
         {/* KPI Grid */}

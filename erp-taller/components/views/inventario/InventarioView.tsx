@@ -10,8 +10,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { 
     Plus, Search, Filter, Cpu, Wrench, Edit3, Trash2, ArrowUpRight, 
-    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info
+    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info, Download
 } from 'lucide-react';
+import { exportToCSV } from '@/lib/csvExport';
 
 import { CrearProductoModal } from './CrearProductoModal';
 import { EditarProductoModal } from './EditarProductoModal';
@@ -300,12 +301,36 @@ export function InventarioView() {
         ));
     };
 
+    const handleExportCSV = () => {
+        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock', 'Precio Venta (S/)'];
+        // Cambiado de 'productos' a 'items'
+        const rows = items.map(p => [
+            p.detalles?.sku || '',
+            p.nombre || '',
+            p.categoria || '',
+            p.tipoAutoparte?.nombre || '-',
+            p.stock || '0',
+            parseFloat(p.precioVenta || '0').toFixed(2)
+        ]);
+        exportToCSV(`Inventario_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
     return (
         <ModuleTemplate
             title="Inventario de Productos"
             description="Gestiona y monitorea el catálogo encriptado de motores y autopartes de repuesto."
             actions={
                 <div className="flex gap-2">
+                    <Button 
+                        icon={Download} 
+                        variant="secondary" 
+                        onClick={handleExportCSV} 
+                        className="rounded-full shadow-soft"
+                        // Cambiado de 'productos' a 'items'
+                        disabled={loading || items.length === 0}
+                    >
+                        Exportar CSV
+                    </Button>
                     <Button 
                         icon={RefreshCw} 
                         variant="secondary" 

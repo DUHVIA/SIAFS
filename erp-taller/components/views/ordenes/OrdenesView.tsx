@@ -14,6 +14,7 @@ import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
 import { generarCotizacionPDF } from '@/lib/pdfGenerator';
+import { exportToCSV } from '@/lib/csvExport';
 
 type Tab = 'ventas' | 'cotizaciones' | 'anuladas';
 
@@ -176,6 +177,19 @@ export function OrdenesView() {
         { id: 'anuladas',     label: 'Anuladas',       icon: <Ban className="w-4 h-4" /> },
     ];
 
+    const handleExportOrdenesCSV = () => {
+        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
+        const rows = items.map(o => [
+            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
+            o.tipo || '',
+            o.cliente?.nombre || '',
+            o.estado || '',
+            parseFloat(o.total || '0').toFixed(2),
+            new Date(o.createdAt).toLocaleDateString('es-PE')
+        ]);
+        exportToCSV(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
     return (
         <>
             <ModuleTemplate
@@ -183,6 +197,9 @@ export function OrdenesView() {
                 description="Registra y administra ventas directas y cotizaciones de clientes."
                 actions={
                     <>
+                        <Button variant="secondary" icon={Download} onClick={handleExportOrdenesCSV} disabled={loading || items.length === 0}>
+                            Exportar CSV
+                        </Button>
                         <Button variant="secondary" icon={FileText} onClick={() => handleNueva('COTIZACION')}>
                             Nueva Cotización
                         </Button>

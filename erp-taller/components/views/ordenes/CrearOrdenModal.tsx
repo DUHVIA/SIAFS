@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 
@@ -15,6 +15,7 @@ interface DetalleLinea {
     nombre: string;
     cantidad: number;
     precioUnitario: number;
+    precioCosto: number;
     stockDisponible: number;
 }
 
@@ -141,6 +142,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
     const agregarProducto = (producto: any) => {
         const yaEsta = detalles.find(d => d.productoId === producto.id);
+        const costo = parseFloat(producto.detalles?.costo || producto.detalles?.precioCompra || producto.precioCosto || '0');
         if (yaEsta) {
             setDetalles(detalles.map(d =>
                 d.productoId === producto.id
@@ -153,6 +155,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 nombre: producto.nombre,
                 cantidad: 1,
                 precioUnitario: parseFloat(producto.precioVenta || '0'),
+                precioCosto: costo,
                 stockDisponible: parseInt(producto.stock || '0', 10),
             }]);
         }
@@ -160,7 +163,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         setShowProductoDropdown(false);
     };
 
-    const actualizarDetalle = (idx: number, field: 'cantidad' | 'precioUnitario', value: number) => {
+    const actualizarDetalle = (idx: number, field: 'cantidad' | 'precioUnitario' | 'precioCosto', value: number) => {
         setDetalles(detalles.map((d, i) => i === idx ? { ...d, [field]: value } : d));
     };
 
@@ -169,6 +172,9 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
     };
 
     const subtotal = detalles.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+    const costoTotal = detalles.reduce((s, d) => s + d.cantidad * (d.precioCosto || 0), 0);
+    const gananciaEstimada = subtotal - costoTotal;
+    const margenPorcentaje = subtotal > 0 ? (gananciaEstimada / subtotal) * 100 : 0;
 
     const fmtCurrency = (v: number) =>
         new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(v);
@@ -384,8 +390,18 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                                         className="text-center"
                                     />
                                 </div>
-                                <div className="w-28">
-                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Unit. (S/)</label>
+                                <div className="w-24">
+                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Costo (S/)</label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={det.precioCosto}
+                                        onChange={e => actualizarDetalle(idx, 'precioCosto', parseFloat(e.target.value) || 0)}
+                                    />
+                                </div>
+                                <div className="w-24">
+                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Venta (S/)</label>
                                     <Input
                                         type="number"
                                         step="0.01"
@@ -411,6 +427,42 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                         ))}
                     </div>
                 </div>
+
+                {/* Card de Ganancia Estimada y Margen % en tiempo real */}
+                {detalles.length > 0 && (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-wrap items-center justify-between gap-4 font-body shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold ${
+                                gananciaEstimada >= 0 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-red-500/20 text-red-600'
+                            }`}>
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-semibold">Ganancia Estimada Proyectada</p>
+                                <p className={`font-headline text-xl font-bold ${gananciaEstimada >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                                    {fmtCurrency(gananciaEstimada)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-medium">Costo Total Productos</p>
+                                <p className="font-label text-sm font-semibold text-secondary">{fmtCurrency(costoTotal)}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-medium mb-0.5">Margen de Ganancia</p>
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                                    margenPorcentaje >= 20 ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/30' :
+                                    margenPorcentaje > 0 ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30' :
+                                    'bg-red-500/20 text-red-700 border border-red-500/30'
+                                }`}>
+                                    {margenPorcentaje.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Error */}
                 {error && (

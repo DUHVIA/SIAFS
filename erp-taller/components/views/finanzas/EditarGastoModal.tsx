@@ -59,6 +59,9 @@ export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGa
 
     setLoading(true);
     try {
+      const [yyyy, mm, dd] = fecha.split('-').map(Number);
+      const fechaLocal = new Date(yyyy, mm - 1, dd, 12, 0, 0);
+
       const res = await fetch(`/api/gastos/${gasto.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -66,13 +69,14 @@ export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGa
           usuarioId: user.id,
           motivo: motivo.trim(),
           monto: valorMonto,
-          fecha: new Date(fecha).toISOString(),
+          fecha: fechaLocal.toISOString(),
         }),
       });
 
       if (res.ok) {
         toast.success('Gasto actualizado exitosamente');
         onSuccess();
+        onClose();
       } else {
         const err = await res.json();
         setError(err.error || 'Error al actualizar el gasto');
