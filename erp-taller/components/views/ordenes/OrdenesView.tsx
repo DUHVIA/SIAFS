@@ -8,13 +8,14 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import {
     Plus, Search, ShoppingCart, FileText, RefreshCw,
     ChevronLeft, ChevronRight, Eye, Ban, TrendingUp,
-    Clock, BarChart2, DollarSign, Download, Loader2
+    Clock, BarChart2, DollarSign, Download, Loader2, FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
 import { generarCotizacionPDF } from '@/lib/pdfGenerator';
 import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
 
 type Tab = 'ventas' | 'cotizaciones' | 'anuladas';
 
@@ -190,6 +191,19 @@ export function OrdenesView() {
         exportToCSV(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     };
 
+    const handleExportOrdenesExcel = () => {
+        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
+        const rows = items.map(o => [
+            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
+            o.tipo || '',
+            o.cliente?.nombre || '',
+            o.estado || '',
+            parseFloat(o.total || '0'),
+            new Date(o.createdAt).toLocaleDateString('es-PE')
+        ]);
+        exportToExcel(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Ordenes');
+    };
+
     return (
         <>
             <ModuleTemplate
@@ -199,6 +213,9 @@ export function OrdenesView() {
                     <>
                         <Button variant="secondary" icon={Download} onClick={handleExportOrdenesCSV} disabled={loading || items.length === 0}>
                             Exportar CSV
+                        </Button>
+                        <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportOrdenesExcel} className="text-emerald-700 hover:text-emerald-800" disabled={loading || items.length === 0}>
+                            Exportar Excel
                         </Button>
                         <Button variant="secondary" icon={FileText} onClick={() => handleNueva('COTIZACION')}>
                             Nueva Cotización

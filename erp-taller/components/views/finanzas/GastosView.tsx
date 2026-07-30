@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
   Plus, Search, RefreshCw, Edit2, Trash2, Wallet,
-  Calendar, DollarSign, TrendingDown, ClipboardList, Download
+  Calendar, DollarSign, TrendingDown, ClipboardList, Download, FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearGastoModal } from './CrearGastoModal';
 import { EditarGastoModal } from './EditarGastoModal';
 import { ConfirmAnularGastoModal } from './ConfirmAnularGastoModal';
 import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
 
 export function GastosView() {
   const toast = useToast();
@@ -121,6 +122,17 @@ export function GastosView() {
       exportToCSV(`Gastos_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     };
 
+    const handleExportGastosExcel = () => {
+      const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado por'];
+      const rows = items.map(g => [
+        new Date(g.fecha).toLocaleDateString('es-PE'),
+        g.motivo || '',
+        parseFloat(g.monto || '0'),
+        g.usuario?.nombre || 'Sistema'
+      ]);
+      exportToExcel(`Gastos_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Gastos');
+    };
+
   return (
     <>
       <ModuleTemplate
@@ -130,6 +142,9 @@ export function GastosView() {
           <div className="flex gap-2">
             <Button variant="secondary" icon={Download} onClick={handleExportGastosCSV} disabled={loading || items.length === 0}>
               Exportar CSV
+            </Button>
+            <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportGastosExcel} className="text-emerald-700 hover:text-emerald-800" disabled={loading || items.length === 0}>
+              Exportar Excel
             </Button>
             <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
               Registrar Gasto

@@ -142,7 +142,9 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
     const agregarProducto = (producto: any) => {
         const yaEsta = detalles.find(d => d.productoId === producto.id);
-        const costo = parseFloat(producto.detalles?.costo || producto.detalles?.precioCompra || producto.precioCosto || '0');
+        const costo = typeof producto.precioCosto === 'number' && producto.precioCosto > 0
+            ? producto.precioCosto
+            : parseFloat(producto.detalles?.costo || producto.detalles?.precioCompra || producto.precioCosto || '0');
         if (yaEsta) {
             setDetalles(detalles.map(d =>
                 d.productoId === producto.id

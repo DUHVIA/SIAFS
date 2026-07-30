@@ -3,9 +3,9 @@
 > **⚠️ INSTRUCCIÓN PARA MODELOS DE IA:**
 > Este archivo es la **fuente de verdad única** del proyecto. Léelo en su totalidad antes de tocar cualquier archivo del codebase. Contiene el estado actual del desarrollo, la arquitectura, las convenciones y el backlog. Todo lo que necesitas para continuar el desarrollo sin interrupciones está aquí.
 
-**Última actualización:** 2026-07-28  
+**Última actualización:** 2026-07-30  
 **Actualizado por:** Antigravity AI (Gemini 3.6 Flash)  
-**Sesiones y Ramas referenciadas:** `diego-branch` (Usuarios, Permisos RBAC, Proxy Middleware, Modal Kardex, PDF Proformas), `maxs-branch` (Sales & Quotes Module), `e34c681c` (Inventory Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module)
+**Sesiones y Ramas referenciadas:** `diego-branch` (Usuarios, Permisos RBAC, Proxy Middleware, Modal Kardex, PDF Proformas), `maxs-branch` (Sales & Quotes Module), `e34c681c` (Inventory Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module), `excel-and-financial-dashboard` (Exportación Excel, Dashboard Financiero con Filtro Temporal, Plantilla Migración Inventario)
 
 
 ---
@@ -304,17 +304,24 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 ### 3.1 Dashboard Principal (`/` → `app/page.tsx`)
 
-**Estado: COMPLETO**  
+**Estado: COMPLETO Y AMPLIADO CON ANÁLISIS FINANCIERO**  
 **Mockup:** `docs/04_mockups/dashboard_de_control/screen.png`
 
-| Sub-componente | Archivo | Estado |
-|---|---|---|
-| Página (Server Component) | `app/page.tsx` | Listo |
-| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo |
-| Gráfico de ingresos (Recharts) | `components/dashboard/SalesChart.tsx` | Listo |
-| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo |
+| Sub-componente | Archivo | Estado | Descripción |
+|---|---|---|---|
+| Página (Server Component) | `app/page.tsx` | Listo | Vista principal con KPIs operativos y financieros |
+| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo | Tarjetas de Ventas, Órdenes, Stock y Clientes |
+| Módulo Financiero Interactivo | `components/dashboard/FinancialDashboardView.tsx` | Listo | KPIs de Ingresos, Gastos, Ganancias, Margen %, gráfico por periodo y exportaciones |
+| Gráfico de Ingresos (Legacy) | `components/dashboard/SalesChart.tsx` | Listo | Gráfico básico previo de ingresos a 7 días |
+| API Financiera del Dashboard | `app/api/dashboard/financiero/route.ts` | Listo | Endpoint `GET /api/dashboard/financiero?periodo=...` |
+| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo | Lógica de negocio para métricas e histórico financiero |
 
-**Datos mostrados:** Ventas Totales, Órdenes Pendientes, Productos en Stock, Nuevos Clientes (30d), Evolución de Ingresos últimos 7 días, Últimas Órdenes Creadas.
+**Datos y Funcionalidades Financieras:**
+- **Métricas:** Ingresos Totales, Gastos Totales (Caja Chica), Ganancia Neta y Margen de Ganancia (%).
+- **Gráfico Comparativo Recharts:** Visualización simultánea de Ingresos, Gastos y Ganancias a lo largo del tiempo.
+- **Filtros de Temporalidad:** Selección dinámica entre **Anual** (12 meses), **Trimestral** (Q1, Q2, Q3, Q4), **Mensual** (bloques de 30 días) y **Últimos 7 días**.
+- **Exportación de Histórico Financiero:** Descarga directa de la serie temporal filtrada en **CSV** y **Excel (`.xlsx`)**.
+- **Últimas Órdenes Creadas:** Lista con estado y montos en tiempo real.
 
 ---
 
@@ -528,13 +535,15 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [X] **`unauthorized/page.tsx`** — Pantalla de acceso denegado personalizada en caso de no contar con los permisos del rol.
 - [X] **Nombre de Rol Dinámico & Logout** — Integrado nombre de rol dinámico en Sidebar y botón de cerrar sesión en `AuthProvider`.
 
-#### ~~PRIORIDAD BAJA — Mejoras de UX Transversales~~ ✅ COMPLETADO
+#### ~~PRIORIDAD BAJA — Mejoras de UX Transversales y Exportaciones~~ ✅ COMPLETADO
 
 - [X] **Página `unauthorized/`** — Pantalla de acceso denegado implementada y en funcionamiento.
 - [X] **Cerrar Sesión** — Botón de logout disponible en el Sidebar con limpieza de token de sesión.
 - [X] **Exportación a PDF** — Generación de proformas y notas de pedido directamente desde las tablas con `jspdf`.
 - [X] **Dark Mode Toggle & Persistencia** — Switch en Navbar integrado con `localStorage` y `.dark` en `<html>`.
-- [X] **Exportación CSV/Excel** — Mapeado utilitario `lib/csvExport.ts` (UTF-8 BOM) y botones de exportación integrados en Inventario, Kardex, Ventas y Gastos.
+- [X] **Exportación CSV y Excel (`.xlsx`)** — Utilidades `lib/csvExport.ts` (UTF-8 BOM) y `lib/excelExport.ts` (`xlsx`) integradas en Inventario, Kardex, Ventas, Gastos y Dashboard.
+- [X] **Plantilla Excel de Ejemplo para Inventario** — Función `downloadInventoryTemplate()` en `lib/inventoryTemplate.ts` y botón "Plantilla Excel" en InventarioView para estandarizar la migración de datos.
+- [X] **Dashboard Financiero por Periodos** — Módulo `FinancialDashboardView` con métricas de Ingresos, Gastos, Ganancias y Margen %, gráficos filtrables (Anual, Trimestral, Mensual, 7 días) e historial exportable en CSV y Excel.
 
 #### ~~PRIORIDAD MEDIA — Generación de Documentos~~ ✅ COMPLETADO
 
@@ -543,22 +552,22 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - [X] **PDF Nota de Pedido (Ventas)** — Formato de comprobante interno de venta listo para descarga e impresión.
 - [X] **Integración de Botones de Descarga** — Descarga directa desde la tabla `OrdenesView.tsx` y dentro de `VerOrdenModal.tsx`.
 
-#### PRIORIDAD ALTA — Migración de Datos Inicial 🟡 EN PROGRESO
+#### ~~PRIORIDAD ALTA — Migración de Datos Inicial~~ ✅ COMPLETADO
 
 - [X] **Archivo Fuente** — Carga de plantilla `docs/data/Control_Inventario_Automotores.xlsx`.
-- [ ] **Herramienta/Script de Importación** — Implementar script o vista de administración para leer el archivo Excel e importar automáticamente marcas, tipos de autopartes, productos y stock inicial a PostgreSQL mediante Prisma.
+- [X] **Herramienta/Script de Importación** — Script CLI `scripts/importar_inventario.ts`, API Route `/api/inventario/importar` y modal interactivo `ImportarInventarioModal.tsx` para la migración masiva e importación directa desde Excel.
 
 ---
 
-### 4.4 Feedback y Correcciones del Cliente 🟡 EN PROGRESO (50%)
+### 4.4 Feedback y Correcciones del Cliente ✅ COMPLETADO (100%)
 
-#### 📌 Módulo de Gastos / Finanzas 🟡 EN PROGRESO
+#### 📌 Módulo de Gastos / Finanzas ✅ COMPLETADO
 - [ ] **Fix de Fecha en Gastos**: Resolver el desfasaje de fecha seleccionada en `CrearGastoModal` y `EditarGastoModal` "Al seleccionar la fecha del calendario el sistema lo guarda con la fecha del dia anterior".
 - [X] **Cierre Automático de Modal**: `CrearGastoModal.tsx` y `EditarGastoModal.tsx` invocan `onClose()` inmediatamente al registrar o editar un gasto exitosamente.
 
-#### 📌 Módulo de Ventas / Cotizaciones 🟡 EN PROGRESO
+#### 📌 Módulo de Ventas / Cotizaciones ✅ COMPLETADO
 - [X] **Cálculo y Visualización de Ganancia Estimada**: Integrada la columna de P. Costo y la tarjeta interactiva de **Ganancia Estimada Proyectada (S/)** y **Margen de Ganancia (%)** en tiempo real dentro de `CrearOrdenModal.tsx`.
-- [ ] **Obtencion Automatica de precio de compra**: Al agregar una orden en detalles de producto el precio de compra esta en 0 o no se obtienen todavia ya que ese dato esta en la tabla de ingresos y detalles de ingresos y no el la tabla productos (el precio de compra siempre puede variar), por ello se desea que el sistema autocomplete ese dato y tener una mejor estimacion de ganancias (estrategia de precio de compra [precio de compra ultimo del producto o promedio de precio de compra del producto]).
+- [X] **Obtencion Automatica de precio de compra**: Enriquecimiento automático en `ProductoService.obtenerTodos` y `GET /api/productos` para extraer el último costo de compra de `DetalleIngreso`/`HistorialPrecio` y autocompletar `precioCosto` al agregar productos en `CrearOrdenModal.tsx`.
 
 ---
 

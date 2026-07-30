@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Activity, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle, Download } from 'lucide-react';
+import { Activity, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
 import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
 
 interface VerKardexModalProps {
     isOpen: boolean;
@@ -69,6 +70,18 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
         exportToCSV(`Kardex_${(producto?.nombre || 'producto').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     };
 
+    const handleExportKardexExcel = () => {
+        const headers = ['Fecha', 'Usuario', 'Movimiento', 'Cantidad', 'Motivo / Origen'];
+        const rows = historial.map(m => [
+            formatFecha(m.fechaMovimiento),
+            m.usuario?.nombre || 'Sistema',
+            m.tipoMovimiento || '',
+            parseInt(m.cantidad || '0', 10),
+            m.motivo || ''
+        ]);
+        exportToExcel(`Kardex_${(producto?.nombre || 'producto').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Kardex');
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -93,49 +106,45 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
                             </thead>
                             <tbody className="divide-y divide-white/40">
                                 {loading ? (
-                                    Array.from({ length: 4 }).map((_, i) => (
-                                        <tr key={i}>
-                                            <td className="px-5 py-4"><Skeleton className="h-5 w-32" /></td>
-                                            <td className="px-5 py-4"><Skeleton className="h-5 w-24" /></td>
-                                            <td className="px-5 py-4"><Skeleton className="h-6 w-20" /></td>
-                                            <td className="px-5 py-4 text-right"><Skeleton className="h-5 w-12 ml-auto" /></td>
-                                            <td className="px-5 py-4"><Skeleton className="h-5 w-48" /></td>
+                                    Array.from({ length: 4 }).map((_, idx) => (
+                                        <tr key={idx} className="border-b border-white/40">
+                                            <td className="px-5 py-3"><Skeleton className="h-5 w-28" /></td>
+                                            <td className="px-5 py-3"><Skeleton className="h-5 w-24" /></td>
+                                            <td className="px-5 py-3"><Skeleton className="h-6 w-20" /></td>
+                                            <td className="px-5 py-3 text-right"><Skeleton className="h-5 w-12 ml-auto" /></td>
+                                            <td className="px-5 py-3"><Skeleton className="h-5 w-36" /></td>
                                         </tr>
                                     ))
-                                ) : historial.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-5 py-12 text-center">
-                                            <AlertTriangle className="w-8 h-8 text-tertiary mx-auto mb-3" />
-                                            <p className="font-headline font-bold text-secondary">Sin movimientos registrados</p>
-                                            <p className="text-sm text-tertiary mt-1">Este producto aún no tiene movimientos en el Kardex.</p>
-                                        </td>
-                                    </tr>
-                                ) : (
+                                ) : historial.length > 0 ? (
                                     historial.map((mov) => (
-                                        <tr key={mov.id} className="hover:bg-white/40 transition-colors">
-                                            <td className="px-5 py-3 font-label text-xs text-secondary whitespace-nowrap flex items-center gap-2">
-                                                <Clock className="w-3.5 h-3.5 text-tertiary" />
+                                        <tr key={mov.id} className="hover:bg-neutral-light/50 transition-colors">
+                                            <td className="px-5 py-3 font-body text-xs text-tertiary whitespace-nowrap">
                                                 {formatFecha(mov.fechaMovimiento)}
                                             </td>
-                                            <td className="px-5 py-3 font-body text-sm text-secondary truncate max-w-[120px]" title={mov.usuario?.nombre || 'Sistema'}>
+                                            <td className="px-5 py-3 font-headline font-semibold text-xs text-secondary">
                                                 {mov.usuario?.nombre || 'Sistema'}
                                             </td>
-                                            <td className="px-5 py-3 whitespace-nowrap">
+                                            <td className="px-5 py-3">
                                                 {getTipoBadge(mov.tipoMovimiento)}
                                             </td>
-                                            <td className="px-5 py-3 font-label font-bold text-sm text-right">
-                                                <span className={
-                                                    mov.tipoMovimiento === 'INGRESO' ? 'text-green-600' : 
-                                                    mov.tipoMovimiento === 'SALIDA' ? 'text-red-600' : 'text-orange-600'
-                                                }>
-                                                    {mov.tipoMovimiento === 'SALIDA' ? '-' : '+'}{mov.cantidad}
-                                                </span>
+                                            <td className={`px-5 py-3 font-label font-bold text-sm text-right ${
+                                                mov.tipoMovimiento === 'INGRESO' ? 'text-green-600' :
+                                                mov.tipoMovimiento === 'SALIDA' ? 'text-red-600' : 'text-orange-600'
+                                            }`}>
+                                                {mov.tipoMovimiento === 'INGRESO' ? `+${mov.cantidad}` :
+                                                 mov.tipoMovimiento === 'SALIDA' ? `-${mov.cantidad}` : mov.cantidad}
                                             </td>
-                                            <td className="px-5 py-3 font-body text-sm text-tertiary">
-                                                {mov.motivo}
+                                            <td className="px-5 py-3 font-body text-xs text-secondary max-w-xs truncate">
+                                                {mov.motivo || '-'}
                                             </td>
                                         </tr>
                                     ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-8 text-center text-sm text-tertiary">
+                                            No hay movimientos registrados en el kardex para este producto.
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                             <tfoot className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-md shadow-[0_-2px_4px_rgba(0,0,0,0.02)] border-t border-white/60">
@@ -155,13 +164,22 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
             </div>
             
             <div className="flex justify-between items-center mt-6">
-                <button
-                    onClick={handleExportKardexCSV}
-                    disabled={loading || historial.length === 0}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full font-headline font-semibold text-xs bg-white text-secondary hover:bg-neutral-light transition-all border border-white/30 shadow-sm disabled:opacity-40"
-                >
-                    <Download className="w-4 h-4 text-tertiary" /> Exportar Kardex CSV
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleExportKardexCSV}
+                        disabled={loading || historial.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full font-headline font-semibold text-xs bg-white text-secondary hover:bg-neutral-light transition-all border border-white/30 shadow-sm disabled:opacity-40"
+                    >
+                        <Download className="w-4 h-4 text-tertiary" /> CSV
+                    </button>
+                    <button
+                        onClick={handleExportKardexExcel}
+                        disabled={loading || historial.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full font-headline font-semibold text-xs bg-white text-emerald-700 hover:bg-emerald-50 transition-all border border-emerald-500/20 shadow-sm disabled:opacity-40"
+                    >
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Excel
+                    </button>
+                </div>
                 <button
                     onClick={onClose}
                     className="px-6 py-2.5 rounded-full font-headline font-bold text-sm bg-neutral-light text-secondary hover:bg-neutral-light/80 transition-all border border-white/20 shadow-sm"
