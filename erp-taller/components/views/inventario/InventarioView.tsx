@@ -225,7 +225,7 @@ export function InventarioView() {
             header: 'Precio Venta',
             render: (row: any) => (
                 <span className="font-body font-bold text-secondary">
-                    ${parseFloat(row.precioVenta || '0').toFixed(2)}
+                    S/.{parseFloat(row.precioVenta || '0').toFixed(2)}
                 </span>
             )
         },
