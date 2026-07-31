@@ -23,9 +23,9 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
     const doc = new jsPDF('p', 'mm', 'a4');
 
     // Configuración de colores corporativos
-    const colorPrimario = [15, 23, 42]; // slate-900
-    const colorSecundario = [71, 85, 105]; // slate-600
-    const colorAcento = [37, 99, 235]; // blue-600
+    const colorPrimario: [number, number, number] = [15, 23, 42]; // slate-900
+    const colorSecundario: [number, number, number] = [71, 85, 105]; // slate-600
+    const colorAcento: [number, number, number] = [37, 99, 235]; // blue-600
 
     // Función auxiliar para formatear moneda
     const fmtCurrency = (val: number | string) => {

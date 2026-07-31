@@ -2,7 +2,7 @@ import React from 'react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FinancialDashboardView } from '@/components/dashboard/FinancialDashboardView';
 import { DashboardService } from '@/modules/dashboard/dashboard.service';
-import { Users, ShoppingCart, DollarSign, Package } from 'lucide-react';
+import { Users, ShoppingCart, DollarSign, Package, ShoppingBag, Truck } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Grid de Tarjetas Operativas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <StatCard
                     title="Ventas Totales"
                     value={`S/ ${metricas.ingresosTotales.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
@@ -42,6 +42,16 @@ export default async function DashboardPage() {
                     value={metricas.nuevosClientes.toString()}
                     icon={Users}
                 />
+                <StatCard
+                    title="Compras del Mes"
+                    value={`S/ ${metricas.totalComprasMes.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
+                    icon={ShoppingBag}
+                />
+                <StatCard
+                    title="Lotes Recibidos (Mes)"
+                    value={metricas.cantidadLotesMes.toString()}
+                    icon={Truck}
+                />
             </div>
 
             {/* Grid Principal: Módulo Financiero Interactivo + Últimas Órdenes */}
@@ -54,7 +64,8 @@ export default async function DashboardPage() {
                             ingresosTotales: metricas.ingresosTotales,
                             gastosTotales: metricas.gastosTotales,
                             gananciasTotales: metricas.gananciasTotales,
-                            margenGanancia: metricas.margenGanancia
+                            margenGanancia: metricas.margenGanancia,
+                            totalInvertidoCompras: metricas.totalInvertidoCompras,
                         }}
                     />
                 </div>

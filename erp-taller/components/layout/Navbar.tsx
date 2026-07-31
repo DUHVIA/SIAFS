@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
+import { Moon, Sun, Menu } from 'lucide-react';
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -40,15 +40,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 <Menu className="w-5 h-5" />
             </button>
 
-            {/* Search Bar - Soft UI */}
-            <div className="flex-1 max-w-md flex items-center bg-neutral-light rounded-full px-4 py-2 transition-all duration-300 focus-within:shadow-sm focus-within:bg-white ">
-                <Search className="w-5 h-5 text-tertiary" />
-                <input
-                    type="text"
-                    placeholder="Buscar algo..."
-                    className="w-full bg-transparent border-none outline-none px-3 text-sm font-body text-secondary placeholder-tertiary"
-                />
-            </div>
+            {/* Spacer para mantener el layout */}
+            <div className="flex-1" />
 
             {/* Actions & Profile */}
             <div className="flex items-center gap-4">
@@ -59,13 +52,6 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                     aria-label="Toggle Dark Mode"
                 >
                     {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
-
-                {/* Notifications */}
-                <button className="relative p-2 rounded-full text-tertiary hover:bg-neutral-light transition-colors">
-                    <Bell className="w-5 h-5" />
-                    {/* Badge */}
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white " />
                 </button>
 
                 {/* User Avatar */}

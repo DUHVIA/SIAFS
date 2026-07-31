@@ -78,8 +78,6 @@ export function ImportarInventarioModal({ isOpen, onClose, onSuccess }: Importar
       isOpen={isOpen}
       onClose={onClose}
       title="Importar Inventario desde Excel"
-      description="Sube un archivo de inventario (.xlsx) para registrar de forma masiva los productos, tipos de autoparte, stock inicial y precios."
-      icon={Upload}
       maxWidth="md"
     >
       <div className="space-y-6 mt-4">

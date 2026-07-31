@@ -295,7 +295,7 @@ export function VerOrdenModal({ isOpen, ordenId, onClose, onSuccess }: VerOrdenM
                     {/* Footer de cierre */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
                         <Button 
-                            variant="outline" 
+                            variant="secondary" 
                             icon={Download}
                             onClick={() => {
                                 generarCotizacionPDF({

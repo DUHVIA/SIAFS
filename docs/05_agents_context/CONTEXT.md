@@ -4,8 +4,8 @@
 > Este archivo es la **fuente de verdad única** del proyecto. Léelo en su totalidad antes de tocar cualquier archivo del codebase. Contiene el estado actual del desarrollo, la arquitectura, las convenciones y el backlog. Todo lo que necesitas para continuar el desarrollo sin interrupciones está aquí.
 
 **Última actualización:** 2026-07-30  
-**Actualizado por:** Antigravity AI (Gemini 3.6 Flash)  
-**Sesiones y Ramas referenciadas:** `diego-branch` (Usuarios, Permisos RBAC, Proxy Middleware, Modal Kardex, PDF Proformas), `maxs-branch` (Sales & Quotes Module), `e34c681c` (Inventory Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module), `excel-and-financial-dashboard` (Exportación Excel, Dashboard Financiero con Filtro Temporal, Plantilla Migración Inventario)
+**Actualizado por:** Antigravity AI (Claude Sonnet 4.6)  
+**Sesiones y Ramas referenciadas:** `diego-branch` (Usuarios, Permisos RBAC, Proxy Middleware, Modal Kardex, PDF Proformas), `maxs-branch` (Sales & Quotes Module), `e34c681c` (Inventory Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module), `excel-and-financial-dashboard` (Exportación Excel, Dashboard Financiero con Filtro Temporal, Plantilla Migración Inventario), `ff586395` (Gestión Tipos Autoparte CRUD, Dashboard Compras/Adquisición, Navbar Simplificado)
 
 
 ---
@@ -228,6 +228,8 @@ Petición HTTP
 | `POST` | `/api/productos/[id]/restock` | Suma stock al producto + crea movimiento `INGRESO` en Kardex |
 | `GET` | `/api/tipos-autoparte` | Lista todos los tipos de autopartes activos |
 | `POST` | `/api/tipos-autoparte` | Crea un nuevo tipo de autoparte relacional |
+| `PATCH` | `/api/tipos-autoparte/[id]` | Edita el nombre de un tipo de autoparte (valida duplicados) |
+| `DELETE` | `/api/tipos-autoparte/[id]` | **Soft delete** — pone `isActive: false` |
 
 **Umbrales de Stock Bajo:**
 - Autopartes: `stock < 10` → estado `LOW_STOCK`
@@ -304,39 +306,41 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 ### 3.1 Dashboard Principal (`/` → `app/page.tsx`)
 
-**Estado: COMPLETO Y AMPLIADO CON ANÁLISIS FINANCIERO**  
+**Estado: COMPLETO Y AMPLIADO CON ANÁLISIS FINANCIERO Y DATOS DE COMPRAS**  
 **Mockup:** `docs/04_mockups/dashboard_de_control/screen.png`
 
 | Sub-componente | Archivo | Estado | Descripción |
 |---|---|---|---|
-| Página (Server Component) | `app/page.tsx` | Listo | Vista principal con KPIs operativos y financieros |
-| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo | Tarjetas de Ventas, Órdenes, Stock y Clientes |
-| Módulo Financiero Interactivo | `components/dashboard/FinancialDashboardView.tsx` | Listo | KPIs de Ingresos, Gastos, Ganancias, Margen %, gráfico por periodo y exportaciones |
+| Página (Server Component) | `app/page.tsx` | Listo | Vista principal con 6 KPIs operativos y financieros (incluyendo Compras del Mes y Lotes Recibidos) |
+| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo | 6 tarjetas: Ventas, Órdenes, Stock, Clientes, Compras del Mes, Lotes Recibidos |
+| Módulo Financiero Interactivo | `components/dashboard/FinancialDashboardView.tsx` | Listo | 5 KPIs financieros (Ingresos, Gastos, Ganancias, Margen %, Inversión en Compras), gráfico con 4 series (Ingresos, Gastos, Compras Inventario, Ganancia Neta) y exportaciones |
 | Gráfico de Ingresos (Legacy) | `components/dashboard/SalesChart.tsx` | Listo | Gráfico básico previo de ingresos a 7 días |
 | API Financiera del Dashboard | `app/api/dashboard/financiero/route.ts` | Listo | Endpoint `GET /api/dashboard/financiero?periodo=...` |
-| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo | Lógica de negocio para métricas e histórico financiero |
+| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo | Lógica de negocio para métricas e histórico financiero, incluyendo datos de Ingreso (compras de adquisición) |
 
 **Datos y Funcionalidades Financieras:**
-- **Métricas:** Ingresos Totales, Gastos Totales (Caja Chica), Ganancia Neta y Margen de Ganancia (%).
-- **Gráfico Comparativo Recharts:** Visualización simultánea de Ingresos, Gastos y Ganancias a lo largo del tiempo.
+- **Métricas:** Ingresos Totales, Gastos Totales (Caja Chica), Ganancia Neta, Margen de Ganancia (%), **Inversión Total en Compras (Adquisición de Mercadería)**, **Compras del Mes**, **Lotes Recibidos del Mes**.
+- **Gráfico Comparativo Recharts:** 4 series simultáneas — Ingresos (verde), Gastos (rojo), Compras Inventario (violeta, barras) y Ganancia Neta (azul, línea).
+- **`PuntoFinanciero`**: ahora incluye campo `compras: number` en todas las series históricas.
 - **Filtros de Temporalidad:** Selección dinámica entre **Anual** (12 meses), **Trimestral** (Q1, Q2, Q3, Q4), **Mensual** (bloques de 30 días) y **Últimos 7 días**.
-- **Exportación de Histórico Financiero:** Descarga directa de la serie temporal filtrada en **CSV** y **Excel (`.xlsx`)**.
+- **Exportación de Histórico Financiero:** CSV y Excel ahora incluyen columna **Compras Inventario (S/)**.
 - **Últimas Órdenes Creadas:** Lista con estado y montos en tiempo real.
 
 ---
 
 ### 3.2 Gestión de Inventario (`/inventario` → `app/inventario/page.tsx`)
 
-**Estado: COMPLETO Y FUNCIONAL**  
+**Estado: COMPLETO Y FUNCIONAL CON GESTIÓN COMPLETA DE TIPOS**  
 **Mockup:** `docs/04_mockups/gesti_n_de_inventario/screen.png`
 
 | Componente | Archivo | Tamaño | Estado | Descripción |
 |---|---|---|---|---|
-| Vista Principal | `components/views/inventario/InventarioView.tsx` | 30.5 KB | Listo | Componente maestro con todos los estados |
+| Vista Principal | `components/views/inventario/InventarioView.tsx` | ~36 KB | Listo | Componente maestro con todos los estados |
 | Modal Crear | `components/views/inventario/CrearProductoModal.tsx` | 20.4 KB | Listo | Formulario adaptativo Autoparte/Motor con botón "+" inline |
 | Modal Editar | `components/views/inventario/EditarProductoModal.tsx` | 17.6 KB | Listo | Edición completa con pre-llenado de datos |
 | Modal Restock | `components/views/inventario/RestockModal.tsx` | 5.2 KB | Listo | Ingreso rápido de mercadería |
 | Modal Confirmar Borrado | `components/views/inventario/ConfirmDeleteModal.tsx` | 3.2 KB | Listo | Soft-delete con confirmación |
+| **Modal Gestionar Tipos** | `components/views/inventario/GestionarTiposModal.tsx` | ~7 KB | **Nuevo** | CRUD completo de tipos de autoparte: crear, editar inline, eliminar con confirmación |
 
 **Funcionalidades activas en `InventarioView.tsx`:**
 - **Bento Grid de métricas** (Total SKUs, Agotados, Stock Bajo, Valor Total) — datos reales de la API
@@ -346,6 +350,8 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - **Tabla de alta densidad** con paginación real, skeletons de carga, badges de stock coloreados
 - **Banner "Low Stock Advisory"** — aparece dinámicamente si hay items críticos/agotados; al hacer clic redirige al tab "Reabastecimiento"
 - **CRUD Completo:** Crear, Editar, Restock, Soft-Delete
+- **Botón "Tipos de Autoparte"** — abre `GestionarTiposModal` con gestión CRUD completa de tipos
+- **`GestionarTiposModal`:** Crear nuevos tipos, editar nombre inline con validación de duplicados, eliminar con confirmación. Sincroniza automáticamente con los dropdowns del modal de creación y edición de productos.
 
 ---
 
@@ -357,7 +363,7 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 |---|---|---|---|
 | AppLayout | `components/layout/AppLayout.tsx` | Listo | Contenedor principal. Margen dinámico `lg:ml-[18rem] ml-0` |
 | Sidebar | `components/layout/Sidebar.tsx` | Listo | Navegación lateral. En móvil: flotante/hamburguesa |
-| Navbar | `components/layout/Navbar.tsx` | Listo | Barra superior con botón hamburguesa en móvil |
+| Navbar | `components/layout/Navbar.tsx` | Listo | Barra superior **simplificada**: botón hamburguesa (móvil), toggle Dark Mode y avatar de usuario. La barra de búsqueda y campana de notificaciones fueron ocultadas por solicitud del cliente. |
 
 **Navegación disponible en el Sidebar:**
 - Dashboard (`/`)
@@ -559,6 +565,23 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 ---
 
+### 4.4 Feedback y Correcciones del Cliente — Sesión 2026-07-30 ✅ COMPLETADO
+
+#### 📌 Módulo de Inventario — Gestión de Tipos de Autoparte ✅ COMPLETADO
+- [X] **API `PATCH /api/tipos-autoparte/[id]`** — Editar nombre de tipo con validación de duplicados insensible a mayúsculas.
+- [X] **API `DELETE /api/tipos-autoparte/[id]`** — Soft delete de tipo de autoparte (`isActive: false`).
+- [X] **`GestionarTiposModal.tsx`** — Nuevo modal CRUD accesible desde `InventarioView` con botón "Tipos de Autoparte". Permite crear, editar inline y eliminar con confirmación. Sincroniza automáticamente los dropdowns en `CrearProductoModal` y `EditarProductoModal`.
+
+#### 📌 Dashboard — Ingresos de Inventario / Compras de Adquisición ✅ COMPLETADO
+- [X] **`dashboard.service.ts`** ampliado — `PuntoFinanciero` ahora incluye `compras: number`. `obtenerMetricasGenerales()` retorna `totalInvertidoCompras`, `totalComprasMes` y `cantidadLotesMes` a partir de la tabla `Ingreso`.
+- [X] **`FinancialDashboardView.tsx`** actualizado — Nueva 5ª card financiera **"Inversión en Compras"** (violeta). Nueva barra `compras` (violeta `#8B5CF6`) en el gráfico Recharts. Tooltip y leyenda actualizados. CSV y Excel exportan la columna de compras.
+- [X] **`app/page.tsx`** actualizado — 6 StatCards operativas (grid `xl:grid-cols-3`): Ventas, Órdenes, Stock, Clientes, **Compras del Mes** (ShoppingBag) y **Lotes Recibidos del Mes** (Truck).
+
+#### 📌 Layout — Navbar Simplificado ✅ COMPLETADO
+- [X] **`Navbar.tsx`** actualizado — Se ocultaron la barra de búsqueda y la campana de notificaciones por solicitud del cliente. El navbar conserva: botón hamburguesa (solo móvil), toggle Dark Mode y avatar de usuario.
+
+---
+
 ### 4.4 Feedback y Correcciones del Cliente ✅ COMPLETADO (100%)
 
 #### 📌 Módulo de Gastos / Finanzas ✅ COMPLETADO
@@ -611,7 +634,8 @@ make studio
 | `0c767fd8` | Generación de CONTEXT.md centralizado | Completado |
 | `maxs-branch` | Módulo de Ventas y Cotizaciones (OrdenesView, CrearOrdenModal, VerOrdenModal, API ordenes+metodos-pago) | Completado |
 | `diego-branch` | Módulo de Usuarios y Permisos RBAC, Middleware Proxy, Modal de Kardex, Generación PDF Proformas | Completado |
+| `ff586395` | Gestión CRUD de Tipos de Autoparte (modal + endpoints), Dashboard con métricas de Compras/Adquisición, Navbar simplificado | Completado |
 
 ---
 
-*Generado automáticamente el 2026-07-11 por Antigravity AI. Para actualizar este archivo, solicitar al agente que analice los cambios más recientes y actualice las secciones correspondientes.*
+*Generado automáticamente el 2026-07-30 por Antigravity AI. Para actualizar este archivo, solicitar al agente que analice los cambios más recientes y actualice las secciones correspondientes.*

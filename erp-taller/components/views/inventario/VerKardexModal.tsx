@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Activity, Clock, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle, Download, FileSpreadsheet } from 'lucide-react';
+import { Download, FileSpreadsheet } from 'lucide-react';
 import { exportToCSV } from '@/lib/csvExport';
 import { exportToExcel } from '@/lib/excelExport';
 
@@ -87,8 +87,6 @@ export function VerKardexModal({ isOpen, onClose, producto }: VerKardexModalProp
             isOpen={isOpen}
             onClose={onClose}
             title={`Kardex: ${producto?.nombre || ''}`}
-            description={`Historial de movimientos y trazabilidad del producto. Stock actual: ${producto?.stock || 0}`}
-            icon={Activity}
             maxWidth="4xl"
         >
             <div className="mt-4">

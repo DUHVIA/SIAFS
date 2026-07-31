@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { 
     Plus, Search, Filter, Cpu, Wrench, Edit3, Trash2, ArrowUpRight, 
-    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info, Download, FileSpreadsheet, Upload
+    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info, Download, FileSpreadsheet, Upload, Settings2
 } from 'lucide-react';
 import { exportToCSV } from '@/lib/csvExport';
 import { exportToExcel } from '@/lib/excelExport';
@@ -22,6 +22,7 @@ import { RestockModal } from './RestockModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { VerKardexModal } from './VerKardexModal';
 import { ImportarInventarioModal } from './ImportarInventarioModal';
+import { GestionarTiposModal } from './GestionarTiposModal';
 
 interface TipoAutoparte {
     id: string;
@@ -64,6 +65,7 @@ export function InventarioView() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isKardexOpen, setIsKardexOpen] = useState(false);
     const [isImportarOpen, setIsImportarOpen] = useState(false);
+    const [isGestionarTiposOpen, setIsGestionarTiposOpen] = useState(false);
     const [selectedProducto, setSelectedProducto] = useState<any | null>(null);
 
     // Efecto para el debounce de la búsqueda (300ms)
@@ -370,6 +372,14 @@ export function InventarioView() {
                         className="rounded-full shadow-soft font-medium text-blue-600 hover:bg-blue-50 border-blue-500/30"
                     >
                         Importar Excel
+                    </Button>
+                    <Button 
+                        icon={Settings2} 
+                        variant="secondary" 
+                        onClick={() => setIsGestionarTiposOpen(true)}
+                        className="rounded-full shadow-soft font-medium text-violet-600 hover:bg-violet-50 border-violet-500/30"
+                    >
+                        Tipos de Autoparte
                     </Button>
                     <Button 
                         icon={RefreshCw} 
@@ -723,6 +733,12 @@ export function InventarioView() {
                 isOpen={isImportarOpen}
                 onClose={() => setIsImportarOpen(false)}
                 onSuccess={handleRefresh}
+            />
+
+            <GestionarTiposModal
+                isOpen={isGestionarTiposOpen}
+                onClose={() => setIsGestionarTiposOpen(false)}
+                onRefresh={fetchTiposAutoparte}
             />
         </ModuleTemplate>
     );

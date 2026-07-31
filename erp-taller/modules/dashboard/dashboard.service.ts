@@ -8,6 +8,7 @@ export interface PuntoFinanciero {
   ingresos: number;
   gastos: number;
   ganancias: number;
+  compras: number;
 }
 
 export const DashboardService = {
@@ -64,10 +65,38 @@ export const DashboardService = {
     const gananciasTotales = ingresosTotales - gastosTotales;
     const margenGanancia = ingresosTotales > 0 ? (gananciasTotales / ingresosTotales) * 100 : 0;
 
-    // 6. Cargar historial financiero inicial para últimos 7 días
+    // 6. Compras / Ingresos de Inventario
+    const ingresosInventario = await prisma.ingreso.findMany({
+      select: { totalCifrado: true, fechaIngreso: true }
+    });
+
+    let totalInvertidoCompras = 0;
+    const listaCompras: { monto: number; fecha: Date }[] = [];
+
+    ingresosInventario.forEach((ingreso) => {
+      try {
+        const monto = parseFloat(descifrarTexto(ingreso.totalCifrado));
+        if (!isNaN(monto)) {
+          totalInvertidoCompras += monto;
+          listaCompras.push({ monto, fecha: new Date(ingreso.fechaIngreso) });
+        }
+      } catch (e) {
+        console.error('Error al descifrar total de ingreso:', e);
+      }
+    });
+
+    // Compras del mes actual
+    const inicioMes = new Date();
+    inicioMes.setDate(1);
+    inicioMes.setHours(0, 0, 0, 0);
+    const comprasMes = listaCompras.filter(c => c.fecha >= inicioMes);
+    const totalComprasMes = comprasMes.reduce((s, c) => s + c.monto, 0);
+    const cantidadLotesMes = comprasMes.length;
+
+    // 7. Cargar historial financiero inicial para últimos 7 días
     const chartData = await this.obtenerDatosFinancierosHistoricos('7d');
 
-    // 7. Últimas 5 órdenes
+    // 8. Últimas 5 órdenes
     const ultimasOrdenesRaw = await prisma.orden.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -96,6 +125,9 @@ export const DashboardService = {
       ordenesActivas,
       productosEnStock,
       nuevosClientes,
+      totalInvertidoCompras,
+      totalComprasMes,
+      cantidadLotesMes,
       chartData,
       ultimasOrdenes
     };
@@ -112,7 +144,11 @@ export const DashboardService = {
       select: { montoCifrado: true, fecha: true, createdAt: true }
     });
 
-    // Mapear ingresos y gastos con fechas descifradas
+    const ingresosInventario = await prisma.ingreso.findMany({
+      select: { totalCifrado: true, fechaIngreso: true }
+    });
+
+    // Mapear ingresos, gastos y compras con fechas
     const listaIngresos = ordenesCompletadas.map(o => ({
       monto: parseFloat(descifrarTexto(o.totalCifrado)) || 0,
       fecha: new Date(o.createdAt)
@@ -121,6 +157,13 @@ export const DashboardService = {
     const listaGastos = gastosInternos.map(g => ({
       monto: parseFloat(descifrarTexto(g.montoCifrado)) || 0,
       fecha: new Date(g.fecha || g.createdAt)
+    }));
+
+    const listaCompras = ingresosInventario.map(i => ({
+      monto: (() => {
+        try { return parseFloat(descifrarTexto(i.totalCifrado)) || 0; } catch { return 0; }
+      })(),
+      fecha: new Date(i.fechaIngreso)
     }));
 
     const hoy = new Date();
@@ -132,7 +175,7 @@ export const DashboardService = {
         const d = new Date(hoy);
         d.setDate(d.getDate() - i);
         const dayStr = d.toLocaleDateString('es-ES', { weekday: 'short' });
-        
+
         const sumIngresos = listaIngresos
           .filter(item => item.fecha.toDateString() === d.toDateString())
           .reduce((acc, item) => acc + item.monto, 0);
@@ -141,11 +184,16 @@ export const DashboardService = {
           .filter(item => item.fecha.toDateString() === d.toDateString())
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumCompras = listaCompras
+          .filter(item => item.fecha.toDateString() === d.toDateString())
+          .reduce((acc, item) => acc + item.monto, 0);
+
         result.push({
           periodoLabel: dayStr.charAt(0).toUpperCase() + dayStr.slice(1),
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2))
+          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          compras: parseFloat(sumCompras.toFixed(2)),
         });
       }
     } else if (periodo === 'mensual') {
@@ -169,11 +217,16 @@ export const DashboardService = {
           .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumCompras = listaCompras
+          .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
+          .reduce((acc, item) => acc + item.monto, 0);
+
         result.push({
           periodoLabel: label,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2))
+          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          compras: parseFloat(sumCompras.toFixed(2)),
         });
       }
     } else if (periodo === 'trimestral') {
@@ -195,11 +248,16 @@ export const DashboardService = {
           .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumCompras = listaCompras
+          .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
+          .reduce((acc, item) => acc + item.monto, 0);
+
         result.push({
           periodoLabel: q.label,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2))
+          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          compras: parseFloat(sumCompras.toFixed(2)),
         });
       });
     } else if (periodo === 'anual') {
@@ -216,11 +274,16 @@ export const DashboardService = {
           .filter(item => item.fecha.getFullYear() === year && item.fecha.getMonth() === monthIdx)
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumCompras = listaCompras
+          .filter(item => item.fecha.getFullYear() === year && item.fecha.getMonth() === monthIdx)
+          .reduce((acc, item) => acc + item.monto, 0);
+
         result.push({
           periodoLabel: mesLabel,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2))
+          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          compras: parseFloat(sumCompras.toFixed(2)),
         });
       });
     }

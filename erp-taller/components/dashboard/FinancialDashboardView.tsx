@@ -5,7 +5,7 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
-import { Download, FileSpreadsheet, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart, RefreshCw } from 'lucide-react';
+import { Download, FileSpreadsheet, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart, ShoppingBag, RefreshCw } from 'lucide-react';
 import { exportToCSV } from '@/lib/csvExport';
 import { exportToExcel } from '@/lib/excelExport';
 import { PuntoFinanciero, PeriodoFinanciero } from '@/modules/dashboard/dashboard.service';
@@ -17,6 +17,7 @@ interface FinancialDashboardViewProps {
     gastosTotales: number;
     gananciasTotales: number;
     margenGanancia: number;
+    totalInvertidoCompras: number;
   };
 }
 
@@ -51,31 +52,33 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
   };
 
   const handleExportCSV = () => {
-    const headers = ['Periodo / Fecha', 'Ingresos (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)'];
+    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
     const rows = chartData.map(p => [
       p.periodoLabel,
       p.ingresos.toFixed(2),
       p.gastos.toFixed(2),
-      p.ganancias.toFixed(2)
+      p.ganancias.toFixed(2),
+      p.compras.toFixed(2),
     ]);
     exportToCSV(`Historico_Financiero_${periodo}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   };
 
   const handleExportExcel = () => {
-    const headers = ['Periodo / Fecha', 'Ingresos (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)'];
+    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
     const rows = chartData.map(p => [
       p.periodoLabel,
       p.ingresos,
       p.gastos,
-      p.ganancias
+      p.ganancias,
+      p.compras,
     ]);
     exportToExcel(`Historico_Financiero_${periodo}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Histórico Financiero');
   };
 
   return (
     <div className="space-y-6">
-      {/* Bento Grid Financiero: Métricas Claves (Ingresos, Gastos, Ganancias, Margen) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Bento Grid Financiero: Métricas Claves */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Ingresos Totales */}
         <div className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/20 shadow-soft rounded-3xl p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -139,6 +142,22 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
             <p className="text-xs text-amber-700 mt-1 font-body">Eficiencia sobre ventas</p>
           </div>
         </div>
+
+        {/* Compras / Adquisición de Inventario */}
+        <div className="bg-violet-500/10 backdrop-blur-xl border border-violet-500/20 shadow-soft rounded-3xl p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-headline text-xs font-bold uppercase tracking-wider text-violet-700">Inversión en Compras</span>
+            <div className="w-10 h-10 rounded-2xl bg-violet-500/20 flex items-center justify-center text-violet-600">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="font-label font-bold text-2xl text-violet-900">
+              S/ {metricasFinancieras.totalInvertidoCompras.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+            </span>
+            <p className="text-xs text-violet-700 mt-1 font-body">Adquisición de mercadería</p>
+          </div>
+        </div>
       </div>
 
       {/* Gráfico Financiero de Evolución Temporal */}
@@ -150,7 +169,7 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
               Evolución Financiera Histórica
             </h3>
             <p className="text-xs text-tertiary font-body">
-              Comparativa visual de Ingresos, Gastos y Ganancias a lo largo del tiempo
+              Comparativa de Ingresos, Gastos, Ganancias y Compras de Inventario
             </p>
           </div>
 
@@ -173,7 +192,7 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
               ))}
             </div>
 
-            {/* Botones de Exportación de Histórico Financiero */}
+            {/* Botones de Exportación */}
             <div className="flex gap-1">
               <button
                 onClick={handleExportCSV}
@@ -236,22 +255,36 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
                   }}
                   itemStyle={{ fontSize: '12px', fontWeight: 600 }}
                   formatter={(value: any, name: any) => {
-                    const label = name === 'ingresos' ? 'Ingresos' : name === 'gastos' ? 'Gastos' : 'Ganancia Neta';
-                    return [`S/ ${Number(value).toFixed(2)}`, label];
+                    const labels: Record<string, string> = {
+                      ingresos: 'Ingresos',
+                      gastos: 'Gastos',
+                      ganancias: 'Ganancia Neta',
+                      compras: 'Compras Inventario',
+                    };
+                    return [`S/ ${Number(value).toFixed(2)}`, labels[name] ?? name];
                   }}
                 />
                 <Legend
                   verticalAlign="top"
                   align="right"
                   iconType="circle"
-                  formatter={(val) => (
-                    <span className="text-xs font-headline font-medium text-secondary">
-                      {val === 'ingresos' ? 'Ingresos' : val === 'gastos' ? 'Gastos' : 'Ganancia Neta'}
-                    </span>
-                  )}
+                  formatter={(val) => {
+                    const labels: Record<string, string> = {
+                      ingresos: 'Ingresos',
+                      gastos: 'Gastos',
+                      ganancias: 'Ganancia Neta',
+                      compras: 'Compras Inventario',
+                    };
+                    return (
+                      <span className="text-xs font-headline font-medium text-secondary">
+                        {labels[val] ?? val}
+                      </span>
+                    );
+                  }}
                 />
-                <Bar dataKey="ingresos" fill="#10B981" radius={[6, 6, 0, 0]} maxBarSize={30} />
-                <Bar dataKey="gastos" fill="#EF4444" radius={[6, 6, 0, 0]} maxBarSize={30} />
+                <Bar dataKey="ingresos" fill="#10B981" radius={[6, 6, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="gastos" fill="#EF4444" radius={[6, 6, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="compras" fill="#8B5CF6" radius={[6, 6, 0, 0]} maxBarSize={24} />
                 <Line type="monotone" dataKey="ganancias" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>
