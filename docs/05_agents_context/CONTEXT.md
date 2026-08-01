@@ -585,12 +585,26 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 ### 4.4 Feedback y Correcciones del Cliente ✅ COMPLETADO (100%)
 
 #### 📌 Módulo de Gastos / Finanzas ✅ COMPLETADO
-- [ ] **Fix de Fecha en Gastos**: Resolver el desfasaje de fecha seleccionada en `CrearGastoModal` y `EditarGastoModal` "Al seleccionar la fecha del calendario el sistema lo guarda con la fecha del dia anterior".
+- [X] **Fix de Fecha en Gastos**: Resolver el desfasaje de fecha seleccionada en `CrearGastoModal` y `EditarGastoModal` "Al seleccionar la fecha del calendario el sistema lo guarda con la fecha del dia anterior".
 - [X] **Cierre Automático de Modal**: `CrearGastoModal.tsx` y `EditarGastoModal.tsx` invocan `onClose()` inmediatamente al registrar o editar un gasto exitosamente.
 
 #### 📌 Módulo de Ventas / Cotizaciones ✅ COMPLETADO
 - [X] **Cálculo y Visualización de Ganancia Estimada**: Integrada la columna de P. Costo y la tarjeta interactiva de **Ganancia Estimada Proyectada (S/)** y **Margen de Ganancia (%)** en tiempo real dentro de `CrearOrdenModal.tsx`.
 - [X] **Obtencion Automatica de precio de compra**: Enriquecimiento automático en `ProductoService.obtenerTodos` y `GET /api/productos` para extraer el último costo de compra de `DetalleIngreso`/`HistorialPrecio` y autocompletar `precioCosto` al agregar productos en `CrearOrdenModal.tsx`.
+
+---
+
+### 4.5 [ ] Nuevos Requerimientos y Ajustes del Cliente (Sesión 2026-08-01)
+
+- [ ] **1. Rediseño y Mejora de Formato PDF de Órdenes (Ventas y Cotizaciones)** — Aplicar paleta corporativa (`#DB052B`, `#1A1A1A`), agregar dirección "Calle Espinar 311" e incluir logotipo (`public/LOGO.png`), tomando como base la plantilla `docs/06_plantillas/FORMATO COTIZACIÓN - PROFORMA.xlsx`.
+- [ ] **2. Precio de Compra en Plantilla Excel de Inventario** — Agregar la columna `Precio Compra (S/)` y datos de ejemplo en `lib/inventoryTemplate.ts`.
+- [ ] **3. Exportación a Excel y CSV en Compras y Reabastecimiento** — Agregar botones de exportación CSV y Excel en `IngresosView.tsx` (Compras) y en la sección/tab de Reabastecimiento en `InventarioView.tsx`.
+- [ ] **4. Cambio de Contraseña e Inhabilitación de Usuarios** — Crear modal de cambio de contraseña para el rol DUEÑO y permitir inhabilitar/deshabilitar el acceso al sistema (`accesoSistema: false`).
+- [ ] **5. Control de Permisos y Jerarquía de Usuarios** — Restringir que un usuario pueda auto-modificarse (inhabilitarse o editar sus propios permisos) o alterar usuarios de roles superiores, mostrando alerta Toast informativa.
+- [ ] **6. Fix de Desfasaje de Fecha en Gastos** — Corregir la discrepancia de zona horaria UTC en `CrearGastoModal`, `EditarGastoModal` y `GastosView` para registrar exactamente la fecha seleccionada.
+- [ ] **7. Atajo Rápido para Crear Cliente en CrearOrdenModal** — Agregar botón `+ Nuevo Cliente` en el modal de órdenes que abra `CrearClienteModal` y autoseleccione el cliente recién creado.
+- [ ] **8. Cotizaciones Flexibles (Stock Cero, Edición y Conversión a Venta Validada)** — Permitir agregar productos con stock 0 en cotizaciones, habilitar la edición de cotizaciones `PENDIENTE` y validar el stock real al momento de convertir a Venta.
+- [ ] **9. Logo 2 en Theme Dark** — Configurar el Sidebar/Layout para conmutar dinámicamente el logo a `/LOGO 2.png` (`siteConfig.logo_2`) cuando se activa el Dark Mode.
 
 ---
 

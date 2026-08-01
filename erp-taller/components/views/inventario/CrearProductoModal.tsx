@@ -190,7 +190,7 @@ export function CrearProductoModal({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Registrar Nuevo Producto" maxWidth="xl">
+        <Modal isOpen={isOpen} onClose={onClose} title="Registrar Nuevo Producto" maxWidth="2xl">
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Nombre y Categoría */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

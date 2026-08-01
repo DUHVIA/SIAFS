@@ -38,12 +38,12 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(24);
     doc.setTextColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
-    doc.text('A8F Samfor', 15, 25);
+    doc.text('A&F SAMFOR', 15, 25);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(colorSecundario[0], colorSecundario[1], colorSecundario[2]);
-    doc.text('Soluciones Automotrices Profesionales', 15, 32);
+    doc.text('Tienda de autopartes y motores', 15, 32);
 
     // Recuadro de Cotización (esquina superior derecha)
     doc.setDrawColor(colorPrimario[0], colorPrimario[1], colorPrimario[2]);
@@ -164,7 +164,7 @@ export function generarCotizacionPDF(datos: DatosCotizacion) {
         doc.setTextColor(colorSecundario[0], colorSecundario[1], colorSecundario[2]);
     }
     
-    doc.text('Documento generado automáticamente por A8F Samfor - SIAFS', 105, pageHeight - 15, { align: 'center' });
+    doc.text('Documento generado automáticamente por A&F Samfor - SIAFS', 105, pageHeight - 15, { align: 'center' });
     doc.text('Los precios incluyen IGV y están sujetos a cambios sin previo aviso.', 105, pageHeight - 10, { align: 'center' });
 
     // Guardar el PDF
