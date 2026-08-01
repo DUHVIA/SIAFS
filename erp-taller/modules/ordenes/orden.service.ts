@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto } from '@/lib/crypto';
-import { CrearOrdenDTO, AnularOrdenDTO, ConvertirAVentaDTO } from './orden.dto';
+import { CrearOrdenDTO, ActualizarCotizacionDTO, AnularOrdenDTO, ConvertirAVentaDTO } from './orden.dto';
 
 
 
@@ -81,6 +81,65 @@ export const OrdenService = {
       }
 
       return nuevaOrden;
+    });
+  },
+
+  async actualizarCotizacion(id: string, data: ActualizarCotizacionDTO) {
+    return await prisma.$transaction(async (tx) => {
+      const orden = await tx.orden.findUniqueOrThrow({
+        where: { id },
+        include: { detalles: true }
+      });
+
+      if (orden.tipo !== 'COTIZACION') {
+        throw new Error('Solo se pueden editar cotizaciones');
+      }
+      if (orden.estado !== 'PENDIENTE') {
+        throw new Error('Solo se pueden editar cotizaciones en estado PENDIENTE');
+      }
+
+      // Eliminar detalles anteriores
+      await tx.detalleOrden.deleteMany({ where: { ordenId: id } });
+
+      // Calcular nuevos detalles
+      let subtotal = 0;
+      const detallesProcesados = await Promise.all(
+        data.detalles.map(async (detalle) => {
+          const sub = detalle.cantidad * detalle.precioUnitario;
+          subtotal += sub;
+          const producto = await tx.producto.findUniqueOrThrow({
+            where: { id: detalle.productoId }
+          });
+          const nombreDecifrado = descifrarTexto(producto.nombreCifrado);
+          return {
+            productoId: detalle.productoId,
+            productoNombreCifrado: cifrarTexto(nombreDecifrado),
+            precioUnitarioCongeladoCifrado: cifrarTexto(detalle.precioUnitario.toString()),
+            cantidadCifrada: cifrarTexto(detalle.cantidad.toString()),
+            subtotalCifrado: cifrarTexto(sub.toString()),
+          };
+        })
+      );
+
+      // Crear nuevos detalles y actualizar totales
+      return await tx.orden.update({
+        where: { id },
+        data: {
+          clienteId: data.clienteId,
+          subtotalCifrado: cifrarTexto(subtotal.toString()),
+          totalCifrado: cifrarTexto(subtotal.toString()),
+          detalles: {
+            create: detallesProcesados.map(d => ({
+              productoId: d.productoId,
+              productoNombreCifrado: d.productoNombreCifrado,
+              precioUnitarioCongeladoCifrado: d.precioUnitarioCongeladoCifrado,
+              cantidadCifrada: d.cantidadCifrada,
+              subtotalCifrado: d.subtotalCifrado,
+            }))
+          }
+        },
+        include: { detalles: true }
+      });
     });
   },
 

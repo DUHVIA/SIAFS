@@ -30,6 +30,37 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         if (auth.error) return auth.error;
 
         const { id } = await props.params;
+        const requestingUserId = request.headers.get('x-usuario-id');
+
+        // 1. Restricción: No auto-modificarse sus propios permisos
+        if (requestingUserId && requestingUserId === id) {
+            return NextResponse.json(
+                { error: 'No puedes modificar tus propios permisos de usuario' },
+                { status: 403 }
+            );
+        }
+
+        // 2. Restricción de Jerarquía: Solo DUEÑO puede modificar a un usuario con rol DUEÑO
+        const targetUsuario = await prisma.usuario.findUnique({
+            where: { id },
+            include: { rol: true },
+        });
+
+        if (targetUsuario && targetUsuario.rol?.nombre === 'DUEÑO') {
+            if (requestingUserId) {
+                const requestingUsuario = await prisma.usuario.findUnique({
+                    where: { id: requestingUserId },
+                    include: { rol: true },
+                });
+                if (requestingUsuario?.rol?.nombre !== 'DUEÑO') {
+                    return NextResponse.json(
+                        { error: 'No tienes autorización para modificar los permisos de un usuario con el rol DUEÑO' },
+                        { status: 403 }
+                    );
+                }
+            }
+        }
+
         const json = await request.json();
         const permisosIds = PermisosArraySchema.parse(json.permisosIds);
 

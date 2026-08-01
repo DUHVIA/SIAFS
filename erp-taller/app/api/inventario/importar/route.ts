@@ -63,13 +63,20 @@ export async function POST(request: Request) {
       let stockNum = 1;
       let descripcion = '';
 
-      // Formato 1: Plantilla estandarizada (Nombre del Producto | Categoría | Tipo | Precio Venta | Stock | Descripción)
+      // Formato 1: Plantilla estandarizada (Nombre | Categoría | Tipo | [Precio Compra] | Precio Venta | Stock | Descripción)
       if (col0 && col1 && (col1.toUpperCase() === 'AUTOPARTE' || col1.toUpperCase() === 'MOTOR')) {
         categoria = col1.toUpperCase() as 'AUTOPARTE' | 'MOTOR';
         tipoNombre = col2 || 'General';
-        precioVentaNum = parseFloat(col3) || 0;
-        stockNum = parseInt(col4, 10) || 1;
-        descripcion = String(row[5] || nombreProducto).trim();
+        if (row.length >= 7 && !isNaN(parseFloat(col3))) {
+          precioCompraNum = parseFloat(col3) || 0;
+          precioVentaNum = parseFloat(row[4]) || 0;
+          stockNum = parseInt(row[5], 10) || 1;
+          descripcion = String(row[6] || nombreProducto).trim();
+        } else {
+          precioVentaNum = parseFloat(col3) || 0;
+          stockNum = parseInt(col4, 10) || 1;
+          descripcion = String(row[5] || nombreProducto).trim();
+        }
       } else {
         // Formato 2: Control_Inventario_Automotores.xlsx (Código | Modelo | Serie | Descripción | Precio Compra | Precio Venta | ...)
         descripcion = col3 || nombreProducto;

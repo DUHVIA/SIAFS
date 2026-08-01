@@ -8,6 +8,8 @@ import { Wallet, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 
+import { toInputDate, toFixedISOString } from '@/lib/dateUtils';
+
 interface EditarGastoModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,12 +33,7 @@ export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGa
       setMotivo(gasto.motivo || '');
       setMonto(gasto.monto || '');
       setError(null);
-      
-      const gastoDate = new Date(gasto.fecha);
-      const yyyy = gastoDate.getFullYear();
-      const mm = String(gastoDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(gastoDate.getDate()).padStart(2, '0');
-      setFecha(`${yyyy}-${mm}-${dd}`);
+      setFecha(toInputDate(gasto.fecha));
     }
   }, [isOpen, gasto]);
 
@@ -59,9 +56,6 @@ export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGa
 
     setLoading(true);
     try {
-      const [yyyy, mm, dd] = fecha.split('-').map(Number);
-      const fechaLocal = new Date(yyyy, mm - 1, dd, 12, 0, 0);
-
       const res = await fetch(`/api/gastos/${gasto.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +63,7 @@ export function EditarGastoModal({ isOpen, onClose, onSuccess, gasto }: EditarGa
           usuarioId: user.id,
           motivo: motivo.trim(),
           monto: valorMonto,
-          fecha: fechaLocal.toISOString(),
+          fecha: toFixedISOString(fecha),
         }),
       });
 

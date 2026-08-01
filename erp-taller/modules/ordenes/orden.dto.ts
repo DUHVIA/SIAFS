@@ -26,11 +26,19 @@ export const ConvertirAVentaSchema = z.object({
   metodoPagoId: z.string().uuid().optional(),
 });
 
+export const ActualizarCotizacionSchema = z.object({
+  tipo: z.literal('COTIZACION').optional(),
+  clienteId: z.string().uuid("El clienteId debe ser un UUID"),
+  usuarioId: z.string().uuid("El usuarioId debe ser un UUID"),
+  detalles: z.array(DetalleOrdenSchema).min(1, "Debe incluir al menos un detalle"),
+});
+
 export const PatchOrdenSchema = z.discriminatedUnion('action', [
   AnularOrdenSchema,
   ConvertirAVentaSchema,
 ]);
 
 export type CrearOrdenDTO = z.infer<typeof CrearOrdenSchema>;
+export type ActualizarCotizacionDTO = z.infer<typeof ActualizarCotizacionSchema>;
 export type AnularOrdenDTO = z.infer<typeof AnularOrdenSchema>;
 export type ConvertirAVentaDTO = z.infer<typeof ConvertirAVentaSchema>;

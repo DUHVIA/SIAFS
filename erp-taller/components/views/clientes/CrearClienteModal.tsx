@@ -10,7 +10,7 @@ import { useToast } from '@/components/providers/ToastProvider';
 interface CrearClienteModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (nuevoCliente?: any) => void;
 }
 
 const EMPTY = { nombre: '', documento: '', telefono: '', correo: '', direccion: '' };
@@ -56,8 +56,9 @@ export function CrearClienteModal({ isOpen, onClose, onSuccess }: CrearClienteMo
             });
 
             if (res.ok) {
+                const nuevoCliente = await res.json();
                 toast.success(`Cliente "${form.nombre}" registrado exitosamente`);
-                onSuccess();
+                onSuccess(nuevoCliente);
             } else {
                 const err = await res.json();
                 if (err.errors) {

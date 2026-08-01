@@ -57,6 +57,8 @@ export const UsuarioService = {
     if (data.nombre !== undefined) updateData.nombre = data.nombre;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.rolId !== undefined) updateData.rolId = data.rolId;
+    if (data.accesoSistema !== undefined) updateData.accesoSistema = data.accesoSistema;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
     
     if (data.password) {
       const { hash, salt } = hashPassword(data.password);

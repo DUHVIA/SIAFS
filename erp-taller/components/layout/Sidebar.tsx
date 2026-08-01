@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/lib/config';
@@ -35,6 +35,28 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, permisos } = useAuth();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Sincronizar con el estado dark del documento (gestionado por Navbar)
+  useEffect(() => {
+    const updateDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+
+    // Estado inicial
+    updateDarkMode();
+
+    // Observar cambios en la clase 'dark' del elemento <html>
+    const observer = new MutationObserver(updateDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const logoSrc = isDarkMode ? siteConfig.logo_2 : siteConfig.logo;
 
   return (
     <>
@@ -62,9 +84,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <X className="w-4 h-4" />
           </button>
           <img
-            src={siteConfig.logo}
+            src={logoSrc}
             alt={siteConfig.name}
-            className="w-12 h-12 object-contain rounded-full shadow-md border-2 border-white/20 bg-white z-10"
+            className="w-12 h-12 object-contain rounded-full shadow-md border-2 border-white/20 bg-white z-10 transition-all duration-300"
           />
           <h1 className="font-headline font-bold text-lg text-white tracking-tight z-10">
             {siteConfig.name}

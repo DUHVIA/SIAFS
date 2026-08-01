@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 
 /**
  * Utilidad para generar y descargar la plantilla Excel oficial de migración/importación de inventario.
- * Proporciona a los clientes una estructura clara y estandarizada con datos de ejemplo.
+ * Proporciona a los clientes una estructura clara y estandarizada con datos de ejemplo, incluyendo el precio de compra.
  */
 export function downloadInventoryTemplate() {
   if (typeof window === 'undefined') return;
@@ -11,6 +11,7 @@ export function downloadInventoryTemplate() {
     'Nombre del Producto',
     'Categoría',
     'Tipo de Autoparte',
+    'Precio Compra (S/)',
     'Precio Venta (S/)',
     'Stock Inicial',
     'Descripción / Detalles'
@@ -21,6 +22,7 @@ export function downloadInventoryTemplate() {
       'Motor Hyundai G4FC 1.6L Complete',
       'MOTOR',
       'Motor',
+      3200.00,
       4500.00,
       3,
       'Motor a gasolina completo, importación Japón, 1.6L para Hyundai Elantra / Kia Cerato'
@@ -29,6 +31,7 @@ export function downloadInventoryTemplate() {
       'Pastillas de Freno Cerámicas Delanteras',
       'AUTOPARTE',
       'Frenos',
+      95.00,
       155.00,
       25,
       'Juego de pastillas de freno alto rendimiento compatibles con Toyota Yaris 2015-2022'
@@ -37,6 +40,7 @@ export function downloadInventoryTemplate() {
       'Filtro de Aceite Sintético de Alto Flujo',
       'AUTOPARTE',
       'Filtros',
+      22.00,
       38.50,
       60,
       'Filtro de aceite premium de múltiples capas para motores 1.6 a 2.0L'
@@ -45,6 +49,7 @@ export function downloadInventoryTemplate() {
       'Amortiguador Hidráulico Trasero',
       'AUTOPARTE',
       'Suspensión',
+      130.00,
       210.00,
       12,
       'Amortiguador posterior reforzado para Nissan Versa / Sentra'
@@ -58,6 +63,7 @@ export function downloadInventoryTemplate() {
     { wch: 40 }, // Nombre del Producto
     { wch: 15 }, // Categoría
     { wch: 20 }, // Tipo de Autoparte
+    { wch: 18 }, // Precio Compra
     { wch: 18 }, // Precio Venta
     { wch: 15 }, // Stock Inicial
     { wch: 60 }  // Descripción

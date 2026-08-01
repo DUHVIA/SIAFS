@@ -297,8 +297,8 @@ export function VerOrdenModal({ isOpen, ordenId, onClose, onSuccess }: VerOrdenM
                         <Button 
                             variant="secondary" 
                             icon={Download}
-                            onClick={() => {
-                                generarCotizacionPDF({
+                            onClick={async () => {
+                                await generarCotizacionPDF({
                                     tipo: orden.tipo as 'COTIZACION' | 'VENTA',
                                     numeroOrden: orden.numeroOrden,
                                     clienteNombre: orden.clienteNombre,

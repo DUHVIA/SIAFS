@@ -308,29 +308,43 @@ export function InventarioView() {
     };
 
     const handleExportCSV = () => {
-        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock', 'Precio Venta (S/)'];
-        const rows = items.map(p => [
-            p.detalles?.sku || '',
-            p.nombre || '',
-            p.categoria || '',
-            p.tipoAutoparte?.nombre || '-',
-            p.stock || '0',
-            parseFloat(p.precioVenta || '0').toFixed(2)
-        ]);
-        exportToCSV(`Inventario_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+        const esReabastecimiento = stockStatusFilter === 'RESTOCKING';
+        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
+        const rows = items.map(p => {
+            const stock = parseInt(p.stock || '0', 10);
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            return [
+                p.detalles?.sku || '',
+                p.nombre || '',
+                p.categoria || '',
+                p.tipoAutoparte?.nombre || '-',
+                stock,
+                estadoStr,
+                parseFloat(p.precioVenta || '0').toFixed(2)
+            ];
+        });
+        const prefix = esReabastecimiento ? 'Reabastecimiento' : 'Inventario';
+        exportToCSV(`${prefix}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
     };
 
     const handleExportExcel = () => {
-        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock', 'Precio Venta (S/)'];
-        const rows = items.map(p => [
-            p.detalles?.sku || '',
-            p.nombre || '',
-            p.categoria || '',
-            p.tipoAutoparte?.nombre || '-',
-            p.stock || 0,
-            parseFloat(p.precioVenta || '0')
-        ]);
-        exportToExcel(`Inventario_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Inventario');
+        const esReabastecimiento = stockStatusFilter === 'RESTOCKING';
+        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
+        const rows = items.map(p => {
+            const stock = parseInt(p.stock || '0', 10);
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            return [
+                p.detalles?.sku || '',
+                p.nombre || '',
+                p.categoria || '',
+                p.tipoAutoparte?.nombre || '-',
+                stock,
+                estadoStr,
+                parseFloat(p.precioVenta || '0')
+            ];
+        });
+        const prefix = esReabastecimiento ? 'Reabastecimiento' : 'Inventario';
+        exportToExcel(`${prefix}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, prefix);
     };
 
     return (

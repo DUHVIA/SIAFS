@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import {
     Plus, Search, ShoppingCart, FileText, RefreshCw,
     ChevronLeft, ChevronRight, Eye, Ban, TrendingUp,
-    Clock, BarChart2, DollarSign, Download, Loader2, FileSpreadsheet
+    Clock, BarChart2, DollarSign, Download, Loader2, FileSpreadsheet, Pencil
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
@@ -54,6 +54,8 @@ export function OrdenesView() {
     const [tipoNueva, setTipoNueva] = useState<'VENTA' | 'COTIZACION'>('VENTA');
     const [isVerOpen, setIsVerOpen] = useState(false);
     const [selectedOrdenId, setSelectedOrdenId] = useState<string | null>(null);
+    const [editarOrdenId, setEditarOrdenId] = useState<string | null>(null);
+    const [isEditarOpen, setIsEditarOpen] = useState(false);
 
     // Debounce búsqueda
     useEffect(() => {
@@ -108,13 +110,18 @@ export function OrdenesView() {
 
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
+    const handleEditarCotizacion = (id: string) => {
+        setEditarOrdenId(id);
+        setIsEditarOpen(true);
+    };
+
     const handleDescargarPDF = async (id: string) => {
         setDownloadingId(id);
         try {
             const res = await fetch(`/api/ordenes/${id}`);
             if (res.ok) {
                 const orden = await res.json();
-                generarCotizacionPDF({
+                await generarCotizacionPDF({
                     tipo: orden.tipo as 'COTIZACION' | 'VENTA',
                     numeroOrden: orden.numeroOrden,
                     clienteNombre: orden.clienteNombre,
@@ -401,6 +408,15 @@ export function OrdenesView() {
                                                     title="Descargar PDF"
                                                     disabled={downloadingId === orden.id}
                                                 />
+                                                {orden.tipo === 'COTIZACION' && orden.estado === 'PENDIENTE' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        icon={Pencil}
+                                                        onClick={() => handleEditarCotizacion(orden.id)}
+                                                        title="Editar cotización"
+                                                    />
+                                                )}
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -465,6 +481,16 @@ export function OrdenesView() {
                 onClose={() => setIsCrearOpen(false)}
                 onSuccess={() => { setIsCrearOpen(false); handleRefresh(); }}
             />
+
+            {isEditarOpen && editarOrdenId && (
+                <CrearOrdenModal
+                    isOpen={isEditarOpen}
+                    tipoInicial="COTIZACION"
+                    editarOrdenId={editarOrdenId}
+                    onClose={() => { setIsEditarOpen(false); setEditarOrdenId(null); }}
+                    onSuccess={() => { setIsEditarOpen(false); setEditarOrdenId(null); handleRefresh(); }}
+                />
+            )}
 
             <VerOrdenModal
                 isOpen={isVerOpen}

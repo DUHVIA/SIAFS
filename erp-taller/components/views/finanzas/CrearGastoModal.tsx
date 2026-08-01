@@ -8,6 +8,8 @@ import { Wallet, Loader2, Calendar } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 
+import { toInputDate, toFixedISOString } from '@/lib/dateUtils';
+
 interface CrearGastoModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,11 +32,7 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
       setMotivo('');
       setMonto('');
       setError(null);
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      setFecha(`${yyyy}-${mm}-${dd}`);
+      setFecha(toInputDate(new Date()));
     }
   }, [isOpen]);
 
@@ -55,9 +53,6 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
 
     setLoading(true);
     try {
-      const [yyyy, mm, dd] = fecha.split('-').map(Number);
-      const fechaLocal = new Date(yyyy, mm - 1, dd, 12, 0, 0);
-
       const res = await fetch('/api/gastos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +60,7 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
           usuarioId: user.id,
           motivo: motivo.trim(),
           monto: valorMonto,
-          fecha: fechaLocal.toISOString(),
+          fecha: toFixedISOString(fecha),
         }),
       });
 

@@ -15,6 +15,7 @@ import { EditarGastoModal } from './EditarGastoModal';
 import { ConfirmAnularGastoModal } from './ConfirmAnularGastoModal';
 import { exportToCSV } from '@/lib/csvExport';
 import { exportToExcel } from '@/lib/excelExport';
+import { formatFechaDisplay } from '@/lib/dateUtils';
 
 export function GastosView() {
   const toast = useToast();
@@ -114,7 +115,7 @@ export function GastosView() {
   const handleExportGastosCSV = () => {
       const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado Por'];
       const rows = items.map(g => [
-        new Date(g.fecha).toLocaleDateString('es-PE'),
+        formatFechaDisplay(g.fecha),
         g.motivo || '',
         parseFloat(g.monto || '0').toFixed(2),
         g.usuario?.nombre || 'Sistema'
@@ -125,7 +126,7 @@ export function GastosView() {
     const handleExportGastosExcel = () => {
       const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado por'];
       const rows = items.map(g => [
-        new Date(g.fecha).toLocaleDateString('es-PE'),
+        formatFechaDisplay(g.fecha),
         g.motivo || '',
         parseFloat(g.monto || '0'),
         g.usuario?.nombre || 'Sistema'
@@ -251,7 +252,7 @@ export function GastosView() {
                     <td className="px-4 py-3 text-secondary font-body font-medium">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-3.5 h-3.5 text-tertiary opacity-70" />
-                        {new Date(gasto.fecha).toLocaleDateString('es-PE')}
+                        {formatFechaDisplay(gasto.fecha)}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-secondary font-body font-medium max-w-sm truncate">

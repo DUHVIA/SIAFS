@@ -9,5 +9,9 @@ export const CrearUsuarioSchema = z.object({
 
 export type CrearUsuarioDTO = z.infer<typeof CrearUsuarioSchema>;
 
-export const ActualizarUsuarioSchema = CrearUsuarioSchema.partial();
+export const ActualizarUsuarioSchema = CrearUsuarioSchema.partial().extend({
+  accesoSistema: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
 export type ActualizarUsuarioDTO = z.infer<typeof ActualizarUsuarioSchema>;

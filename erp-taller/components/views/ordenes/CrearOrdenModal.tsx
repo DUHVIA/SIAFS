@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package, TrendingUp, UserPlus } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
+import { CrearClienteModal } from '@/components/views/clientes/CrearClienteModal';
 
 interface DetalleLinea {
     productoId: string;
@@ -22,11 +23,12 @@ interface DetalleLinea {
 interface CrearOrdenModalProps {
     isOpen: boolean;
     tipoInicial: 'VENTA' | 'COTIZACION';
+    editarOrdenId?: string | null;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: CrearOrdenModalProps) {
+export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, onSuccess }: CrearOrdenModalProps) {
     const { user } = useAuth();
     const toast = useToast();
 
@@ -35,10 +37,11 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
     // Clientes
     const [clientes, setClientes] = useState<any[]>([]);
-    const [clienteQuery, setClienteQuery] = useState('');
+    const [clienteQuery, setClienteQuery] = useState<string>('');
     const [clientesFiltrados, setClientesFiltrados] = useState<any[]>([]);
     const [clienteSeleccionado, setClienteSeleccionado] = useState<any | null>(null);
     const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+    const [isCrearClienteOpen, setIsCrearClienteOpen] = useState(false);
     const clienteRef = useRef<HTMLDivElement>(null);
 
     // Productos
@@ -61,12 +64,14 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
     useEffect(() => {
         if (isOpen) {
             setTipo(tipoInicial);
-            setDetalles([]);
-            setClienteQuery('');
-            setClienteSeleccionado(null);
-            setProductoQuery('');
-            setMetodoPagoId('');
-            setError(null);
+            if (!editarOrdenId) {
+                setDetalles([]);
+                setClienteQuery('');
+                setClienteSeleccionado(null);
+                setProductoQuery('');
+                setMetodoPagoId('');
+                setError(null);
+            }
         }
     }, [isOpen, tipoInicial]);
 
@@ -80,10 +85,8 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                     fetch('/api/productos?limit=999'),
                     fetch('/api/metodos-pago'),
                 ]);
-                // ==== CORRECION (Validación inteligente):
                 if (cRes.ok) {
                     const cData = await cRes.json();
-                    // Si es un array directo, lo guarda. Si es un objeto, busca la propiedad '.items' o '.clientes'
                     const arrayClientes = Array.isArray(cData) ? cData : (cData.items || cData.clientes || []);
                     setClientes(arrayClientes);
                 }
@@ -96,9 +99,44 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         fetchCatalogos();
     }, [isOpen]);
 
+    // Si es modo edición, cargar datos de la cotización existente
+    useEffect(() => {
+        if (!isOpen || !editarOrdenId) return;
+        const fetchOrden = async () => {
+            try {
+                const res = await fetch(`/api/ordenes/${editarOrdenId}`);
+                if (!res.ok) return;
+                const orden = await res.json();
+                setTipo('COTIZACION');
+                if (orden.cliente) {
+                    const clienteObj = {
+                        id: orden.clienteId,
+                        nombre: orden.clienteNombre,
+                        documento: orden.clienteDocumento,
+                    };
+                    setClienteSeleccionado(clienteObj);
+                    setClienteQuery(orden.clienteNombre);
+                }
+                if (orden.metodoPagoId) setMetodoPagoId(orden.metodoPagoId);
+                setDetalles(orden.detalles.map((d: any) => ({
+                    productoId: d.productoId,
+                    nombre: d.productoNombre,
+                    cantidad: parseFloat(d.cantidad) || 1,
+                    precioUnitario: parseFloat(d.precioUnitario) || 0,
+                    precioCosto: 0,
+                    stockDisponible: 9999,
+                })));
+            } catch {
+                toast.error('Error al cargar la cotización');
+            }
+        };
+        fetchOrden();
+    }, [isOpen, editarOrdenId]);
+
     // Filtro clientes
     useEffect(() => {
-        if (!clienteQuery.trim()) { setClientesFiltrados(clientes.slice(0, 8)); return; }
+        // Si clienteQuery es undefined/null o está vacío tras el trim
+        if (!(clienteQuery || "").trim()) { setClientesFiltrados(clientes.slice(0, 8)); return; }
         const q = clienteQuery.toLowerCase();
         setClientesFiltrados(
             clientes.filter(c =>
@@ -214,14 +252,25 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 body.metodoPagoId = metodoPagoId;
             }
 
-            const res = await fetch('/api/ordenes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
+            let res;
+            if (editarOrdenId) {
+                // Modo edición: actualizar cotización existente
+                res = await fetch(`/api/ordenes/${editarOrdenId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            } else {
+                // Modo creación: nueva orden
+                res = await fetch('/api/ordenes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            }
 
             if (res.ok) {
-                toast.success(tipo === 'VENTA' ? 'Venta registrada exitosamente' : 'Cotización creada exitosamente');
+                toast.success(editarOrdenId ? 'Cotización actualizada exitosamente' : tipo === 'VENTA' ? 'Venta registrada exitosamente' : 'Cotización creada exitosamente');
                 onSuccess();
             } else {
                 const err = await res.json();
@@ -234,11 +283,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         }
     };
 
+    const modalTitle = editarOrdenId
+        ? 'Editar Cotización'
+        : tipo === 'VENTA' ? 'Registrar Nueva Venta' : 'Crear Nueva Cotización';
+
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={tipo === 'VENTA' ? 'Registrar Nueva Venta' : 'Crear Nueva Cotización'}
+            title={modalTitle}
             maxWidth="3xl"
         >
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -265,14 +319,24 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
                 {/* Selector de cliente */}
                 <div ref={clienteRef} className="relative">
-                    <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-1.5">
-                        Cliente *
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider">
+                            Cliente *
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setIsCrearClienteOpen(true)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Nuevo Cliente
+                        </button>
+                    </div>
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" />
                         <Input
                             placeholder="Buscar por nombre o documento..."
-                            value={clienteQuery}
+                            value={clienteQuery ?? ''}
                             onChange={e => { setClienteQuery(e.target.value); setClienteSeleccionado(null); setShowClienteDropdown(true); }}
                             onFocus={() => setShowClienteDropdown(true)}
                             className="pl-9"
@@ -341,15 +405,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                             <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-white/20 shadow-xl rounded-2xl overflow-hidden max-h-52 overflow-y-auto">
                                 {productosFiltrados.map(p => {
                                     const stock = parseInt(p.stock || '0', 10);
-                                    const sinStock = stock === 0;
+                                    // Para Cotizaciones se permite agregar productos aun con stock 0
+                                    const deshabilitado = tipo === 'VENTA' && stock === 0;
                                     return (
                                         <button
                                             key={p.id}
                                             type="button"
-                                            disabled={sinStock}
-                                            onMouseDown={() => !sinStock && agregarProducto(p)}
+                                            disabled={deshabilitado}
+                                            onMouseDown={() => !deshabilitado && agregarProducto(p)}
                                             className={`w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between gap-3 ${
-                                                sinStock ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-light/60'
+                                                deshabilitado ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-light/60'
                                             }`}
                                         >
                                             <div>
@@ -504,5 +569,29 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 </div>
             </form>
         </Modal>
+
+        {isCrearClienteOpen && (
+            <CrearClienteModal
+                isOpen={isCrearClienteOpen}
+                onClose={() => setIsCrearClienteOpen(false)}
+                onSuccess={(nuevoCliente) => {
+                    if (nuevoCliente) {
+                        // 1. Agregarlo al inicio de la lista local de clientes
+                        setClientes(prev => [nuevoCliente, ...prev]);
+
+                        // 2. Establecerlo como el cliente seleccionado
+                        setClienteSeleccionado(nuevoCliente);
+
+                        // 3. Actualizar la búsqueda con el nombre del nuevo cliente
+                        setClienteQuery(nuevoCliente.nombre || '');
+
+                        // 4. Asegurar que aparezca en el dropdown/filtro
+                        setClientesFiltrados(prev => [nuevoCliente, ...prev.slice(0, 7)]);
+                    }
+                    setIsCrearClienteOpen(false);
+                }}
+            />
+        )}
+    </>
     );
 }
