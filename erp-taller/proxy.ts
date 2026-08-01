@@ -26,6 +26,7 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith('/api/auth/login') || 
     pathname.startsWith('/api/auth/invitacion') || 
+    pathname.startsWith('/api/auth/verify') ||
     pathname === '/login' || 
     pathname === '/unauthorized' ||
     pathname.startsWith('/invitacion')
