@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { cifrarTexto, descifrarTexto } from '@/lib/crypto';
 import { CrearGastoDTO, ActualizarGastoDTO } from './gasto.dto';
-
+import { diaCalendarioUTC, diaCalendarioPeru, mismoMes } from '@/lib/dateUtils';
 
 
 export const GastoService = {
@@ -36,7 +36,17 @@ export const GastoService = {
       monto: descifrarTexto(gasto.montoCifrado),
     }));
 
+    const hoyPeru = diaCalendarioPeru(new Date());
+
     // Métricas del mes en curso
+    const gastosMes = descifrados.filter(g =>
+      mismoMes(diaCalendarioUTC(g.fecha), hoyPeru)
+    );
+    const totalGastadoMes = gastosMes.reduce((s, g) => s + parseFloat(g.monto || '0'), 0);
+    const totalTransacciones = gastosMes.length;
+    const gastoPromedioDiario = totalTransacciones > 0 ? totalGastadoMes / hoyPeru.d : 0;
+
+    /*
     const inicioMes = new Date();
     inicioMes.setDate(1);
     inicioMes.setHours(0, 0, 0, 0);
@@ -47,6 +57,7 @@ export const GastoService = {
     const hoy = new Date();
     const diasPasados = hoy.getMonth() === inicioMes.getMonth() ? hoy.getDate() : 30;
     const gastoPromedioDiario = totalTransacciones > 0 ? totalGastadoMes / (diasPasados || 1) : 0;
+    */
 
     // Filtros
     let filtradas = [...descifrados];

@@ -6,26 +6,29 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, FileText, Search, Loader2, User, Package, TrendingUp, UserPlus } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
+import { CrearClienteModal } from '@/components/views/clientes/CrearClienteModal';
 
 interface DetalleLinea {
     productoId: string;
     nombre: string;
     cantidad: number;
     precioUnitario: number;
+    precioCosto: number;
     stockDisponible: number;
 }
 
 interface CrearOrdenModalProps {
     isOpen: boolean;
     tipoInicial: 'VENTA' | 'COTIZACION';
+    editarOrdenId?: string | null;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: CrearOrdenModalProps) {
+export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, onSuccess }: CrearOrdenModalProps) {
     const { user } = useAuth();
     const toast = useToast();
 
@@ -34,10 +37,11 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
     // Clientes
     const [clientes, setClientes] = useState<any[]>([]);
-    const [clienteQuery, setClienteQuery] = useState('');
+    const [clienteQuery, setClienteQuery] = useState<string>('');
     const [clientesFiltrados, setClientesFiltrados] = useState<any[]>([]);
     const [clienteSeleccionado, setClienteSeleccionado] = useState<any | null>(null);
     const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+    const [isCrearClienteOpen, setIsCrearClienteOpen] = useState(false);
     const clienteRef = useRef<HTMLDivElement>(null);
 
     // Productos
@@ -60,12 +64,14 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
     useEffect(() => {
         if (isOpen) {
             setTipo(tipoInicial);
-            setDetalles([]);
-            setClienteQuery('');
-            setClienteSeleccionado(null);
-            setProductoQuery('');
-            setMetodoPagoId('');
-            setError(null);
+            if (!editarOrdenId) {
+                setDetalles([]);
+                setClienteQuery('');
+                setClienteSeleccionado(null);
+                setProductoQuery('');
+                setMetodoPagoId('');
+                setError(null);
+            }
         }
     }, [isOpen, tipoInicial]);
 
@@ -79,10 +85,8 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                     fetch('/api/productos?limit=999'),
                     fetch('/api/metodos-pago'),
                 ]);
-                // ==== CORRECION (Validación inteligente):
                 if (cRes.ok) {
                     const cData = await cRes.json();
-                    // Si es un array directo, lo guarda. Si es un objeto, busca la propiedad '.items' o '.clientes'
                     const arrayClientes = Array.isArray(cData) ? cData : (cData.items || cData.clientes || []);
                     setClientes(arrayClientes);
                 }
@@ -95,9 +99,44 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         fetchCatalogos();
     }, [isOpen]);
 
+    // Si es modo edición, cargar datos de la cotización existente
+    useEffect(() => {
+        if (!isOpen || !editarOrdenId) return;
+        const fetchOrden = async () => {
+            try {
+                const res = await fetch(`/api/ordenes/${editarOrdenId}`);
+                if (!res.ok) return;
+                const orden = await res.json();
+                setTipo('COTIZACION');
+                if (orden.cliente) {
+                    const clienteObj = {
+                        id: orden.clienteId,
+                        nombre: orden.clienteNombre,
+                        documento: orden.clienteDocumento,
+                    };
+                    setClienteSeleccionado(clienteObj);
+                    setClienteQuery(orden.clienteNombre);
+                }
+                if (orden.metodoPagoId) setMetodoPagoId(orden.metodoPagoId);
+                setDetalles(orden.detalles.map((d: any) => ({
+                    productoId: d.productoId,
+                    nombre: d.productoNombre,
+                    cantidad: parseFloat(d.cantidad) || 1,
+                    precioUnitario: parseFloat(d.precioUnitario) || 0,
+                    precioCosto: 0,
+                    stockDisponible: 9999,
+                })));
+            } catch {
+                toast.error('Error al cargar la cotización');
+            }
+        };
+        fetchOrden();
+    }, [isOpen, editarOrdenId]);
+
     // Filtro clientes
     useEffect(() => {
-        if (!clienteQuery.trim()) { setClientesFiltrados(clientes.slice(0, 8)); return; }
+        // Si clienteQuery es undefined/null o está vacío tras el trim
+        if (!(clienteQuery || "").trim()) { setClientesFiltrados(clientes.slice(0, 8)); return; }
         const q = clienteQuery.toLowerCase();
         setClientesFiltrados(
             clientes.filter(c =>
@@ -141,6 +180,9 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
     const agregarProducto = (producto: any) => {
         const yaEsta = detalles.find(d => d.productoId === producto.id);
+        const costo = typeof producto.precioCosto === 'number' && producto.precioCosto > 0
+            ? producto.precioCosto
+            : parseFloat(producto.detalles?.costo || producto.detalles?.precioCompra || producto.precioCosto || '0');
         if (yaEsta) {
             setDetalles(detalles.map(d =>
                 d.productoId === producto.id
@@ -153,6 +195,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 nombre: producto.nombre,
                 cantidad: 1,
                 precioUnitario: parseFloat(producto.precioVenta || '0'),
+                precioCosto: costo,
                 stockDisponible: parseInt(producto.stock || '0', 10),
             }]);
         }
@@ -160,7 +203,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         setShowProductoDropdown(false);
     };
 
-    const actualizarDetalle = (idx: number, field: 'cantidad' | 'precioUnitario', value: number) => {
+    const actualizarDetalle = (idx: number, field: 'cantidad' | 'precioUnitario' | 'precioCosto', value: number) => {
         setDetalles(detalles.map((d, i) => i === idx ? { ...d, [field]: value } : d));
     };
 
@@ -169,6 +212,9 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
     };
 
     const subtotal = detalles.reduce((s, d) => s + d.cantidad * d.precioUnitario, 0);
+    const costoTotal = detalles.reduce((s, d) => s + d.cantidad * (d.precioCosto || 0), 0);
+    const gananciaEstimada = subtotal - costoTotal;
+    const margenPorcentaje = subtotal > 0 ? (gananciaEstimada / subtotal) * 100 : 0;
 
     const fmtCurrency = (v: number) =>
         new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(v);
@@ -206,14 +252,25 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 body.metodoPagoId = metodoPagoId;
             }
 
-            const res = await fetch('/api/ordenes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
+            let res;
+            if (editarOrdenId) {
+                // Modo edición: actualizar cotización existente
+                res = await fetch(`/api/ordenes/${editarOrdenId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            } else {
+                // Modo creación: nueva orden
+                res = await fetch('/api/ordenes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            }
 
             if (res.ok) {
-                toast.success(tipo === 'VENTA' ? 'Venta registrada exitosamente' : 'Cotización creada exitosamente');
+                toast.success(editarOrdenId ? 'Cotización actualizada exitosamente' : tipo === 'VENTA' ? 'Venta registrada exitosamente' : 'Cotización creada exitosamente');
                 onSuccess();
             } else {
                 const err = await res.json();
@@ -226,11 +283,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
         }
     };
 
+    const modalTitle = editarOrdenId
+        ? 'Editar Cotización'
+        : tipo === 'VENTA' ? 'Registrar Nueva Venta' : 'Crear Nueva Cotización';
+
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title={tipo === 'VENTA' ? 'Registrar Nueva Venta' : 'Crear Nueva Cotización'}
+            title={modalTitle}
             maxWidth="3xl"
         >
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -257,14 +319,24 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
 
                 {/* Selector de cliente */}
                 <div ref={clienteRef} className="relative">
-                    <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-1.5">
-                        Cliente *
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider">
+                            Cliente *
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setIsCrearClienteOpen(true)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary-hover transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            Nuevo Cliente
+                        </button>
+                    </div>
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" />
                         <Input
                             placeholder="Buscar por nombre o documento..."
-                            value={clienteQuery}
+                            value={clienteQuery ?? ''}
                             onChange={e => { setClienteQuery(e.target.value); setClienteSeleccionado(null); setShowClienteDropdown(true); }}
                             onFocus={() => setShowClienteDropdown(true)}
                             className="pl-9"
@@ -333,15 +405,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                             <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-white/20 shadow-xl rounded-2xl overflow-hidden max-h-52 overflow-y-auto">
                                 {productosFiltrados.map(p => {
                                     const stock = parseInt(p.stock || '0', 10);
-                                    const sinStock = stock === 0;
+                                    // Para Cotizaciones se permite agregar productos aun con stock 0
+                                    const deshabilitado = tipo === 'VENTA' && stock === 0;
                                     return (
                                         <button
                                             key={p.id}
                                             type="button"
-                                            disabled={sinStock}
-                                            onMouseDown={() => !sinStock && agregarProducto(p)}
+                                            disabled={deshabilitado}
+                                            onMouseDown={() => !deshabilitado && agregarProducto(p)}
                                             className={`w-full text-left px-4 py-2.5 transition-colors flex items-center justify-between gap-3 ${
-                                                sinStock ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-light/60'
+                                                deshabilitado ? 'opacity-40 cursor-not-allowed' : 'hover:bg-neutral-light/60'
                                             }`}
                                         >
                                             <div>
@@ -384,8 +457,18 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                                         className="text-center"
                                     />
                                 </div>
-                                <div className="w-28">
-                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Unit. (S/)</label>
+                                <div className="w-24">
+                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Costo (S/)</label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={det.precioCosto}
+                                        onChange={e => actualizarDetalle(idx, 'precioCosto', parseFloat(e.target.value) || 0)}
+                                    />
+                                </div>
+                                <div className="w-24">
+                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Venta (S/)</label>
                                     <Input
                                         type="number"
                                         step="0.01"
@@ -411,6 +494,42 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                         ))}
                     </div>
                 </div>
+
+                {/* Card de Ganancia Estimada y Margen % en tiempo real */}
+                {detalles.length > 0 && (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex flex-wrap items-center justify-between gap-4 font-body shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold ${
+                                gananciaEstimada >= 0 ? 'bg-emerald-500/20 text-emerald-600' : 'bg-red-500/20 text-red-600'
+                            }`}>
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-semibold">Ganancia Estimada Proyectada</p>
+                                <p className={`font-headline text-xl font-bold ${gananciaEstimada >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                                    {fmtCurrency(gananciaEstimada)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-medium">Costo Total Productos</p>
+                                <p className="font-label text-sm font-semibold text-secondary">{fmtCurrency(costoTotal)}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-tertiary uppercase tracking-wider font-medium mb-0.5">Margen de Ganancia</p>
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                                    margenPorcentaje >= 20 ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/30' :
+                                    margenPorcentaje > 0 ? 'bg-blue-500/20 text-blue-700 border border-blue-500/30' :
+                                    'bg-red-500/20 text-red-700 border border-red-500/30'
+                                }`}>
+                                    {margenPorcentaje.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Error */}
                 {error && (
@@ -450,5 +569,48 @@ export function CrearOrdenModal({ isOpen, tipoInicial, onClose, onSuccess }: Cre
                 </div>
             </form>
         </Modal>
+
+        {isCrearClienteOpen && (
+            <CrearClienteModal
+                isOpen={isCrearClienteOpen}
+                onClose={() => setIsCrearClienteOpen(false)}
+                onSuccess={async (nuevoCliente) => {
+                    if (nuevoCliente) {
+                        let clienteFinal = nuevoCliente;
+
+                        // 1. Refrescar la lista de la API para obtener el listado descifrado y actualizado
+                        try {
+                            const cRes = await fetch('/api/clientes');
+                            if (cRes.ok) {
+                                const cData = await cRes.json();
+                                const arrayClientes = Array.isArray(cData) ? cData : (cData.items || cData.clientes || []);
+                                setClientes(arrayClientes);
+
+                                // Buscar el cliente recién creado dentro de la lista que devolvió la API
+                                const encontrado = arrayClientes.find((c: any) => c.id === nuevoCliente.id);
+                                if (encontrado) {
+                                    clienteFinal = encontrado;
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Error actualizando clientes:", err);
+                            setClientes(prev => [nuevoCliente, ...prev]);
+                        }
+
+                        // 2. Extraer el nombre/razón social con fallback para evitar 'undefined'
+                        const nombreMostrar = 
+                            clienteFinal.nombre || 
+                            'Cliente Nuevo';
+
+                        // 3. Autoseleccionar correctamente
+                        setClienteSeleccionado(clienteFinal);
+                        setClienteQuery(nombreMostrar);
+                        setShowClienteDropdown(false); // Ocultar el desplegable
+                    }
+                    setIsCrearClienteOpen(false);
+                }}
+            />
+        )}
+    </>
     );
 }

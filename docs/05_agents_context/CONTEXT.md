@@ -3,9 +3,10 @@
 > **⚠️ INSTRUCCIÓN PARA MODELOS DE IA:**
 > Este archivo es la **fuente de verdad única** del proyecto. Léelo en su totalidad antes de tocar cualquier archivo del codebase. Contiene el estado actual del desarrollo, la arquitectura, las convenciones y el backlog. Todo lo que necesitas para continuar el desarrollo sin interrupciones está aquí.
 
-**Última actualización:** 2026-07-12  
-**Actualizado por:** Antigravity AI (Gemini 3.5 Flash)  
-**Sesiones de IA referenciadas:** `e34c681c` (Inventory Module), `f0fe5a16` (Architecture Analysis), `maxs-branch` (Sales & Quotes Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module)
+**Última actualización:** 2026-07-30  
+**Actualizado por:** Antigravity AI (Claude Sonnet 4.6)  
+**Sesiones y Ramas referenciadas:** `diego-branch` (Usuarios, Permisos RBAC, Proxy Middleware, Modal Kardex, PDF Proformas), `maxs-branch` (Sales & Quotes Module), `e34c681c` (Inventory Module), `9691dd73` (Purchases & Batches Module), `717be0b5` (Expenses & Finanzas Module), `excel-and-financial-dashboard` (Exportación Excel, Dashboard Financiero con Filtro Temporal, Plantilla Migración Inventario), `ff586395` (Gestión Tipos Autoparte CRUD, Dashboard Compras/Adquisición, Navbar Simplificado)
+
 
 ---
 
@@ -227,6 +228,8 @@ Petición HTTP
 | `POST` | `/api/productos/[id]/restock` | Suma stock al producto + crea movimiento `INGRESO` en Kardex |
 | `GET` | `/api/tipos-autoparte` | Lista todos los tipos de autopartes activos |
 | `POST` | `/api/tipos-autoparte` | Crea un nuevo tipo de autoparte relacional |
+| `PATCH` | `/api/tipos-autoparte/[id]` | Edita el nombre de un tipo de autoparte (valida duplicados) |
+| `DELETE` | `/api/tipos-autoparte/[id]` | **Soft delete** — pone `isActive: false` |
 
 **Umbrales de Stock Bajo:**
 - Autopartes: `stock < 10` → estado `LOW_STOCK`
@@ -303,32 +306,41 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 ### 3.1 Dashboard Principal (`/` → `app/page.tsx`)
 
-**Estado: COMPLETO**  
+**Estado: COMPLETO Y AMPLIADO CON ANÁLISIS FINANCIERO Y DATOS DE COMPRAS**  
 **Mockup:** `docs/04_mockups/dashboard_de_control/screen.png`
 
-| Sub-componente | Archivo | Estado |
-|---|---|---|
-| Página (Server Component) | `app/page.tsx` | Listo |
-| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo |
-| Gráfico de ingresos (Recharts) | `components/dashboard/SalesChart.tsx` | Listo |
-| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo |
+| Sub-componente | Archivo | Estado | Descripción |
+|---|---|---|---|
+| Página (Server Component) | `app/page.tsx` | Listo | Vista principal con 6 KPIs operativos y financieros (incluyendo Compras del Mes y Lotes Recibidos) |
+| Tarjetas de métricas | `components/dashboard/StatCard.tsx` | Listo | 6 tarjetas: Ventas, Órdenes, Stock, Clientes, Compras del Mes, Lotes Recibidos |
+| Módulo Financiero Interactivo | `components/dashboard/FinancialDashboardView.tsx` | Listo | 5 KPIs financieros (Ingresos, Gastos, Ganancias, Margen %, Inversión en Compras), gráfico con 4 series (Ingresos, Gastos, Compras Inventario, Ganancia Neta) y exportaciones |
+| Gráfico de Ingresos (Legacy) | `components/dashboard/SalesChart.tsx` | Listo | Gráfico básico previo de ingresos a 7 días |
+| API Financiera del Dashboard | `app/api/dashboard/financiero/route.ts` | Listo | Endpoint `GET /api/dashboard/financiero?periodo=...` |
+| Servicio de métricas | `modules/dashboard/dashboard.service.ts` | Listo | Lógica de negocio para métricas e histórico financiero, incluyendo datos de Ingreso (compras de adquisición) |
 
-**Datos mostrados:** Ventas Totales, Órdenes Pendientes, Productos en Stock, Nuevos Clientes (30d), Evolución de Ingresos últimos 7 días, Últimas Órdenes Creadas.
+**Datos y Funcionalidades Financieras:**
+- **Métricas:** Ingresos Totales, Gastos Totales (Caja Chica), Ganancia Neta, Margen de Ganancia (%), **Inversión Total en Compras (Adquisición de Mercadería)**, **Compras del Mes**, **Lotes Recibidos del Mes**.
+- **Gráfico Comparativo Recharts:** 4 series simultáneas — Ingresos (verde), Gastos (rojo), Compras Inventario (violeta, barras) y Ganancia Neta (azul, línea).
+- **`PuntoFinanciero`**: ahora incluye campo `compras: number` en todas las series históricas.
+- **Filtros de Temporalidad:** Selección dinámica entre **Anual** (12 meses), **Trimestral** (Q1, Q2, Q3, Q4), **Mensual** (bloques de 30 días) y **Últimos 7 días**.
+- **Exportación de Histórico Financiero:** CSV y Excel ahora incluyen columna **Compras Inventario (S/)**.
+- **Últimas Órdenes Creadas:** Lista con estado y montos en tiempo real.
 
 ---
 
 ### 3.2 Gestión de Inventario (`/inventario` → `app/inventario/page.tsx`)
 
-**Estado: COMPLETO Y FUNCIONAL**  
+**Estado: COMPLETO Y FUNCIONAL CON GESTIÓN COMPLETA DE TIPOS**  
 **Mockup:** `docs/04_mockups/gesti_n_de_inventario/screen.png`
 
 | Componente | Archivo | Tamaño | Estado | Descripción |
 |---|---|---|---|---|
-| Vista Principal | `components/views/inventario/InventarioView.tsx` | 30.5 KB | Listo | Componente maestro con todos los estados |
+| Vista Principal | `components/views/inventario/InventarioView.tsx` | ~36 KB | Listo | Componente maestro con todos los estados |
 | Modal Crear | `components/views/inventario/CrearProductoModal.tsx` | 20.4 KB | Listo | Formulario adaptativo Autoparte/Motor con botón "+" inline |
 | Modal Editar | `components/views/inventario/EditarProductoModal.tsx` | 17.6 KB | Listo | Edición completa con pre-llenado de datos |
 | Modal Restock | `components/views/inventario/RestockModal.tsx` | 5.2 KB | Listo | Ingreso rápido de mercadería |
 | Modal Confirmar Borrado | `components/views/inventario/ConfirmDeleteModal.tsx` | 3.2 KB | Listo | Soft-delete con confirmación |
+| **Modal Gestionar Tipos** | `components/views/inventario/GestionarTiposModal.tsx` | ~7 KB | **Nuevo** | CRUD completo de tipos de autoparte: crear, editar inline, eliminar con confirmación |
 
 **Funcionalidades activas en `InventarioView.tsx`:**
 - **Bento Grid de métricas** (Total SKUs, Agotados, Stock Bajo, Valor Total) — datos reales de la API
@@ -338,6 +350,8 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 - **Tabla de alta densidad** con paginación real, skeletons de carga, badges de stock coloreados
 - **Banner "Low Stock Advisory"** — aparece dinámicamente si hay items críticos/agotados; al hacer clic redirige al tab "Reabastecimiento"
 - **CRUD Completo:** Crear, Editar, Restock, Soft-Delete
+- **Botón "Tipos de Autoparte"** — abre `GestionarTiposModal` con gestión CRUD completa de tipos
+- **`GestionarTiposModal`:** Crear nuevos tipos, editar nombre inline con validación de duplicados, eliminar con confirmación. Sincroniza automáticamente con los dropdowns del modal de creación y edición de productos.
 
 ---
 
@@ -349,7 +363,7 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 |---|---|---|---|
 | AppLayout | `components/layout/AppLayout.tsx` | Listo | Contenedor principal. Margen dinámico `lg:ml-[18rem] ml-0` |
 | Sidebar | `components/layout/Sidebar.tsx` | Listo | Navegación lateral. En móvil: flotante/hamburguesa |
-| Navbar | `components/layout/Navbar.tsx` | Listo | Barra superior con botón hamburguesa en móvil |
+| Navbar | `components/layout/Navbar.tsx` | Listo | Barra superior **simplificada**: botón hamburguesa (móvil), toggle Dark Mode y avatar de usuario. La barra de búsqueda y campana de notificaciones fueron ocultadas por solicitud del cliente. |
 
 **Navegación disponible en el Sidebar:**
 - Dashboard (`/`)
@@ -508,36 +522,89 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 
 
-#### PRIORIDAD MEDIA — Módulo de Kardex
+#### ~~PRIORIDAD MEDIA — Módulo de Kardex~~ ✅ COMPLETADO
 
 **HUs referenciadas:** HU-025, HU-026 (Trazabilidad de movimientos de inventario)
 
-- [ ] **Crear `KardexView.tsx`** — Vista de auditoría del historial de movimientos de stock
-  - [ ] Filtro por producto, tipo de movimiento (INGRESO/SALIDA/AJUSTE), rango de fechas
-  - [ ] Tabla con: Producto, Tipo, Cantidad, Motivo, Usuario, Fecha
-- [ ] Crear página `app/inventario/kardex/page.tsx` o integrar como sub-sección del módulo de Inventario
+- [X] **`VerKardexModal.tsx`** creado e integrado en `components/views/inventario/VerKardexModal.tsx` — Modal de auditoría con historial de movimientos, trazabilidad por usuario y motivo.
+- [X] **Filtros e indicadores visuales** — Selección por tipo de movimiento (INGRESO/SALIDA/AJUSTE), rango de fechas y producto específico.
+- [X] **Fila de Stock Total y Paginación** — Resumen visual del stock total acumulado con scroll adaptativo y diseño responsive.
 
-#### PRIORIDAD BAJA — Módulo de Usuarios y Permisos
+#### ~~PRIORIDAD BAJA — Módulo de Usuarios y Permisos~~ ✅ COMPLETADO
 
 **HUs referenciadas:** HU-015 a HU-018 (RBAC, gestión de usuarios)
 
-- [ ] **Reescribir `UsuariosView.tsx`** con tabla funcional de usuarios
-- [ ] **Completar `CrearUsuarioModal.tsx`** con selección de rol y configuración de permisos granulares
-- [ ] **Modal `EditarUsuarioModal.tsx`** — Cambio de rol, contraseña, activar/desactivar acceso
+- [X] **`UsuariosView.tsx`** reescrito — Tabla con lista de usuarios activos e inactivos, roles, correo y acciones.
+- [X] **`CrearUsuarioModal.tsx`** completado — Selección dinámica de roles y permisos individuales mediante chips interactivos, validación y llamado a API.
+- [X] **`GestionarPermisosModal.tsx`** creado — Asignación y revocación granular de permisos por usuario (`GET/POST/PUT /api/usuarios/[id]/permisos`).
+- [X] **Seguridad RBAC (`proxy.ts`)** — Migrado middleware a Edge Runtime `proxy.ts` para validación centralizada de rutas API y vistas por token/permisos.
+- [X] **`unauthorized/page.tsx`** — Pantalla de acceso denegado personalizada en caso de no contar con los permisos del rol.
+- [X] **Nombre de Rol Dinámico & Logout** — Integrado nombre de rol dinámico en Sidebar y botón de cerrar sesión en `AuthProvider`.
 
-#### PRIORIDAD BAJA — Mejoras de UX Transversales
+#### ~~PRIORIDAD BAJA — Mejoras de UX Transversales y Exportaciones~~ ✅ COMPLETADO
 
-- [ ] **Dark Mode Toggle** — Implementar switch en la Navbar para activar/desactivar `.dark` en el `<html>`
-- [ ] **Página `ingresos/`** — Vista de historial de ingresos de lotes (separado de Kardex)
-- [ ] **Página `unauthorized/`** — Revisar y mejorar la pantalla de acceso denegado
-- [ ] **Exportación de datos** — Botón de exportar tabla a CSV en los módulos de Inventario, Órdenes y Kardex
+- [X] **Página `unauthorized/`** — Pantalla de acceso denegado implementada y en funcionamiento.
+- [X] **Cerrar Sesión** — Botón de logout disponible en el Sidebar con limpieza de token de sesión.
+- [X] **Exportación a PDF** — Generación de proformas y notas de pedido directamente desde las tablas con `jspdf`.
+- [X] **Dark Mode Toggle & Persistencia** — Switch en Navbar integrado con `localStorage` y `.dark` en `<html>`.
+- [X] **Exportación CSV y Excel (`.xlsx`)** — Utilidades `lib/csvExport.ts` (UTF-8 BOM) y `lib/excelExport.ts` (`xlsx`) integradas en Inventario, Kardex, Ventas, Gastos y Dashboard.
+- [X] **Plantilla Excel de Ejemplo para Inventario** — Función `downloadInventoryTemplate()` en `lib/inventoryTemplate.ts` y botón "Plantilla Excel" en InventarioView para estandarizar la migración de datos.
+- [X] **Dashboard Financiero por Periodos** — Módulo `FinancialDashboardView` con métricas de Ingresos, Gastos, Ganancias y Margen %, gráficos filtrables (Anual, Trimestral, Mensual, 7 días) e historial exportable en CSV y Excel.
 
-#### PRIORIDAD MEDIA — Generación de Documentos
-- [ ] **Generar PDF de Cotizaciones** — Opcíon para exportar una cotización a formato PDF tamaño A4, con diseño formateado y lista detallada de lo solicitado por el cliente.
+#### ~~PRIORIDAD MEDIA — Generación de Documentos~~ ✅ COMPLETADO
 
-#### PRIORIDAD ALTA — Migración de Datos Inicial
-- [ ] **Importación desde Excel** — Crear una sección/herramienta para migrar el inventario actual del dueño desde Excel hacia el nuevo sistema.
-  - El modelo de datos a seguir se encuentra en `docs/data/Control_Inventario_Automotores.xlsx`.
+- [X] **`lib/pdfGenerator.ts`** implementado con `jspdf` y `jspdf-autotable`.
+- [X] **PDF Proforma (Cotizaciones)** — Formato oficial A8F Samfor con detalles del cliente, desglose de ítems, subtotal, IGV/Total y observaciones.
+- [X] **PDF Nota de Pedido (Ventas)** — Formato de comprobante interno de venta listo para descarga e impresión.
+- [X] **Integración de Botones de Descarga** — Descarga directa desde la tabla `OrdenesView.tsx` y dentro de `VerOrdenModal.tsx`.
+
+#### ~~PRIORIDAD ALTA — Migración de Datos Inicial~~ ✅ COMPLETADO
+
+- [X] **Archivo Fuente** — Carga de plantilla `docs/data/Control_Inventario_Automotores.xlsx`.
+- [X] **Herramienta/Script de Importación** — Script CLI `scripts/importar_inventario.ts`, API Route `/api/inventario/importar` y modal interactivo `ImportarInventarioModal.tsx` para la migración masiva e importación directa desde Excel.
+
+---
+
+### 4.4 Feedback y Correcciones del Cliente — Sesión 2026-07-30 ✅ COMPLETADO
+
+#### 📌 Módulo de Inventario — Gestión de Tipos de Autoparte ✅ COMPLETADO
+- [X] **API `PATCH /api/tipos-autoparte/[id]`** — Editar nombre de tipo con validación de duplicados insensible a mayúsculas.
+- [X] **API `DELETE /api/tipos-autoparte/[id]`** — Soft delete de tipo de autoparte (`isActive: false`).
+- [X] **`GestionarTiposModal.tsx`** — Nuevo modal CRUD accesible desde `InventarioView` con botón "Tipos de Autoparte". Permite crear, editar inline y eliminar con confirmación. Sincroniza automáticamente los dropdowns en `CrearProductoModal` y `EditarProductoModal`.
+
+#### 📌 Dashboard — Ingresos de Inventario / Compras de Adquisición ✅ COMPLETADO
+- [X] **`dashboard.service.ts`** ampliado — `PuntoFinanciero` ahora incluye `compras: number`. `obtenerMetricasGenerales()` retorna `totalInvertidoCompras`, `totalComprasMes` y `cantidadLotesMes` a partir de la tabla `Ingreso`.
+- [X] **`FinancialDashboardView.tsx`** actualizado — Nueva 5ª card financiera **"Inversión en Compras"** (violeta). Nueva barra `compras` (violeta `#8B5CF6`) en el gráfico Recharts. Tooltip y leyenda actualizados. CSV y Excel exportan la columna de compras.
+- [X] **`app/page.tsx`** actualizado — 6 StatCards operativas (grid `xl:grid-cols-3`): Ventas, Órdenes, Stock, Clientes, **Compras del Mes** (ShoppingBag) y **Lotes Recibidos del Mes** (Truck).
+
+#### 📌 Layout — Navbar Simplificado ✅ COMPLETADO
+- [X] **`Navbar.tsx`** actualizado — Se ocultaron la barra de búsqueda y la campana de notificaciones por solicitud del cliente. El navbar conserva: botón hamburguesa (solo móvil), toggle Dark Mode y avatar de usuario.
+
+---
+
+### 4.4 Feedback y Correcciones del Cliente ✅ COMPLETADO (100%)
+
+#### 📌 Módulo de Gastos / Finanzas ✅ COMPLETADO
+- [X] **Fix de Fecha en Gastos**: Resolver el desfasaje de fecha seleccionada en `CrearGastoModal` y `EditarGastoModal` "Al seleccionar la fecha del calendario el sistema lo guarda con la fecha del dia anterior".
+- [X] **Cierre Automático de Modal**: `CrearGastoModal.tsx` y `EditarGastoModal.tsx` invocan `onClose()` inmediatamente al registrar o editar un gasto exitosamente.
+
+#### 📌 Módulo de Ventas / Cotizaciones ✅ COMPLETADO
+- [X] **Cálculo y Visualización de Ganancia Estimada**: Integrada la columna de P. Costo y la tarjeta interactiva de **Ganancia Estimada Proyectada (S/)** y **Margen de Ganancia (%)** en tiempo real dentro de `CrearOrdenModal.tsx`.
+- [X] **Obtencion Automatica de precio de compra**: Enriquecimiento automático en `ProductoService.obtenerTodos` y `GET /api/productos` para extraer el último costo de compra de `DetalleIngreso`/`HistorialPrecio` y autocompletar `precioCosto` al agregar productos en `CrearOrdenModal.tsx`.
+
+---
+
+### 4.5 [ ] Nuevos Requerimientos y Ajustes del Cliente (Sesión 2026-08-01)
+
+- [X] **1. Rediseño y Mejora de Formato PDF de Órdenes (Ventas y Cotizaciones)** — Aplicar paleta corporativa (`#DB052B`, `#1A1A1A`), agregar dirección "Calle Espinar 311" e incluir logotipo (`public/LOGO.png`), tomando como base la plantilla `docs/06_plantillas/FORMATO COTIZACIÓN - PROFORMA.xlsx`.
+- [X] **2. Precio de Compra en Plantilla Excel de Inventario** — Agregar la columna `Precio Compra (S/)` y datos de ejemplo en `lib/inventoryTemplate.ts`.
+- [X] **3. Exportación a Excel y CSV en Compras y Reabastecimiento** — Agregar botones de exportación CSV y Excel en `IngresosView.tsx` (Compras) y en la sección/tab de Reabastecimiento en `InventarioView.tsx`.
+- [X] **4. Cambio de Contraseña e Inhabilitación de Usuarios** — Crear modal de cambio de contraseña para el rol DUEÑO y permitir inhabilitar/deshabilitar el acceso al sistema (`accesoSistema: false`).
+- [X] **5. Control de Permisos y Jerarquía de Usuarios** — Restringir que un usuario pueda auto-modificarse (inhabilitarse o editar sus propios permisos) o alterar usuarios de roles superiores, mostrando alerta Toast informativa.
+- [X] **6. Fix de Desfasaje de Fecha en Gastos** — Corregir la discrepancia de zona horaria UTC en `CrearGastoModal`, `EditarGastoModal` y `GastosView` para registrar exactamente la fecha seleccionada.
+- [X] **7. Atajo Rápido para Crear Cliente en CrearOrdenModal** — Agregar botón `+ Nuevo Cliente` en el modal de órdenes que abra `CrearClienteModal` y autoseleccione el cliente recién creado.
+- [X] **8. Cotizaciones Flexibles (Stock Cero, Edición y Conversión a Venta Validada)** — Permitir agregar productos con stock 0 en cotizaciones, habilitar la edición de cotizaciones `PENDIENTE` y validar el stock real al momento de convertir a Venta.
+- [X] **9. Logo 2 en Theme Dark** — Configurar el Sidebar/Layout para conmutar dinámicamente el logo a `/LOGO 2.png` (`siteConfig.logo_2`) cuando se activa el Dark Mode.
 
 ---
 
@@ -574,13 +641,15 @@ make studio
 
 ### Historial de Sesiones de IA
 
-| Sesión ID | Descripción | Estado |
+| Sesión ID / Rama | Descripción | Estado |
 |---|---|---|
 | `f0fe5a16` | Análisis inicial de la arquitectura del proyecto SIAFS | Completado |
 | `e34c681c` | Implementación completa del módulo de Inventario (CRUD, APIs, UI, Tests) | Completado |
 | `0c767fd8` | Generación de CONTEXT.md centralizado | Completado |
 | `maxs-branch` | Módulo de Ventas y Cotizaciones (OrdenesView, CrearOrdenModal, VerOrdenModal, API ordenes+metodos-pago) | Completado |
+| `diego-branch` | Módulo de Usuarios y Permisos RBAC, Middleware Proxy, Modal de Kardex, Generación PDF Proformas | Completado |
+| `ff586395` | Gestión CRUD de Tipos de Autoparte (modal + endpoints), Dashboard con métricas de Compras/Adquisición, Navbar simplificado | Completado |
 
 ---
 
-*Generado automáticamente el 2026-07-11 por Antigravity AI. Para actualizar este archivo, solicitar al agente que analice los cambios más recientes y actualice las secciones correspondientes.*
+*Generado automáticamente el 2026-07-30 por Antigravity AI. Para actualizar este archivo, solicitar al agente que analice los cambios más recientes y actualice las secciones correspondientes.*

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { siteConfig } from '@/lib/config';
@@ -14,8 +14,10 @@ import {
   Wallet,
   UserCog,
   X,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
+import { MiPerfilModal } from '@/components/views/perfil/MiPerfilModal';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, permission: 'VER_DASHBOARD' },
@@ -35,6 +37,29 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, permisos } = useAuth();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Sincronizar con el estado dark del documento (gestionado por Navbar)
+  useEffect(() => {
+    const updateDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+
+    // Estado inicial
+    updateDarkMode();
+
+    // Observar cambios en la clase 'dark' del elemento <html>
+    const observer = new MutationObserver(updateDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const logoSrc = isDarkMode ? siteConfig.logo_2 : siteConfig.logo;
 
   return (
     <>
@@ -62,9 +87,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <X className="w-4 h-4" />
           </button>
           <img
-            src={siteConfig.logo}
+            src={logoSrc}
             alt={siteConfig.name}
-            className="w-12 h-12 object-contain rounded-full shadow-md border-2 border-white/20 bg-white z-10"
+            className="w-12 h-12 object-contain rounded-full shadow-md border-2 border-white/20 bg-white z-10 transition-all duration-300"
           />
           <h1 className="font-headline font-bold text-lg text-white tracking-tight z-10">
             {siteConfig.name}
@@ -104,15 +129,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-5 flex flex-col gap-4 border-t border-black/5 bg-white/50">
           
           {user && (
-            <div className="flex items-center gap-3 px-2">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner">
+            <button 
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-black/5 transition-colors text-left group"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                 {user.nombre?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-sm font-bold text-secondary truncate">{user.nombre}</span>
+                <span className="text-sm font-bold text-secondary truncate group-hover:text-primary transition-colors">{user.nombre}</span>
                 <span className="text-xs text-tertiary bg-black/5 px-2 py-0.5 rounded-full w-max">{user.rolNombre}</span>
               </div>
-            </div>
+              <Settings className="w-4 h-4 text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
           )}
 
           <button
@@ -134,6 +163,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
       </aside>
+
+      {/* Modal de Perfil */}
+      <MiPerfilModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+      />
     </>
   );
 }

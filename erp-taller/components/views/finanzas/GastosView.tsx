@@ -7,12 +7,15 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
   Plus, Search, RefreshCw, Edit2, Trash2, Wallet,
-  Calendar, DollarSign, TrendingDown, ClipboardList
+  Calendar, DollarSign, TrendingDown, ClipboardList, Download, FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearGastoModal } from './CrearGastoModal';
 import { EditarGastoModal } from './EditarGastoModal';
 import { ConfirmAnularGastoModal } from './ConfirmAnularGastoModal';
+import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
+import { formatFechaDisplay } from '@/lib/dateUtils';
 
 export function GastosView() {
   const toast = useToast();
@@ -109,15 +112,45 @@ export function GastosView() {
       </tr>
     ));
 
+  const handleExportGastosCSV = () => {
+      const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado Por'];
+      const rows = items.map(g => [
+        formatFechaDisplay(g.fecha),
+        g.motivo || '',
+        parseFloat(g.monto || '0').toFixed(2),
+        g.usuario?.nombre || 'Sistema'
+      ]);
+      exportToCSV(`Gastos_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
+    const handleExportGastosExcel = () => {
+      const headers = ['Fecha', 'Motivo / Descripción', 'Monto (S/)', 'Registrado por'];
+      const rows = items.map(g => [
+        formatFechaDisplay(g.fecha),
+        g.motivo || '',
+        parseFloat(g.monto || '0'),
+        g.usuario?.nombre || 'Sistema'
+      ]);
+      exportToExcel(`Gastos_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Gastos');
+    };
+
   return (
     <>
       <ModuleTemplate
         title="Gastos de Caja Chica"
         description="Lleva el control detallado de los gastos internos de la empresa."
         actions={
-          <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
-            Registrar Gasto
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" icon={Download} onClick={handleExportGastosCSV} disabled={loading || items.length === 0}>
+              Exportar CSV
+            </Button>
+            <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportGastosExcel} className="text-emerald-700 hover:text-emerald-800" disabled={loading || items.length === 0}>
+              Exportar Excel
+            </Button>
+            <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
+              Registrar Gasto
+            </Button>
+          </div>
         }
       >
         {/* KPI Grid */}
@@ -219,7 +252,7 @@ export function GastosView() {
                     <td className="px-4 py-3 text-secondary font-body font-medium">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-3.5 h-3.5 text-tertiary opacity-70" />
-                        {new Date(gasto.fecha).toLocaleDateString('es-PE')}
+                        {formatFechaDisplay(gasto.fecha)}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-secondary font-body font-medium max-w-sm truncate">

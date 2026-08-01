@@ -11,10 +11,11 @@ import { useRouter } from 'next/navigation';
 interface CrearUsuarioModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSuccess?: () => void;
     roles: { id: string, nombre: string }[];
 }
 
-export function CrearUsuarioModal({ isOpen, onClose, roles }: CrearUsuarioModalProps) {
+export function CrearUsuarioModal({ isOpen, onClose, onSuccess, roles }: CrearUsuarioModalProps) {
     const [nombre, setNombre] = useState('');
     const [email, setEmail] = useState('');
     const [rolId, setRolId] = useState('');
@@ -53,6 +54,7 @@ export function CrearUsuarioModal({ isOpen, onClose, roles }: CrearUsuarioModalP
                 toast.error(errData.error || 'Error al crear el usuario');
             } else {
                 toast.success(`Usuario ${nombre} creado exitosamente.`);
+                onSuccess?.();
                 router.refresh();
                 onClose();
             }

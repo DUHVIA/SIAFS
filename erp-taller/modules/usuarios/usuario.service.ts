@@ -38,7 +38,7 @@ export const UsuarioService = {
     });
 
     // Clonar los permisos del rol como permisos individuales del usuario (Rol como plantilla)
-    if (nuevoUsuario.rol.permisos.length > 0) {
+    if (nuevoUsuario.rol?.permisos && nuevoUsuario.rol.permisos.length > 0) {
       await prisma.usuarioPermiso.createMany({
         data: nuevoUsuario.rol.permisos.map(rp => ({
           usuarioId: nuevoUsuario.id,
@@ -57,6 +57,8 @@ export const UsuarioService = {
     if (data.nombre !== undefined) updateData.nombre = data.nombre;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.rolId !== undefined) updateData.rolId = data.rolId;
+    if (data.accesoSistema !== undefined) updateData.accesoSistema = data.accesoSistema;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
     
     if (data.password) {
       const { hash, salt } = hashPassword(data.password);

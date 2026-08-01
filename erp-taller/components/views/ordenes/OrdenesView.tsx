@@ -8,12 +8,14 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import {
     Plus, Search, ShoppingCart, FileText, RefreshCw,
     ChevronLeft, ChevronRight, Eye, Ban, TrendingUp,
-    Clock, BarChart2, DollarSign, Download, Loader2
+    Clock, BarChart2, DollarSign, Download, Loader2, FileSpreadsheet, Pencil
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
 import { generarCotizacionPDF } from '@/lib/pdfGenerator';
+import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
 
 type Tab = 'ventas' | 'cotizaciones' | 'anuladas';
 
@@ -52,6 +54,8 @@ export function OrdenesView() {
     const [tipoNueva, setTipoNueva] = useState<'VENTA' | 'COTIZACION'>('VENTA');
     const [isVerOpen, setIsVerOpen] = useState(false);
     const [selectedOrdenId, setSelectedOrdenId] = useState<string | null>(null);
+    const [editarOrdenId, setEditarOrdenId] = useState<string | null>(null);
+    const [isEditarOpen, setIsEditarOpen] = useState(false);
 
     // Debounce búsqueda
     useEffect(() => {
@@ -106,13 +110,18 @@ export function OrdenesView() {
 
     const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
+    const handleEditarCotizacion = (id: string) => {
+        setEditarOrdenId(id);
+        setIsEditarOpen(true);
+    };
+
     const handleDescargarPDF = async (id: string) => {
         setDownloadingId(id);
         try {
             const res = await fetch(`/api/ordenes/${id}`);
             if (res.ok) {
                 const orden = await res.json();
-                generarCotizacionPDF({
+                await generarCotizacionPDF({
                     tipo: orden.tipo as 'COTIZACION' | 'VENTA',
                     numeroOrden: orden.numeroOrden,
                     clienteNombre: orden.clienteNombre,
@@ -176,6 +185,32 @@ export function OrdenesView() {
         { id: 'anuladas',     label: 'Anuladas',       icon: <Ban className="w-4 h-4" /> },
     ];
 
+    const handleExportOrdenesCSV = () => {
+        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
+        const rows = items.map(o => [
+            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
+            o.tipo || '',
+            o.cliente?.nombre || '',
+            o.estado || '',
+            parseFloat(o.total || '0').toFixed(2),
+            new Date(o.createdAt).toLocaleDateString('es-PE')
+        ]);
+        exportToCSV(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
+    const handleExportOrdenesExcel = () => {
+        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
+        const rows = items.map(o => [
+            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
+            o.tipo || '',
+            o.cliente?.nombre || '',
+            o.estado || '',
+            parseFloat(o.total || '0'),
+            new Date(o.createdAt).toLocaleDateString('es-PE')
+        ]);
+        exportToExcel(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Ordenes');
+    };
+
     return (
         <>
             <ModuleTemplate
@@ -183,6 +218,12 @@ export function OrdenesView() {
                 description="Registra y administra ventas directas y cotizaciones de clientes."
                 actions={
                     <>
+                        <Button variant="secondary" icon={Download} onClick={handleExportOrdenesCSV} disabled={loading || items.length === 0}>
+                            Exportar CSV
+                        </Button>
+                        <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportOrdenesExcel} className="text-emerald-700 hover:text-emerald-800" disabled={loading || items.length === 0}>
+                            Exportar Excel
+                        </Button>
                         <Button variant="secondary" icon={FileText} onClick={() => handleNueva('COTIZACION')}>
                             Nueva Cotización
                         </Button>
@@ -367,6 +408,15 @@ export function OrdenesView() {
                                                     title="Descargar PDF"
                                                     disabled={downloadingId === orden.id}
                                                 />
+                                                {orden.tipo === 'COTIZACION' && orden.estado === 'PENDIENTE' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        icon={Pencil}
+                                                        onClick={() => handleEditarCotizacion(orden.id)}
+                                                        title="Editar cotización"
+                                                    />
+                                                )}
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -431,6 +481,16 @@ export function OrdenesView() {
                 onClose={() => setIsCrearOpen(false)}
                 onSuccess={() => { setIsCrearOpen(false); handleRefresh(); }}
             />
+
+            {isEditarOpen && editarOrdenId && (
+                <CrearOrdenModal
+                    isOpen={isEditarOpen}
+                    tipoInicial="COTIZACION"
+                    editarOrdenId={editarOrdenId}
+                    onClose={() => { setIsEditarOpen(false); setEditarOrdenId(null); }}
+                    onSuccess={() => { setIsEditarOpen(false); setEditarOrdenId(null); handleRefresh(); }}
+                />
+            )}
 
             <VerOrdenModal
                 isOpen={isVerOpen}

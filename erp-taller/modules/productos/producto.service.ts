@@ -10,16 +10,61 @@ export const ProductoService = {
       where: { isActive: true },
       include: {
         tipoAutoparte: true,
+        detalleIngresos: {
+          take: 1,
+          orderBy: { ingreso: { fechaIngreso: 'desc' } },
+          select: { costoUnitarioCifrado: true }
+        },
+        historialPrecios: {
+          where: { NOT: { precioCompraCifrado: null } },
+          take: 1,
+          orderBy: { fechaCambio: 'desc' },
+          select: { precioCompraCifrado: true }
+        }
       },
     });
 
-    return productos.map(producto => ({
-      ...producto,
-      nombre: descifrarTexto(producto.nombreCifrado),
-      precioVenta: descifrarTexto(producto.precioVentaCifrado),
-      stock: descifrarTexto(producto.stockCifrado),
-      detalles: JSON.parse(descifrarTexto(producto.detallesCifrados)),
-    }));
+    return productos.map(producto => {
+      let detallesParsed: any = {};
+      try {
+        detallesParsed = JSON.parse(descifrarTexto(producto.detallesCifrados));
+      } catch (e) {
+        detallesParsed = {};
+      }
+
+      let precioCosto = 0;
+
+      // 1. Prioridad: Último costo en DetalleIngreso
+      if (producto.detalleIngresos && producto.detalleIngresos.length > 0 && producto.detalleIngresos[0].costoUnitarioCifrado) {
+        try {
+          const val = parseFloat(descifrarTexto(producto.detalleIngresos[0].costoUnitarioCifrado));
+          if (!isNaN(val) && val > 0) precioCosto = val;
+        } catch (e) {}
+      }
+
+      // 2. Fallback: HistorialPrecio con precioCompraCifrado
+      if (precioCosto === 0 && producto.historialPrecios && producto.historialPrecios.length > 0 && producto.historialPrecios[0].precioCompraCifrado) {
+        try {
+          const val = parseFloat(descifrarTexto(producto.historialPrecios[0].precioCompraCifrado));
+          if (!isNaN(val) && val > 0) precioCosto = val;
+        } catch (e) {}
+      }
+
+      // 3. Fallback: propiedad costo o precioCompra en JSON detalles
+      if (precioCosto === 0) {
+        const val = parseFloat(detallesParsed.costo || detallesParsed.precioCompra || '0');
+        if (!isNaN(val)) precioCosto = val;
+      }
+
+      return {
+        ...producto,
+        nombre: descifrarTexto(producto.nombreCifrado),
+        precioVenta: descifrarTexto(producto.precioVentaCifrado),
+        stock: descifrarTexto(producto.stockCifrado),
+        precioCosto,
+        detalles: detallesParsed,
+      };
+    });
   },
 
   async crear(data: CrearProductoDTO) {

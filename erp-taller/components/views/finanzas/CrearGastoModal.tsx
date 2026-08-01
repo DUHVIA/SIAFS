@@ -8,6 +8,8 @@ import { Wallet, Loader2, Calendar } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 
+import { toInputDate, toFixedISOString } from '@/lib/dateUtils';
+
 interface CrearGastoModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,11 +32,7 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
       setMotivo('');
       setMonto('');
       setError(null);
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      setFecha(`${yyyy}-${mm}-${dd}`);
+      setFecha(toInputDate(new Date()));
     }
   }, [isOpen]);
 
@@ -62,13 +60,14 @@ export function CrearGastoModal({ isOpen, onClose, onSuccess }: CrearGastoModalP
           usuarioId: user.id,
           motivo: motivo.trim(),
           monto: valorMonto,
-          fecha: new Date(fecha).toISOString(),
+          fecha: toFixedISOString(fecha),
         }),
       });
 
       if (res.ok) {
         toast.success('Gasto registrado exitosamente');
         onSuccess();
+        onClose();
       } else {
         const err = await res.json();
         setError(err.error || 'Error al registrar el gasto');

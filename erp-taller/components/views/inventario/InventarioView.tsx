@@ -10,14 +10,19 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { 
     Plus, Search, Filter, Cpu, Wrench, Edit3, Trash2, ArrowUpRight, 
-    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info
+    AlertTriangle, RefreshCw, ChevronLeft, ChevronRight, Info, Download, FileSpreadsheet, Upload, Settings2
 } from 'lucide-react';
+import { exportToCSV } from '@/lib/csvExport';
+import { exportToExcel } from '@/lib/excelExport';
+import { downloadInventoryTemplate } from '@/lib/inventoryTemplate';
 
 import { CrearProductoModal } from './CrearProductoModal';
 import { EditarProductoModal } from './EditarProductoModal';
 import { RestockModal } from './RestockModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { VerKardexModal } from './VerKardexModal';
+import { ImportarInventarioModal } from './ImportarInventarioModal';
+import { GestionarTiposModal } from './GestionarTiposModal';
 
 interface TipoAutoparte {
     id: string;
@@ -59,6 +64,8 @@ export function InventarioView() {
     const [isRestockOpen, setIsRestockOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [isKardexOpen, setIsKardexOpen] = useState(false);
+    const [isImportarOpen, setIsImportarOpen] = useState(false);
+    const [isGestionarTiposOpen, setIsGestionarTiposOpen] = useState(false);
     const [selectedProducto, setSelectedProducto] = useState<any | null>(null);
 
     // Efecto para el debounce de la búsqueda (300ms)
@@ -218,7 +225,7 @@ export function InventarioView() {
             header: 'Precio Venta',
             render: (row: any) => (
                 <span className="font-body font-bold text-secondary">
-                    ${parseFloat(row.precioVenta || '0').toFixed(2)}
+                    S/ {parseFloat(row.precioVenta || '0').toFixed(2)}
                 </span>
             )
         },
@@ -300,12 +307,94 @@ export function InventarioView() {
         ));
     };
 
+    const handleExportCSV = () => {
+        const esReabastecimiento = stockStatusFilter === 'RESTOCKING';
+        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
+        const rows = items.map(p => {
+            const stock = parseInt(p.stock || '0', 10);
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            return [
+                p.detalles?.sku || '',
+                p.nombre || '',
+                p.categoria || '',
+                p.tipoAutoparte?.nombre || '-',
+                stock,
+                estadoStr,
+                parseFloat(p.precioVenta || '0').toFixed(2)
+            ];
+        });
+        const prefix = esReabastecimiento ? 'Reabastecimiento' : 'Inventario';
+        exportToCSV(`${prefix}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
+    };
+
+    const handleExportExcel = () => {
+        const esReabastecimiento = stockStatusFilter === 'RESTOCKING';
+        const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
+        const rows = items.map(p => {
+            const stock = parseInt(p.stock || '0', 10);
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            return [
+                p.detalles?.sku || '',
+                p.nombre || '',
+                p.categoria || '',
+                p.tipoAutoparte?.nombre || '-',
+                stock,
+                estadoStr,
+                parseFloat(p.precioVenta || '0')
+            ];
+        });
+        const prefix = esReabastecimiento ? 'Reabastecimiento' : 'Inventario';
+        exportToExcel(`${prefix}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, prefix);
+    };
+
     return (
         <ModuleTemplate
             title="Inventario de Productos"
             description="Gestiona y monitorea el catálogo encriptado de motores y autopartes de repuesto."
             actions={
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                    <Button 
+                        icon={Download} 
+                        variant="secondary" 
+                        onClick={handleExportCSV} 
+                        className="rounded-full shadow-soft"
+                        disabled={loading || items.length === 0}
+                    >
+                        Exportar CSV
+                    </Button>
+                    <Button 
+                        icon={FileSpreadsheet} 
+                        variant="secondary" 
+                        onClick={handleExportExcel} 
+                        className="rounded-full shadow-soft text-emerald-700 hover:text-emerald-800"
+                        disabled={loading || items.length === 0}
+                    >
+                        Exportar Excel
+                    </Button>
+                    <Button 
+                        icon={FileSpreadsheet} 
+                        variant="secondary" 
+                        onClick={downloadInventoryTemplate} 
+                        className="rounded-full shadow-soft border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 font-medium"
+                    >
+                        Plantilla Excel
+                    </Button>
+                    <Button 
+                        icon={Upload} 
+                        variant="secondary" 
+                        onClick={() => setIsImportarOpen(true)} 
+                        className="rounded-full shadow-soft font-medium text-blue-600 hover:bg-blue-50 border-blue-500/30"
+                    >
+                        Importar Excel
+                    </Button>
+                    <Button 
+                        icon={Settings2} 
+                        variant="secondary" 
+                        onClick={() => setIsGestionarTiposOpen(true)}
+                        className="rounded-full shadow-soft font-medium text-violet-600 hover:bg-violet-50 border-violet-500/30"
+                    >
+                        Tipos de Autoparte
+                    </Button>
                     <Button 
                         icon={RefreshCw} 
                         variant="secondary" 
@@ -364,7 +453,7 @@ export function InventarioView() {
                         </div>
                         <StatCard 
                             title="Valor Total" 
-                            value={`$${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                            value={`S/ ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
                             icon={Cpu} 
                         />
                     </>
@@ -652,6 +741,18 @@ export function InventarioView() {
                     setSelectedProducto(null);
                 }}
                 producto={selectedProducto}
+            />
+
+            <ImportarInventarioModal
+                isOpen={isImportarOpen}
+                onClose={() => setIsImportarOpen(false)}
+                onSuccess={handleRefresh}
+            />
+
+            <GestionarTiposModal
+                isOpen={isGestionarTiposOpen}
+                onClose={() => setIsGestionarTiposOpen(false)}
+                onRefresh={fetchTiposAutoparte}
             />
         </ModuleTemplate>
     );
