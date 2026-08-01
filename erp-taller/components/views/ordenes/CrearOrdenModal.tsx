@@ -574,19 +574,40 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
             <CrearClienteModal
                 isOpen={isCrearClienteOpen}
                 onClose={() => setIsCrearClienteOpen(false)}
-                onSuccess={(nuevoCliente) => {
+                onSuccess={async (nuevoCliente) => {
                     if (nuevoCliente) {
-                        // 1. Agregarlo al inicio de la lista local de clientes
-                        setClientes(prev => [nuevoCliente, ...prev]);
+                        let clienteFinal = nuevoCliente;
 
-                        // 2. Establecerlo como el cliente seleccionado
-                        setClienteSeleccionado(nuevoCliente);
+                        // 1. Refrescar la lista de la API para obtener el listado descifrado y actualizado
+                        try {
+                            const cRes = await fetch('/api/clientes');
+                            if (cRes.ok) {
+                                const cData = await cRes.json();
+                                const arrayClientes = Array.isArray(cData) ? cData : (cData.items || cData.clientes || []);
+                                setClientes(arrayClientes);
 
-                        // 3. Actualizar la búsqueda con el nombre del nuevo cliente
-                        setClienteQuery(nuevoCliente.nombre || '');
+                                // Buscar el cliente recién creado dentro de la lista que devolvió la API
+                                const encontrado = arrayClientes.find((c: any) => c.id === nuevoCliente.id);
+                                if (encontrado) {
+                                    clienteFinal = encontrado;
+                                }
+                            }
+                        } catch (err) {
+                            console.error("Error actualizando clientes:", err);
+                            setClientes(prev => [nuevoCliente, ...prev]);
+                        }
 
-                        // 4. Asegurar que aparezca en el dropdown/filtro
-                        setClientesFiltrados(prev => [nuevoCliente, ...prev.slice(0, 7)]);
+                        // 2. Extraer el nombre/razón social con fallback para evitar 'undefined'
+                        const nombreMostrar = 
+                            clienteFinal.nombre || 
+                            clienteFinal.razonSocial || 
+                            clienteFinal.nombreComercial || 
+                            'Cliente Nuevo';
+
+                        // 3. Autoseleccionar correctamente
+                        setClienteSeleccionado(clienteFinal);
+                        setClienteQuery(nombreMostrar);
+                        setShowClienteDropdown(false); // Ocultar el desplegable
                     }
                     setIsCrearClienteOpen(false);
                 }}

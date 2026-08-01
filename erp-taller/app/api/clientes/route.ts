@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CrearClienteSchema } from '@/modules/clientes/cliente.dto';
 import { ClienteService } from '@/modules/clientes/cliente.service';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -55,6 +56,21 @@ export async function POST(request: Request) {
     const nuevoCliente = await ClienteService.crear(data);
     return NextResponse.json(nuevoCliente, { status: 201 });
   } catch (error: any) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const campo = (error.meta?.target as string[])?.join(', ');
+      
+      if (campo?.includes('documento')) {
+        return NextResponse.json(
+          { error: 'El DNI/RUC ingresado ya se encuentra registrado con otro cliente.' },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: 'Ya existe un registro con esos mismos datos.' },
+        { status: 400 }
+      );
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ errors: error.issues }, { status: 400 });
     }
