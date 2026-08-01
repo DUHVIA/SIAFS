@@ -600,8 +600,6 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                         // 2. Extraer el nombre/razón social con fallback para evitar 'undefined'
                         const nombreMostrar = 
                             clienteFinal.nombre || 
-                            clienteFinal.razonSocial || 
-                            clienteFinal.nombreComercial || 
                             'Cliente Nuevo';
 
                         // 3. Autoseleccionar correctamente
