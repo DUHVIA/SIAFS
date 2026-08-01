@@ -49,6 +49,19 @@ export async function proxy(request: NextRequest) {
       // Validar el JWT en el Edge Runtime con jose
       const { payload } = await jwtVerify(tokenCookie.value, JWT_SECRET);
       
+      // Verificación en tiempo real contra la base de datos para revocar sesiones inmediatamente
+      const verifyRes = await fetch(new URL('/api/auth/verify', request.url).toString(), {
+        headers: {
+          'Authorization': `Bearer ${tokenCookie.value}`
+        },
+        // No cachear esta petición
+        cache: 'no-store'
+      });
+
+      if (!verifyRes.ok) {
+        throw new Error('Sesión revocada o usuario inhabilitado');
+      }
+
       const permisosUsuario = (payload.permisos as string[]) || [];
 
       // Validar el permiso si la ruta tiene un prefijo en ROUTE_PERMISSIONS

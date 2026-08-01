@@ -28,7 +28,9 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ errors: error.issues }, { status: 400 });
     }
-    console.error('Error en POST /api/auth/login:', error);
+    if (error.message !== 'Credenciales inválidas o usuario inactivo') {
+      console.error('Error en POST /api/auth/login:', error);
+    }
     return NextResponse.json({ error: error.message || 'Error interno del servidor' }, { status: 401 });
   }
 }

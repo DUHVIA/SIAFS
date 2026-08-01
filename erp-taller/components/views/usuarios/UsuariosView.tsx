@@ -5,7 +5,7 @@ import { ModuleTemplate } from '@/components/templates/ModuleTemplate';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Plus, Search, Shield, KeyRound, UserX, UserCheck, RefreshCw, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Plus, Search, Shield, KeyRound, UserX, UserCheck, RefreshCw, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearUsuarioModal } from './CrearUsuarioModal';
@@ -30,7 +30,6 @@ export function UsuariosView({ usuarios: initialUsuarios, roles }: UsuariosViewP
     const [isPermisosOpen, setIsPermisosOpen] = useState(false);
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [selectedUsuario, setSelectedUsuario] = useState<any>(null);
-    const [loadingInvitacion, setLoadingInvitacion] = useState<string | null>(null);
 
     const refreshUsuarios = async () => {
         try {
@@ -103,27 +102,6 @@ export function UsuariosView({ usuarios: initialUsuarios, roles }: UsuariosViewP
         setIsPasswordOpen(true);
     };
 
-    const handleGenerarInvitacion = async (targetUser: any) => {
-        if (!validarPermisoModificar(targetUser)) return;
-
-        setLoadingInvitacion(targetUser.id);
-        try {
-            const res = await fetch(`/api/usuarios/${targetUser.id}/invitacion`);
-            if (res.ok) {
-                const data = await res.json();
-                await navigator.clipboard.writeText(data.link);
-                toast.success('¡Enlace de invitación copiado al portapapeles!');
-            } else {
-                const err = await res.json();
-                toast.error(err.error || 'Error al generar el enlace');
-            }
-        } catch (e) {
-            toast.error('Error de conexión al servidor');
-        } finally {
-            setLoadingInvitacion(null);
-        }
-    };
-
     const filteredData = usuariosList.filter(u =>
         u.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -152,17 +130,6 @@ export function UsuariosView({ usuarios: initialUsuarios, roles }: UsuariosViewP
             key: 'acciones', header: 'Acciones',
             render: (row: any) => (
                 <div className="flex items-center gap-1.5 justify-end">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        icon={loadingInvitacion === row.id ? Loader2 : LinkIcon}
-                        onClick={() => handleGenerarInvitacion(row)}
-                        disabled={loadingInvitacion === row.id}
-                        title="Copiar Enlace de Invitación"
-                        className="hover:text-primary"
-                    >
-                        Invitar
-                    </Button>
                     <Button 
                         variant="ghost" 
                         size="sm" 
