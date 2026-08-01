@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, CategoriaProducto } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import * as XLSX from 'xlsx';
@@ -91,13 +91,16 @@ async function main() {
     const descripcion = String(row[7] || nombreProducto).trim();
 
     // Determinar Categoría (MOTOR / AUTOPARTE)
-    let categoria = colCategoria.toUpperCase();
-    if (categoria !== 'MOTOR' && categoria !== 'AUTOPARTE') {
+    let categoria: CategoriaProducto = colCategoria.toUpperCase() === 'MOTOR' 
+      ? CategoriaProducto.MOTOR 
+      : CategoriaProducto.AUTOPARTE;
+
+    if (colCategoria.toUpperCase() !== 'MOTOR' && colCategoria.toUpperCase() !== 'AUTOPARTE') {
       const isMotor = nombreProducto.toUpperCase().includes('MOTOR') || 
                       descripcion.toUpperCase().includes('MOTOR') ||
                       nombreProducto.toUpperCase().includes('CULATA') ||
                       nombreProducto.toUpperCase().includes('CIGÜEÑAL');
-      categoria = isMotor ? 'MOTOR' : 'AUTOPARTE';
+      categoria = isMotor ? CategoriaProducto.MOTOR : CategoriaProducto.AUTOPARTE;
     }
 
     // Determinar Nombre de Tipo de Autoparte
