@@ -350,7 +350,7 @@ export function EditarProductoModal({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
-                            Precio de Venta ($) *
+                            Precio de Venta (S/) *
                         </label>
                         <Input
                             placeholder="Ej. 189.50"

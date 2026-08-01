@@ -225,7 +225,7 @@ export function InventarioView() {
             header: 'Precio Venta',
             render: (row: any) => (
                 <span className="font-body font-bold text-secondary">
-                    S/.{parseFloat(row.precioVenta || '0').toFixed(2)}
+                    S/ {parseFloat(row.precioVenta || '0').toFixed(2)}
                 </span>
             )
         },
@@ -439,7 +439,7 @@ export function InventarioView() {
                         </div>
                         <StatCard 
                             title="Valor Total" 
-                            value={`$${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+                            value={`S/ ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
                             icon={Cpu} 
                         />
                     </>
