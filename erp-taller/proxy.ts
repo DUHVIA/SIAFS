@@ -22,8 +22,14 @@ const ROUTE_PERMISSIONS = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Rutas públicas (Estáticas y de Login)
-  if (pathname.startsWith('/api/auth/login') || pathname === '/login' || pathname === '/unauthorized') {
+  // Rutas públicas (Estáticas, Login e Invitación)
+  if (
+    pathname.startsWith('/api/auth/login') || 
+    pathname.startsWith('/api/auth/invitacion') || 
+    pathname === '/login' || 
+    pathname === '/unauthorized' ||
+    pathname.startsWith('/invitacion')
+  ) {
     return NextResponse.next();
   }
 
