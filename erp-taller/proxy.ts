@@ -4,44 +4,40 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
 
-const ROUTE_PERMISSIONS: Record<string, string> = {
-  '/inventario': 'VER_PRODUCTOS',
-  '/ordenes': 'VER_ORDENES',
-  '/clientes': 'VER_CLIENTES',
-  '/usuarios': 'GESTIONAR_USUARIOS',
-  '/finanzas': 'VER_GASTOS',
-  '/ingresos': 'VER_INGRESOS',
-  '/api/productos': 'VER_PRODUCTOS',
-  '/api/ordenes': 'VER_ORDENES',
-  '/api/clientes': 'VER_CLIENTES',
-  '/api/usuarios': 'GESTIONAR_USUARIOS',
-  '/api/gastos': 'VER_GASTOS',
-  '/api/ingresos': 'VER_INGRESOS',
-};
+const ROUTE_PERMISSIONS = [
+  { prefix: '/inventario', permission: 'VER_PRODUCTOS' },
+  { prefix: '/ordenes', permission: 'VER_ORDENES' },
+  { prefix: '/clientes', permission: 'VER_CLIENTES' },
+  { prefix: '/usuarios', permission: 'GESTIONAR_USUARIOS' },
+  { prefix: '/finanzas', permission: 'VER_GASTOS' },
+  { prefix: '/ingresos', permission: 'VER_INGRESOS' },
+  { prefix: '/api/productos', permission: 'VER_PRODUCTOS' },
+  { prefix: '/api/ordenes', permission: 'VER_ORDENES' },
+  { prefix: '/api/clientes', permission: 'VER_CLIENTES' },
+  { prefix: '/api/usuarios', permission: 'GESTIONAR_USUARIOS' },
+  { prefix: '/api/gastos', permission: 'VER_GASTOS' },
+  { prefix: '/api/ingresos', permission: 'VER_INGRESOS' },
+];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rutas públicas (Estáticas y de Login)
-  if (pathname.startsWith('/api/auth/login') || pathname === '/login') {
+  if (pathname.startsWith('/api/auth/login') || pathname === '/login' || pathname === '/unauthorized') {
     return NextResponse.next();
   }
 
-  // Comprobar si es una ruta protegida
   const isApiRoute = pathname.startsWith('/api/');
-  const isProtectedAppRoute = ['/inventario', '/ordenes', '/clientes', '/usuarios', '/finanzas', '/'].includes(pathname);
+  const tokenCookie = request.cookies.get('auth_token');
 
-  if (isApiRoute || isProtectedAppRoute) {
-    const tokenCookie = request.cookies.get('auth_token');
-    
-    if (!tokenCookie || !tokenCookie.value) {
-      if (isApiRoute) {
-        return NextResponse.json({ error: 'No autorizado - Falta token' }, { status: 401 });
-      } else {
-        // En un escenario real, redirigir al /login. Por ahora redirigiremos a /login (el usuario tendrá que crearlo).
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
+  // Si no hay token, rechazar el acceso INMEDIATAMENTE para CUALQUIER ruta
+  if (!tokenCookie || !tokenCookie.value) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: 'No autorizado - Falta token' }, { status: 401 });
+    } else {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
+  }
 
     try {
       // Validar el JWT en el Edge Runtime con jose
@@ -49,21 +45,21 @@ export async function proxy(request: NextRequest) {
       
       const permisosUsuario = (payload.permisos as string[]) || [];
 
-      // Validar el permiso si la ruta está en el diccionario ROUTE_PERMISSIONS
+      // Validar el permiso si la ruta tiene un prefijo en ROUTE_PERMISSIONS
       // Si la ruta es '/', y el usuario NO tiene VER_DASHBOARD, buscar la primera ruta permitida
       if (pathname === '/' && !permisosUsuario.includes('VER_DASHBOARD')) {
-        const fallbackRoute = Object.entries(ROUTE_PERMISSIONS).find(
-          ([route, perm]) => !route.startsWith('/api') && permisosUsuario.includes(perm)
+        const fallbackRoute = ROUTE_PERMISSIONS.find(
+          (route) => !route.prefix.startsWith('/api') && permisosUsuario.includes(route.permission)
         );
         if (fallbackRoute) {
-          return NextResponse.redirect(new URL(fallbackRoute[0], request.url));
+          return NextResponse.redirect(new URL(fallbackRoute.prefix, request.url));
         } else {
           return NextResponse.redirect(new URL('/unauthorized', request.url));
         }
       }
 
-      const requiredPermission = ROUTE_PERMISSIONS[pathname];
-      if (requiredPermission && !permisosUsuario.includes(requiredPermission)) {
+      const requiredPermissionMatch = ROUTE_PERMISSIONS.find(route => pathname.startsWith(route.prefix));
+      if (requiredPermissionMatch && !permisosUsuario.includes(requiredPermissionMatch.permission)) {
         if (isApiRoute) {
           return NextResponse.json({ error: 'Permisos insuficientes para esta acción' }, { status: 403 });
         } else {
@@ -91,9 +87,6 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL('/login', request.url));
       }
     }
-  }
-
-  return NextResponse.next();
 }
 
 export const config = {
