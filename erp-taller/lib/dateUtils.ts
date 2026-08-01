@@ -42,3 +42,36 @@ export function toFixedISOString(dateString: string): string {
     const datePart = dateString.includes('T') ? dateString.split('T')[0] : dateString.slice(0, 10);
     return `${datePart}T12:00:00.000Z`;
 }
+// ============ AGREGAR AL FINAL de lib/dateUtils.ts ============
+
+const PERU_OFFSET_MS = 5 * 60 * 60 * 1000; // UTC-5, Perú no usa horario de verano
+
+interface DiaCalendario { y: number; m: number; d: number; }
+
+/**
+ * Extrae el día calendario de un campo @db.Date (fecha, sin hora ni zona horaria).
+ * Postgres/Prisma siempre lo devuelve como medianoche UTC, así que sus
+ * componentes UTC YA representan el día real — no se debe aplicar ningún offset.
+ */
+export function diaCalendarioUTC(fecha: Date | string): DiaCalendario {
+    const f = new Date(fecha);
+    return { y: f.getUTCFullYear(), m: f.getUTCMonth(), d: f.getUTCDate() };
+}
+
+/**
+ * Extrae el día calendario "de negocio" (hora de Perú) de un timestamp real
+ * (createdAt, fechaIngreso, etc). Ajusta por el offset de Perú antes de leer
+ * los componentes UTC, para no depender de la zona horaria del servidor.
+ */
+export function diaCalendarioPeru(fecha: Date | string): DiaCalendario {
+    const f = new Date(new Date(fecha).getTime() - PERU_OFFSET_MS);
+    return { y: f.getUTCFullYear(), m: f.getUTCMonth(), d: f.getUTCDate() };
+}
+
+export function mismoDia(a: DiaCalendario, b: DiaCalendario): boolean {
+    return a.y === b.y && a.m === b.m && a.d === b.d;
+}
+
+export function mismoMes(a: DiaCalendario, b: DiaCalendario): boolean {
+    return a.y === b.y && a.m === b.m;
+}

@@ -9,6 +9,7 @@ export function downloadInventoryTemplate() {
 
   const headers = [
     'Nombre del Producto',
+    'SKU / Codigo',
     'Categoría',
     'Tipo de Autoparte',
     'Precio Compra (S/)',
@@ -20,6 +21,7 @@ export function downloadInventoryTemplate() {
   const sampleRows = [
     [
       'Motor Hyundai G4FC 1.6L Complete',
+      'MTR-HND-001',
       'MOTOR',
       'Motor',
       3200.00,
@@ -29,6 +31,7 @@ export function downloadInventoryTemplate() {
     ],
     [
       'Pastillas de Freno Cerámicas Delanteras',
+      'PST-FRN-001',
       'AUTOPARTE',
       'Frenos',
       95.00,
@@ -38,6 +41,7 @@ export function downloadInventoryTemplate() {
     ],
     [
       'Filtro de Aceite Sintético de Alto Flujo',
+      'FLT-ACE-001',
       'AUTOPARTE',
       'Filtros',
       22.00,
@@ -47,6 +51,7 @@ export function downloadInventoryTemplate() {
     ],
     [
       'Amortiguador Hidráulico Trasero',
+      'AMR-HID-001',
       'AUTOPARTE',
       'Suspensión',
       130.00,
@@ -62,6 +67,7 @@ export function downloadInventoryTemplate() {
   worksheet['!cols'] = [
     { wch: 40 }, // Nombre del Producto
     { wch: 15 }, // Categoría
+    { wch: 20 }, // SKU / Codigo
     { wch: 20 }, // Tipo de Autoparte
     { wch: 18 }, // Precio Compra
     { wch: 18 }, // Precio Venta

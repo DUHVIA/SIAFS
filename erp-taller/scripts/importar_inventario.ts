@@ -29,7 +29,10 @@ async function main() {
 
   console.log(`Cargando archivo de inventario: ${filePath}...`);
   const workbook = XLSX.readFile(filePath);
-  const sheetName = workbook.SheetNames.includes('Inventario') ? 'Inventario' : workbook.SheetNames[0];
+  const sheetName = workbook.SheetNames.includes('Plantilla Inventario') 
+    ? 'Plantilla Inventario' 
+    : (workbook.SheetNames.includes('Inventario') ? 'Inventario' : workbook.SheetNames[0]);
+    
   const sheet = workbook.Sheets[sheetName];
   const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
@@ -49,43 +52,63 @@ async function main() {
   let creadosCount = 0;
   let tiposCreadosCount = 0;
 
-  // Analizar filas ignorando encabezados
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length === 0) continue;
 
-    // Detectar si la fila contiene datos de producto
-    const col0 = String(row[0] || '').trim();
-    const col1 = String(row[1] || '').trim();
-    const col3 = String(row[3] || '').trim();
+    // Extracción directa según la estructura exacta de la plantilla Excel:
+    // row[0] -> Nombre del Producto
+    // row[1] -> SKU / Codigo
+    // row[2] -> Categoría
+    // row[3] -> Tipo de Autoparte
+    // row[4] -> Precio Compra
+    // row[5] -> Precio Venta
+    // row[6] -> Stock Inicial
+    // row[7] -> Descripción / Detalles
 
-    // Omitir títulos y filas de resumen
-    if (col0.includes('INVENTARIO') || col0.includes('Escribe') || col0.includes('Código') || col0 === '') {
-      if (!col1 || col1.includes('Modelo') || col1 === '') continue;
+    const colNombre = String(row[0] || '').trim();
+    const colSku = String(row[1] || '').trim();
+    const colCategoria = String(row[2] || '').trim();
+    const colTipo = String(row[3] || '').trim();
+
+    // Ignorar encabezados o filas vacías
+    if (
+      !colNombre || 
+      colNombre.toUpperCase().includes('NOMBRE') || 
+      colNombre.toUpperCase().includes('INVENTARIO')
+    ) {
+      continue;
     }
 
-    const nombreProducto = col1 || col0;
-    if (!nombreProducto || nombreProducto.length < 2) continue;
+    const nombreProducto = colNombre;
+    if (nombreProducto.length < 2) continue;
 
-    const descripcion = col3 || nombreProducto;
+    // Asignación correcta de SKU y Nombre
+    const skuProducto = colSku || `SKU-${Math.floor(1000 + Math.random() * 9000)}`;
     const precioCompraNum = parseFloat(row[4]) || 0;
     const precioVentaNum = parseFloat(row[5]) || (precioCompraNum > 0 ? precioCompraNum * 1.3 : 100);
-    const stockNum = Math.max(parseInt(row[8] ?? row[6] ?? '1', 10) || 0, 0);
+    const stockNum = Math.max(parseInt(row[6] ?? '0', 10) || 0, 0);
+    const descripcion = String(row[7] || nombreProducto).trim();
 
-    // Determinar categoría y tipo de autoparte
-    const isMotor = nombreProducto.toUpperCase().includes('MOTOR') || 
-                    descripcion.toUpperCase().includes('MOTOR') ||
-                    nombreProducto.toUpperCase().includes('CULATA') ||
-                    nombreProducto.toUpperCase().includes('CIGÜEÑAL');
+    // Determinar Categoría (MOTOR / AUTOPARTE)
+    let categoria = colCategoria.toUpperCase();
+    if (categoria !== 'MOTOR' && categoria !== 'AUTOPARTE') {
+      const isMotor = nombreProducto.toUpperCase().includes('MOTOR') || 
+                      descripcion.toUpperCase().includes('MOTOR') ||
+                      nombreProducto.toUpperCase().includes('CULATA') ||
+                      nombreProducto.toUpperCase().includes('CIGÜEÑAL');
+      categoria = isMotor ? 'MOTOR' : 'AUTOPARTE';
+    }
 
-    const categoria = isMotor ? 'MOTOR' : 'AUTOPARTE';
-    
-    let tipoNombre = 'General';
-    if (nombreProducto.toUpperCase().includes('CULATA')) tipoNombre = 'Motor';
-    else if (nombreProducto.toUpperCase().includes('CAJA')) tipoNombre = 'Transmisión';
-    else if (nombreProducto.toUpperCase().includes('CIGÜEÑAL')) tipoNombre = 'Motor';
-    else if (isMotor) tipoNombre = 'Motor';
-    else tipoNombre = 'Repuestos';
+    // Determinar Nombre de Tipo de Autoparte
+    let tipoNombre = colTipo;
+    if (!tipoNombre || tipoNombre === 'General') {
+      if (nombreProducto.toUpperCase().includes('CULATA')) tipoNombre = 'Motor';
+      else if (nombreProducto.toUpperCase().includes('CAJA')) tipoNombre = 'Transmisión';
+      else if (nombreProducto.toUpperCase().includes('CIGÜEÑAL')) tipoNombre = 'Motor';
+      else if (categoria === 'MOTOR') tipoNombre = 'Motor';
+      else tipoNombre = 'Repuestos';
+    }
 
     // Buscar o crear TipoAutoparte
     let tipoObj = await prisma.tipoAutoparte.findUnique({
@@ -99,20 +122,22 @@ async function main() {
       tiposCreadosCount++;
     }
 
-    // Cifrar datos de producto
+    // Cifrar datos de producto para cumplimiento de arquitectura SIAFS
     const nombreCifrado = cifrarTexto(nombreProducto);
     const idxNombre = generarIndiceCiego(nombreProducto);
     const precioVentaCifrado = cifrarTexto(precioVentaNum.toFixed(2));
     const stockCifrado = cifrarTexto(stockNum.toString());
+
+    // JSON cifrado en detalles con el SKU asignado correctamente
     const detallesJSON = JSON.stringify({
-      sku: col0 || `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+      sku: skuProducto,
       descripcion,
       precioCompra: precioCompraNum.toFixed(2),
       origenImportacion: 'Migración Inicial Excel'
     });
     const detallesCifrados = cifrarTexto(detallesJSON);
 
-    // Crear Producto en transacción con Kardex e Ingreso inicial
+    // Guardar en Base de Datos con transacción de Kardex e Historial
     await prisma.$transaction(async (tx) => {
       const nuevoProd = await tx.producto.create({
         data: {
@@ -127,7 +152,7 @@ async function main() {
         }
       });
 
-      // Historial de Precio inicial
+      // Historial de Precio
       await tx.historialPrecio.create({
         data: {
           productoId: nuevoProd.id,

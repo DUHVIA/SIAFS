@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { descifrarTexto } from '@/lib/crypto';
+import { diaCalendarioUTC, diaCalendarioPeru, mismoDia, mismoMes } from '@/lib/dateUtils';
 
 export type PeriodoFinanciero = '7d' | 'mensual' | 'trimestral' | 'anual';
 
@@ -156,7 +157,8 @@ export const DashboardService = {
 
     const listaGastos = gastosInternos.map(g => ({
       monto: parseFloat(descifrarTexto(g.montoCifrado)) || 0,
-      fecha: new Date(g.fecha || g.createdAt)
+      dia: diaCalendarioUTC(g.fecha || g.createdAt),
+      //fecha: new Date(g.fecha || g.createdAt)
     }));
 
     const listaCompras = ingresosInventario.map(i => ({
@@ -180,8 +182,10 @@ export const DashboardService = {
           .filter(item => item.fecha.toDateString() === d.toDateString())
           .reduce((acc, item) => acc + item.monto, 0);
 
+        // Gastos 
+        const diaObjetivo = diaCalendarioUTC(d); 
         const sumGastos = listaGastos
-          .filter(item => item.fecha.toDateString() === d.toDateString())
+          .filter(item => mismoDia(item.dia, diaObjetivo))
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumCompras = listaCompras
@@ -213,8 +217,12 @@ export const DashboardService = {
           .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
           .reduce((acc, item) => acc + item.monto, 0);
 
+        // Gastos
         const sumGastos = listaGastos
-          .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
+          .filter(item => {
+            const t = Date.UTC(item.dia.y, item.dia.m, item.dia.d);
+            return t >= dStart.getTime() && t <= dEnd.getTime();
+          })
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumCompras = listaCompras
@@ -244,8 +252,10 @@ export const DashboardService = {
           .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
           .reduce((acc, item) => acc + item.monto, 0);
 
+        // Gastos
         const sumGastos = listaGastos
-          .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
+          .filter(item => item.dia.y === year && q.months.includes(item.dia.m)) // trimestral
+          // o: item.dia.y === year && item.dia.m === monthIdx   // anual
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumCompras = listaCompras
@@ -271,7 +281,7 @@ export const DashboardService = {
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumGastos = listaGastos
-          .filter(item => item.fecha.getFullYear() === year && item.fecha.getMonth() === monthIdx)
+          .filter(item => item.dia.y === year && item.dia.m === monthIdx) // anual
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumCompras = listaCompras
