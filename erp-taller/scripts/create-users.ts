@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { SignJWT } from 'jose';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Usamos la misma lógica de cifrado que en el servidor
 function hashPassword(password: string) {
