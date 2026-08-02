@@ -114,7 +114,7 @@ export const config = {
   // Runtime Node.js (estable desde Next.js 15.5): permite usar Prisma/pg
   // directamente en el middleware, sin el antipatrón de fetch interno que
   // causaba ERR_SSL_WRONG_VERSION_NUMBER en Railway.
-  runtime: 'nodejs',
+  // runtime: 'nodejs',
   // Proteger toda la aplicación excepto los assets estáticos de Next.js
   matcher: ['/((?!_next/static|_next/image|favicon.ico|LOGO.png).*)'],
 };
