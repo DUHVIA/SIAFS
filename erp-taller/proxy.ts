@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { ENCODED_JWT_SECRET } from './lib/secrets';
+import { prisma } from './lib/prisma';
 
 const ROUTE_PERMISSIONS = [
   { prefix: '/inventario', permission: 'VER_PRODUCTOS' },
@@ -23,10 +24,10 @@ export async function proxy(request: NextRequest) {
 
   // Rutas públicas (Estáticas, Login e Invitación)
   if (
-    pathname.startsWith('/api/auth/login') || 
-    pathname.startsWith('/api/auth/invitacion') || 
+    pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/invitacion') ||
     pathname.startsWith('/api/auth/verify') ||
-    pathname === '/login' || 
+    pathname === '/login' ||
     pathname === '/unauthorized' ||
     pathname.startsWith('/invitacion')
   ) {
@@ -45,70 +46,75 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-    try {
-      // Validar el JWT en el Edge Runtime con jose
-      const { payload } = await jwtVerify(tokenCookie.value, ENCODED_JWT_SECRET);
-      
-      // Verificación en tiempo real contra la base de datos para revocar sesiones inmediatamente
-      const verifyRes = await fetch(new URL('/api/auth/verify', request.url).toString(), {
-        headers: {
-          'Authorization': `Bearer ${tokenCookie.value}`
-        },
-        // No cachear esta petición
-        cache: 'no-store'
-      });
+  try {
+    // Validar el JWT (firma + expiración)
+    const { payload } = await jwtVerify(tokenCookie.value, ENCODED_JWT_SECRET);
+    const usuarioId = payload.usuarioId as string;
 
-      if (!verifyRes.ok) {
-        throw new Error('Sesión revocada o usuario inhabilitado');
-      }
+    // Verificación de revocación de sesión EN TIEMPO REAL, consultando la BD
+    // directamente (ya no vía fetch a /api/auth/verify — ver nota de la migración
+    // a runtime 'nodejs' más abajo en `config`). Esto evita el antipatrón de que
+    // el middleware se llame a sí mismo por HTTP.
+    const usuarioActivo = await prisma.usuario.findUnique({
+      where: { id: usuarioId },
+      select: { isActive: true, accesoSistema: true },
+    });
 
-      const permisosUsuario = (payload.permisos as string[]) || [];
+    if (!usuarioActivo || !usuarioActivo.isActive || !usuarioActivo.accesoSistema) {
+      throw new Error('Sesión revocada o usuario inhabilitado');
+    }
 
-      // Validar el permiso si la ruta tiene un prefijo en ROUTE_PERMISSIONS
-      // Si la ruta es '/', y el usuario NO tiene VER_DASHBOARD, buscar la primera ruta permitida
-      if (pathname === '/' && !permisosUsuario.includes('VER_DASHBOARD')) {
-        const fallbackRoute = ROUTE_PERMISSIONS.find(
-          (route) => !route.prefix.startsWith('/api') && permisosUsuario.includes(route.permission)
-        );
-        if (fallbackRoute) {
-          return NextResponse.redirect(new URL(fallbackRoute.prefix, request.url));
-        } else {
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-      }
+    const permisosUsuario = (payload.permisos as string[]) || [];
 
-      const requiredPermissionMatch = ROUTE_PERMISSIONS.find(route => pathname.startsWith(route.prefix));
-      if (requiredPermissionMatch && !permisosUsuario.includes(requiredPermissionMatch.permission)) {
-        if (isApiRoute) {
-          return NextResponse.json({ error: 'Permisos insuficientes para esta acción' }, { status: 403 });
-        } else {
-          // Redirigir a pantalla de acceso denegado si intenta ver una pantalla prohibida
-          return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
-      }
-      
-      // Adjuntar info limpia a los headers
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-usuario-id', payload.usuarioId as string);
-      requestHeaders.set('x-rol-id', payload.rolId as string);
-      requestHeaders.set('x-user-permissions', JSON.stringify(permisosUsuario));
-
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-    } catch (error) {
-      console.error('Error verificando JWT:', error);
-      if (isApiRoute) {
-        return NextResponse.json({ error: 'Token inválido o expirado' }, { status: 401 });
+    // Validar el permiso si la ruta tiene un prefijo en ROUTE_PERMISSIONS
+    // Si la ruta es '/', y el usuario NO tiene VER_DASHBOARD, buscar la primera ruta permitida
+    if (pathname === '/' && !permisosUsuario.includes('VER_DASHBOARD')) {
+      const fallbackRoute = ROUTE_PERMISSIONS.find(
+        (route) => !route.prefix.startsWith('/api') && permisosUsuario.includes(route.permission)
+      );
+      if (fallbackRoute) {
+        return NextResponse.redirect(new URL(fallbackRoute.prefix, request.url));
       } else {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
     }
+
+    const requiredPermissionMatch = ROUTE_PERMISSIONS.find(route => pathname.startsWith(route.prefix));
+    if (requiredPermissionMatch && !permisosUsuario.includes(requiredPermissionMatch.permission)) {
+      if (isApiRoute) {
+        return NextResponse.json({ error: 'Permisos insuficientes para esta acción' }, { status: 403 });
+      } else {
+        // Redirigir a pantalla de acceso denegado si intenta ver una pantalla prohibida
+        return NextResponse.redirect(new URL('/unauthorized', request.url));
+      }
+    }
+
+    // Adjuntar info limpia a los headers
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-usuario-id', usuarioId);
+    requestHeaders.set('x-rol-id', payload.rolId as string);
+    requestHeaders.set('x-user-permissions', JSON.stringify(permisosUsuario));
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  } catch (error) {
+    console.error('Error verificando JWT/sesión:', error);
+    if (isApiRoute) {
+      return NextResponse.json({ error: 'Token inválido, expirado o sesión revocada' }, { status: 401 });
+    } else {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
 }
 
 export const config = {
+  // Runtime Node.js (estable desde Next.js 15.5): permite usar Prisma/pg
+  // directamente en el middleware, sin el antipatrón de fetch interno que
+  // causaba ERR_SSL_WRONG_VERSION_NUMBER en Railway.
+  runtime: 'nodejs',
   // Proteger toda la aplicación excepto los assets estáticos de Next.js
   matcher: ['/((?!_next/static|_next/image|favicon.ico|LOGO.png).*)'],
 };
