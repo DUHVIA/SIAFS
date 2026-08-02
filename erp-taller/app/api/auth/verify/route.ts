@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
+import { ENCODED_JWT_SECRET } from '@/lib/secrets';
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +11,7 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.split(' ')[1];
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, ENCODED_JWT_SECRET);
     
     if (!payload || !payload.usuarioId) {
       return NextResponse.json({ active: false }, { status: 401 });

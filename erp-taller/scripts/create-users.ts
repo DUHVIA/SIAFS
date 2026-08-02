@@ -78,7 +78,10 @@ async function main() {
     }
 
     // 5. Generar link de invitación
-    const BASE_SECRET = process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!';
+    if (!process.env.JWT_SECRET) {
+      throw new Error("FATAL ERROR: JWT_SECRET environment variable is not set.");
+    }
+    const BASE_SECRET = process.env.JWT_SECRET;
     const secretKey = new TextEncoder().encode(BASE_SECRET + hash);
     const token = await new SignJWT({ userId: nuevoUsuario.id, purpose: 'invitation' })
       .setProtectedHeader({ alg: 'HS256' })

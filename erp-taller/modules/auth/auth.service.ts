@@ -3,7 +3,7 @@ import { verificarPassword } from '@/lib/crypto';
 import { SignJWT } from 'jose';
 
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
+import { ENCODED_JWT_SECRET } from '@/lib/secrets';
 
 export const AuthService = {
   async login(email: string, passwordString: string) {
@@ -39,7 +39,7 @@ export const AuthService = {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('12h')
-      .sign(JWT_SECRET);
+      .sign(ENCODED_JWT_SECRET);
 
     return {
       token,

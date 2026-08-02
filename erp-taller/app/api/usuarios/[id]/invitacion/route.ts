@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { SignJWT } from 'jose';
-
-const BASE_SECRET = process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!';
+import { BASE_SECRET } from '@/lib/secrets';
 
 export async function GET(
   request: Request,

@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify, decodeJwt } from 'jose';
 import crypto from 'crypto';
-
-const BASE_SECRET = process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!';
+import { BASE_SECRET } from '@/lib/secrets';
 
 function hashPassword(password: string) {
   const salt = crypto.randomBytes(16).toString('hex');

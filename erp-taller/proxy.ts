@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
+import { ENCODED_JWT_SECRET } from './lib/secrets';
 
 const ROUTE_PERMISSIONS = [
   { prefix: '/inventario', permission: 'VER_PRODUCTOS' },
@@ -48,7 +47,7 @@ export async function proxy(request: NextRequest) {
 
     try {
       // Validar el JWT en el Edge Runtime con jose
-      const { payload } = await jwtVerify(tokenCookie.value, JWT_SECRET);
+      const { payload } = await jwtVerify(tokenCookie.value, ENCODED_JWT_SECRET);
       
       // Verificación en tiempo real contra la base de datos para revocar sesiones inmediatamente
       const verifyRes = await fetch(new URL('/api/auth/verify', request.url).toString(), {

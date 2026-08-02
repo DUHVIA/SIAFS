@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!');
+import { ENCODED_JWT_SECRET } from '@/lib/secrets';
 
 export default async function RootLayout({
   children,
@@ -35,7 +35,7 @@ export default async function RootLayout({
 
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
+      const { payload } = await jwtVerify(token, ENCODED_JWT_SECRET);
       user = { 
         id: payload.usuarioId as string, 
         rolId: payload.rolId as string,
