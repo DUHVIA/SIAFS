@@ -2,6 +2,7 @@
   "name": "erp-taller",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
@@ -39,5 +40,8 @@
     "typescript": "^5",
     "vitest": "^4.1.9",
     "vitest-mock-extended": "^4.0.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }
