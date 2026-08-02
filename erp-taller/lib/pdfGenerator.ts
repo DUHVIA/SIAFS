@@ -245,7 +245,7 @@ export async function generarCotizacionPDF(datos: DatosCotizacion) {
     if (!esVenta) {
         doc.text('• Cotización válida por 7 días calendario a partir de su emisión.', 15, finalY + 18);
     } else {
-        doc.text('• Documento de venta interna generado desde A&F Samfor - SIAFS.', 15, finalY + 18);
+        doc.text('• Documento nota de pedido generado desde A&F Samfor - SIAFS.', 15, finalY + 18);
     }
 
     // --- PIE DE PÁGINA FIX ---
@@ -264,7 +264,7 @@ export async function generarCotizacionPDF(datos: DatosCotizacion) {
         doc.setFont('helvetica', 'italic');
         doc.setTextColor(colorGris[0], colorGris[1], colorGris[2]);
     }
-
+    doc.text('Este documento no es válido para efectos tributarios, exija su boleta o factura', 105, pageHeight - 13, { align: 'center' });
     doc.text('A&F SAMFOR - SIAFS', 105, pageHeight - 8, { align: 'center' });
 
     // Descargar archivo PDF
