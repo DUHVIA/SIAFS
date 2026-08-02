@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { KeyRound, Loader2 } from 'lucide-react';
+import { KeyRound, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 
 interface CambiarPasswordModalProps {
@@ -19,6 +19,7 @@ export function CambiarPasswordModal({ isOpen, usuario, onClose, onSuccess }: Ca
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,26 +80,37 @@ export function CambiarPasswordModal({ isOpen, usuario, onClose, onSuccess }: Ca
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 font-body">
         <div>
           <label className="text-xs text-tertiary font-medium mb-1.5 block">Nueva Contraseña</label>
-          <Input
-            required
-            type="password"
-            placeholder="Mínimo 8 caracteres"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-          />
+          <div className="relative">
+            <Input
+              required
+              type={showPassword ? "text" : "password"}
+              placeholder="Mínimo 8 caracteres"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary focus:outline-none"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         <div>
           <label className="text-xs text-tertiary font-medium mb-1.5 block">Confirmar Nueva Contraseña</label>
-          <Input
-            required
-            type="password"
-            placeholder="Repita la nueva contraseña"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={loading}
-          />
+          <div className="relative">
+            <Input
+              required
+              type={showPassword ? "text" : "password"}
+              placeholder="Repita la nueva contraseña"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
         </div>
 
         {error && (

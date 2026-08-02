@@ -9,7 +9,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-    if (pathname === '/login') {
+    if (pathname === '/login' || pathname.startsWith('/invitacion')) {
         return <div className="flex-1 min-h-screen bg-transparent">{children}</div>;
     }
 

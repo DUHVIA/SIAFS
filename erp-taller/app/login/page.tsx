@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useLoading } from '@/components/providers/LoadingProvider';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
     const { success, error } = useToast();
     const { setLoading, isLoading } = useLoading();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,14 +71,23 @@ export default function LoginPage() {
 
                     <div>
                         <label className="text-xs text-tertiary font-medium mb-1 block">Contraseña</label>
-                        <Input
-                            required
-                            type="password"
-                            icon={Lock}
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
+                        <div className="relative">
+                            <Input
+                                required
+                                type={showPassword ? "text" : "password"}
+                                icon={Lock}
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-secondary focus:outline-none"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
                     </div>
 
                     <Button

@@ -5,7 +5,7 @@ import { ModuleTemplate } from '@/components/templates/ModuleTemplate';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Plus, Search, Shield, KeyRound, UserX, UserCheck, RefreshCw } from 'lucide-react';
+import { Plus, Search, Shield, KeyRound, UserX, UserCheck, RefreshCw, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearUsuarioModal } from './CrearUsuarioModal';

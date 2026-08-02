@@ -26,7 +26,8 @@ export async function POST(request: Request) {
     return NextResponse.json(nuevoUsuario, { status: 201 });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ errors: error.issues }, { status: 400 });
+      const msgs = error.issues.map(i => i.message).join(' | ');
+      return NextResponse.json({ error: msgs }, { status: 400 });
     }
     console.error('Error en POST /api/usuarios:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
