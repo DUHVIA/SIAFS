@@ -13,9 +13,7 @@ function hashPassword(password: string) {
 // Lista de usuarios a crear
 // Modifica esta lista según tus necesidades
 const USERS_TO_CREATE = [
-  { nombre: 'Nuevo Vendedor 1', email: 'vendedor1@samfor.com', rolNombre: 'VENDEDOR' },
-  { nombre: 'Nuevo Vendedor 2', email: 'vendedor2@samfor.com', rolNombre: 'VENDEDOR' },
-  { nombre: 'Nuevo Tecnico 1', email: 'tecnico1@samfor.com', rolNombre: 'TÉCNICO' }
+  { nombre: 'Administrador (Dueño)', email: 'afsamfor@gmail.com', rolNombre: 'DUEÑO' }
 ];
 
 async function main() {
