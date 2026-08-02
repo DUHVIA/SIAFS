@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import { SignJWT } from 'jose';
 
 const prisma = new PrismaClient();
 
@@ -76,7 +77,23 @@ async function main() {
       });
     }
 
+    // 5. Generar link de invitación
+    const BASE_SECRET = process.env.JWT_SECRET || 'DuhviaERP_Super_Secret_JWT_Key!';
+    const secretKey = new TextEncoder().encode(BASE_SECRET + hash);
+    const token = await new SignJWT({ userId: nuevoUsuario.id, purpose: 'invitation' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .sign(secretKey);
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tu-erp-en-railway.app';
+    const invitationLink = `${baseUrl}/invitacion?token=${token}`;
+
     console.log(`[CREADO] Usuario: ${userData.nombre} | Email: ${userData.email} | Rol: ${userData.rolNombre}`);
+    console.log(`\n======================================================`);
+    console.log(`🔗 LINK DE INVITACIÓN (UN SOLO USO)`);
+    console.log(`${invitationLink}`);
+    console.log(`======================================================\n`);
   }
 
   console.log("Proceso finalizado.");
