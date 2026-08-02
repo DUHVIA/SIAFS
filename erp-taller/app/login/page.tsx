@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useLoading } from '@/components/providers/LoadingProvider';
 import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Image } from 'next/image';
 
 export default function LoginPage() {
     const { success, error } = useToast();
@@ -46,7 +47,13 @@ export default function LoginPage() {
 
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-primary/10 rounded-2xl mx-auto flex items-center justify-center mb-4">
-                        <img src="/logo.png" alt="Logo" className="w-10 h-10" />
+                        <Image 
+                        src="/LOGO.png" 
+                        alt="Logo A&F Samfor" 
+                        width={40} 
+                        height={40} 
+                        className="w-10 h-10 object-contain"
+                        />
                     </div>
                     <h1 className="font-headline text-2xl font-bold text-secondary ">
                         Bienvenido a SIAFS
