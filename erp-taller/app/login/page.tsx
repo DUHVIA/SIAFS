@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useLoading } from '@/components/providers/LoadingProvider';
 import { Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { Image } from 'next/image';
+import Image from 'next/image';
 
 export default function LoginPage() {
     const { success, error } = useToast();
