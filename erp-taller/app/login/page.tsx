@@ -46,7 +46,7 @@ export default function LoginPage() {
 
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-primary/10 rounded-2xl mx-auto flex items-center justify-center mb-4">
-                        <Lock className="w-8 h-8 text-primary" />
+                        <img src="/logo.png" alt="Logo" className="w-10 h-10" />
                     </div>
                     <h1 className="font-headline text-2xl font-bold text-secondary ">
                         Bienvenido a SIAFS
