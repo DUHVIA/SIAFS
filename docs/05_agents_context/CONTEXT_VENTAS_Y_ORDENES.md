@@ -73,6 +73,7 @@ model Orden {
   subtotalCifrado String       @map("subtotal_cifrado") @db.Text
   totalCifrado    String       @map("total_cifrado") @db.Text
   fechaValidez    DateTime?    @map("fecha_validez") 
+  fechaOrden      DateTime     @default(now()) @map("fecha_orden")  // Fecha real de la transacción (configurable)
   createdAt       DateTime     @default(now()) @map("created_at")
 
   cliente         Cliente      @relation(fields: [clienteId], references: [id])
@@ -88,8 +89,9 @@ model DetalleOrden {
   ordenId                       String   @map("orden_id") @db.Uuid
   productoId                    String?  @map("producto_id") @db.Uuid
   
-  productoNombreCifrado         String   @map("producto_nombre_cifrado") @db.Text 
-  precioUnitarioCongeladoCifrado String  @map("precio_unitario_congelado_cifrado") @db.Text
+  productoNombreCifrado                String   @map("producto_nombre_cifrado") @db.Text 
+  precioUnitarioCongeladoCifrado       String   @map("precio_unitario_congelado_cifrado") @db.Text
+  costoUnitarioCongeladoCifrado        String?  @map("costo_unitario_congelado_cifrado") @db.Text  // Costo congelado al momento de la venta
   cantidadCifrada               String   @map("cantidad_cifrada") @db.Text
   subtotalCifrado               String   @map("subtotal_cifrado") @db.Text
 
@@ -114,9 +116,10 @@ model DetalleOrden {
 - **Payload:**
   ```json
   {
-    "tipo": "VENTA", // o "COTIZACION"
+    "tipo": "VENTA",
     "clienteId": "uuid-cliente",
     "metodoPagoId": "uuid-metodo",
+    "fecha": "2026-08-07",
     "detalles": [
       {
         "productoId": "uuid-prod",
@@ -127,6 +130,8 @@ model DetalleOrden {
   }
   ```
 - **Lógica Transaccional:**
+  - Parsea `fecha` usando hora local (`new Date(year, month - 1, day, 12, 0, 0)`) y la guarda en `fechaOrden`.
+  - Congela `costoUnitarioCongeladoCifrado` de `Producto.precioCompraCifrado` en cada `DetalleOrden`.
   - Si es `VENTA`: Valida stock, descuenta stock de `Producto` y crea registro Kardex `SALIDA`.
   - Si es `COTIZACION`: Guarda la orden sin descontar stock.
 
@@ -143,13 +148,19 @@ model DetalleOrden {
 
 Ubicados en [components/views/ordenes/](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/views/ordenes/):
 
-1. **`OrdenesView.tsx`**: Bento grid de KPIs de Ventas, tabs (Ventas, Cotizaciones, Anuladas), tabla paginada con acciones (Ver Detalle, Descargar PDF Proforma/Nota de Pedido, Convertir a Venta, Anular) y botones de exportación CSV/Excel.
+1. **`OrdenesView.tsx`**: Bento grid de KPIs de Ventas, tabs (Ventas, Cotizaciones, Anuladas), tabla paginada con acciones (Ver Detalle, Descargar PDF, Editar Cotización, Convertir a Venta, Anular) y botón **"Exportar"** que abre `ExportarOrdenesModal`.
 2. **`CrearOrdenModal.tsx`**:
    - Selector dinámico entre Venta Directa y Cotización.
    - Combobox con autocompletado de Clientes + botón inline `+ Nuevo Cliente`.
-   - Tabla de ítems con combobox de Productos, precio unitario editable y stock disponible.
+   - **Selector de Fecha** (`<input type="date">`) pre-llenado con la fecha local actual. Permite registrar transacciones retroactivas.
+   - Tabla de ítems con sanitización de ceros a la izquierda en inputs numéricos (cantidad, precio costo, precio venta).
    - **Ganancia Estimada Proyectada (S/) y Margen (%)** calculados en tiempo real contra el último costo de compra.
 3. **`VerOrdenModal.tsx`**: Ficha detallada con estado, desglose congelado de ítems y botones de acción rápida (Convertir a Venta / Anular / PDF).
+4. **`ExportarOrdenesModal.tsx`** *(Nuevo)*: Modal avanzado de exportación con:
+   - Selector de tipo de orden (Todos | Ventas | Cotizaciones).
+   - Rango de fechas (Fecha Inicio / Fecha Fin) filtrando por `fechaOrden`.
+   - Tipo de reporte: **Resumen General** (1 fila por orden) | **Detalle de Ítems** (SKU, Producto, P. Unitario, Cantidad, Subtotal).
+   - Formatos: CSV y Excel (`.xlsx`).
 
 ---
 
@@ -204,5 +215,18 @@ Definida en [pdfGenerator.ts](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Deskto
 
 ## 10. Guía de Modificación para Agentes de IA
 
-1. Al modificar `orden.service.ts`, mantén **SIEMPRE** el guardado de los snapshots descifrados en `DetalleOrden` (`productoNombreCifrado` y `precioUnitarioCongeladoCifrado`).
+1. Al modificar `orden.service.ts`, mantén **SIEMPRE** el guardado de los snapshots descifrados en `DetalleOrden` (`productoNombreCifrado`, `precioUnitarioCongeladoCifrado` y ahora también `costoUnitarioCongeladoCifrado`).
 2. Al editar la generación de PDF en `pdfGenerator.ts`, asegúrate de incluir el logo `/LOGO.png` mediante conversión Base64 o canvas y mantener la dirección institucional "Calle Espinar 311".
+3. El campo `fechaOrden` debe parsearse siempre con hora local (`new Date(year, month - 1, day, 12, 0, 0)`) para evitar desfasajes UTC. Nunca usar `new Date('YYYY-MM-DD')` directamente.
+4. En `ExportarOrdenesModal.tsx`, la exportación en modo **detalle** hace fetch individual por orden si los detalles no están incluidos en la respuesta paginada. Esto puede ser lento si hay muchas órdenes; considerar cachear o incluir detalles en el endpoint GET.
+
+---
+
+## 11. Cambios de la Sesión 2026-08-07 ✅ COMPLETADO
+
+- [X] **Campo `fechaOrden` en `Orden`** — Permite registrar la fecha real de la transacción (retroactiva). Parseada con hora local para evitar desfasaje UTC.
+- [X] **Campo `costoUnitarioCongeladoCifrado` en `DetalleOrden`** — Congela el costo unitario del producto al momento de la venta/cotización, habilitando cálculo futuro de ganancia bruta real en el Dashboard.
+- [X] **Selector de Fecha en `CrearOrdenModal`** — Fecha local de hoy por defecto, editable con `max=hoy`.
+- [X] **Sanitización de ceros a la izquierda** — Inputs numéricos (cantidad, precio costo, precio venta) filtran ceros iniciales con `.replace(/^0+(?=\d)/, '')`.
+- [X] **`ExportarOrdenesModal.tsx`** — Nuevo modal de exportación avanzada con rango de fechas, tipo de orden, reporte resumen/detalle y formatos CSV/Excel.
+- [X] **`OrdenesView.tsx`** — Botones "Exportar CSV" y "Exportar Excel" reemplazados por un único botón "Exportar" que abre el modal avanzado.

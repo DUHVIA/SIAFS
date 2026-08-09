@@ -68,11 +68,23 @@ interface MetricasGeneralesResponse {
 ### `PuntoFinanciero` (Serie para Recharts)
 ```typescript
 interface PuntoFinanciero {
-  periodo: string;  // Ej. "Ene 2026", "Semana 1", "Q1"
-  ingresos: number; // S/ Ventas completadas
-  gastos: number;   // S/ Gastos caja chica
-  compras: number;  // S/ Compras de inventario (ingresos)
-  ganancia: number; // S/ (Ingresos - Gastos - Compras)
+  periodoLabel: string;  // Ej. "Ene", "Semana 1", "Q1"
+  ingresos: number;      // S/ Ventas completadas
+  gastos: number;        // S/ Gastos caja chica
+  ganancias: number;     // S/ Ganancia Neta (Ingresos - Gastos)
+  gananciaVentas: number; // S/ Ganancia Bruta en Ventas (Ventas - Costos de ventas congelados)
+  compras: number;       // S/ Compras de inventario (ingresos)
+}
+```
+
+### `ProductoMasVendido`
+```typescript
+interface ProductoMasVendido {
+  id: string;
+  nombre: string;
+  sku: string;
+  cantidadVendida: number;
+  totalVendido: number;
 }
 ```
 
@@ -110,15 +122,19 @@ interface PuntoFinanciero {
 ## 6. Componentes de UI / UX (Frontend)
 
 1. **[app/page.tsx](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/app/page.tsx)**:
-   - Server Component principal. Carga datos operativos iniciales y renderiza las 6 StatCards en grid `xl:grid-cols-3`.
+   - Server Component principal. Carga métricas generales y top productos más vendidos. Renderiza grid de tarjetas operativas, módulo financiero y grid inferior con top productos y últimas órdenes.
 2. **[StatCard.tsx](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/dashboard/StatCard.tsx)**:
    - Tarjeta estilizada bento grid con ícono Lucide, cifra destacada en fuente `font-label` (JetBrains Mono) y pill de tendencia (+% en verde, -% en rojo).
 3. **[FinancialDashboardView.tsx](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/dashboard/FinancialDashboardView.tsx)**:
    - Componente cliente interactivo.
-   - 5 Cards resumen: Ingresos (verde), Gastos (rojo), Compras (violeta), Ganancia Neta (azul) y Margen % (amarillo).
+   - 6 Cards resumen: Ingresos (verde), **Ganancia en Ventas** (teal), Gastos (rojo), Ganancia Neta (azul), Margen % (amarillo) e Inversión en Compras (violeta).
    - Selector de periodo en tiempo real (`anual`, `trimestral`, `mensual`, `7dias`).
-   - Gráfico dinámico Recharts con Tooltip personalizado descifrado.
+   - Gráfico dinámico Recharts con multiserie incluyendo la barra de **Ganancia en Ventas**.
    - Botones de exportación rápida: **Exportar CSV** y **Exportar Excel** (`.xlsx`).
+4. **[ProductosMasVendidosWidget.tsx](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/dashboard/ProductosMasVendidosWidget.tsx)** *(Nuevo)*:
+   - Componente de ranking comercial. Muestra los 5 productos con mayor rotación en unidades + un elemento agrupador "Otros Productos".
+   - Barras visuales de progreso proporcionales a las ventas del líder.
+   - Botones de exportación a **CSV** y **Excel** (`.xlsx`).
 
 ---
 
@@ -166,7 +182,17 @@ interface PuntoFinanciero {
 1. Si agregas una nueva categoría de flujo de caja (ejemplo: Pagos de Nómina o Impuestos), debes modificar `PuntoFinanciero` en `dashboard.service.ts` y añadir la nueva serie de barras/línea en `FinancialDashboardView.tsx`.
 2. Mantén los colores corporativos en el gráfico:
    - Ingresos: `#10B981` (Esmeralda/Verde)
+   - Ganancia en Ventas: `#0D9488` (Teal)
    - Gastos: `#EF4444` (Rojo corporativo)
    - Compras Inventario: `#8B5CF6` (Violeta)
    - Ganancia Neta: `#3B82F6` (Azul)
 3. Al modificar `obtenerMetricasGenerales()`, asegúrate de mantener el filtro `isActive: true` en las consultas de Prisma.
+
+---
+
+## 11. Cambios de la Sesión 2026-08-07 ✅ COMPLETADO
+
+- [X] **Card & Serie "Ganancia en Ventas (Bruta)"** — Calculada a partir de los costos congelados en `DetalleOrden` (`costoUnitarioCongeladoCifrado` o fallback `precioCompraCifrado`).
+- [X] **Widget "Productos Más Vendidos" (`ProductosMasVendidosWidget.tsx`)** — Muestra Top 5 productos en unidades vendidas + "Otros Productos", con barras de progreso visuales y exportación independiente a CSV y Excel.
+- [X] **Actualización de `FinancialDashboardView.tsx`** — Bento grid de 6 cards (incluyendo Ganancia en Ventas) y gráfico Recharts ampliado con serie teal `#0D9488`.
+

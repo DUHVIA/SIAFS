@@ -7,13 +7,12 @@ import { Input } from '@/components/ui/Input';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
   Plus, Search, RefreshCw, Eye, ArrowDownToLine,
-  TrendingUp, Clock, Package, DollarSign, Download, FileSpreadsheet
+  TrendingUp, Clock, Package, DollarSign, Download
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearIngresoModal } from './CrearIngresoModal';
 import { VerIngresoModal } from './VerIngresoModal';
-import { exportToCSV } from '@/lib/csvExport';
-import { exportToExcel } from '@/lib/excelExport';
+import { ExportarIngresosModal } from './ExportarIngresosModal';
 
 export function IngresosView() {
   const toast = useToast();
@@ -36,6 +35,7 @@ export function IngresosView() {
   const [isCrearOpen, setIsCrearOpen] = useState(false);
   const [isVerOpen, setIsVerOpen] = useState(false);
   const [selectedIngresoId, setSelectedIngresoId] = useState<string | null>(null);
+  const [isExportarOpen, setIsExportarOpen] = useState(false);
 
   // Debounce búsqueda
   useEffect(() => {
@@ -107,31 +107,7 @@ export function IngresosView() {
       </tr>
     ));
 
-  const handleExportCSV = () => {
-    const headers = ['ID Lote', 'Fecha de Registro', 'Registrado Por', 'Notas / Proveedor', 'Productos', 'Total (S/)'];
-    const rows = items.map(ing => [
-      ing.id,
-      new Date(ing.fechaIngreso).toLocaleString('es-PE'),
-      ing.usuarioNombre || 'Sistema',
-      ing.descripcion || 'Sin notas',
-      ing.cantidadItems || 0,
-      parseFloat(ing.total || '0').toFixed(2)
-    ]);
-    exportToCSV(`Compras_Lotes_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
-  };
-
-  const handleExportExcel = () => {
-    const headers = ['ID Lote', 'Fecha de Registro', 'Registrado Por', 'Notas / Proveedor', 'Productos', 'Total (S/)'];
-    const rows = items.map(ing => [
-      ing.id,
-      new Date(ing.fechaIngreso).toLocaleString('es-PE'),
-      ing.usuarioNombre || 'Sistema',
-      ing.descripcion || 'Sin notas',
-      ing.cantidadItems || 0,
-      parseFloat(ing.total || '0')
-    ]);
-    exportToExcel(`Compras_Lotes_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Lotes de Compra');
-  };
+  const handleExportarClick = () => setIsExportarOpen(true);
 
   return (
     <>
@@ -143,19 +119,10 @@ export function IngresosView() {
             <Button
               variant="secondary"
               icon={Download}
-              onClick={handleExportCSV}
-              disabled={loading || items.length === 0}
+              onClick={handleExportarClick}
+              disabled={loading}
             >
-              Exportar CSV
-            </Button>
-            <Button
-              variant="secondary"
-              icon={FileSpreadsheet}
-              onClick={handleExportExcel}
-              className="text-emerald-700 hover:text-emerald-800"
-              disabled={loading || items.length === 0}
-            >
-              Exportar Excel
+              Exportar
             </Button>
             <Button variant="primary" icon={Plus} onClick={() => setIsCrearOpen(true)}>
               Registrar Compra
@@ -360,6 +327,11 @@ export function IngresosView() {
           }}
         />
       )}
+
+      <ExportarIngresosModal
+        isOpen={isExportarOpen}
+        onClose={() => setIsExportarOpen(false)}
+      />
     </>
   );
 }

@@ -8,14 +8,13 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import {
     Plus, Search, ShoppingCart, FileText, RefreshCw,
     ChevronLeft, ChevronRight, Eye, Ban, TrendingUp,
-    Clock, BarChart2, DollarSign, Download, Loader2, FileSpreadsheet, Pencil
+    Clock, BarChart2, DollarSign, Download, Loader2, Pencil
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
+import { ExportarOrdenesModal } from './ExportarOrdenesModal';
 import { generarCotizacionPDF } from '@/lib/pdfGenerator';
-import { exportToCSV } from '@/lib/csvExport';
-import { exportToExcel } from '@/lib/excelExport';
 
 type Tab = 'ventas' | 'cotizaciones' | 'anuladas';
 
@@ -56,6 +55,7 @@ export function OrdenesView() {
     const [selectedOrdenId, setSelectedOrdenId] = useState<string | null>(null);
     const [editarOrdenId, setEditarOrdenId] = useState<string | null>(null);
     const [isEditarOpen, setIsEditarOpen] = useState(false);
+    const [isExportarOpen, setIsExportarOpen] = useState(false);
 
     // Debounce búsqueda
     useEffect(() => {
@@ -126,7 +126,7 @@ export function OrdenesView() {
                     numeroOrden: orden.numeroOrden,
                     clienteNombre: orden.clienteNombre,
                     clienteDocumento: orden.clienteDocumento,
-                    fecha: orden.createdAt,
+                    fecha: orden.fechaOrden || orden.createdAt,
                     detalles: orden.detalles,
                     total: orden.total
                 });
@@ -185,30 +185,8 @@ export function OrdenesView() {
         { id: 'anuladas',     label: 'Anuladas',       icon: <Ban className="w-4 h-4" /> },
     ];
 
-    const handleExportOrdenesCSV = () => {
-        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
-        const rows = items.map(o => [
-            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
-            o.tipo || '',
-            o.cliente?.nombre || '',
-            o.estado || '',
-            parseFloat(o.total || '0').toFixed(2),
-            new Date(o.createdAt).toLocaleDateString('es-PE')
-        ]);
-        exportToCSV(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
-    };
-
-    const handleExportOrdenesExcel = () => {
-        const headers = ['Nº Orden', 'Tipo', 'Cliente', 'Estado', 'Monto Total (S/)', 'Fecha'];
-        const rows = items.map(o => [
-            `ORD-${String(o.numeroOrden || 0).padStart(4, '0')}`,
-            o.tipo || '',
-            o.cliente?.nombre || '',
-            o.estado || '',
-            parseFloat(o.total || '0'),
-            new Date(o.createdAt).toLocaleDateString('es-PE')
-        ]);
-        exportToExcel(`Ordenes_${tab}_${new Date().toISOString().slice(0, 10)}.xlsx`, headers, rows, 'Ordenes');
+    const handleExportarOrdenesClick = () => {
+        setIsExportarOpen(true);
     };
 
     return (
@@ -218,11 +196,8 @@ export function OrdenesView() {
                 description="Registra y administra ventas directas y cotizaciones de clientes."
                 actions={
                     <>
-                        <Button variant="secondary" icon={Download} onClick={handleExportOrdenesCSV} disabled={loading || items.length === 0}>
-                            Exportar CSV
-                        </Button>
-                        <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExportOrdenesExcel} className="text-emerald-700 hover:text-emerald-800" disabled={loading || items.length === 0}>
-                            Exportar Excel
+                        <Button variant="secondary" icon={Download} onClick={handleExportarOrdenesClick} disabled={loading}>
+                            Exportar
                         </Button>
                         <Button variant="secondary" icon={FileText} onClick={() => handleNueva('COTIZACION')}>
                             Nueva Cotización
@@ -381,8 +356,9 @@ export function OrdenesView() {
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-tertiary text-xs font-label">
-                                            {new Date(orden.createdAt).toLocaleDateString('es-PE', {
-                                                day: '2-digit', month: 'short', year: 'numeric'
+                                            {new Date(orden.fechaOrden || orden.createdAt).toLocaleDateString('es-PE', {
+                                                day: '2-digit', month: 'short', year: 'numeric',
+                                                timeZone: 'America/Lima'
                                             })}
                                         </td>
                                         <td className="px-4 py-3">
@@ -497,6 +473,11 @@ export function OrdenesView() {
                 ordenId={selectedOrdenId}
                 onClose={() => { setIsVerOpen(false); setSelectedOrdenId(null); }}
                 onSuccess={() => { setIsVerOpen(false); setSelectedOrdenId(null); handleRefresh(); }}
+            />
+
+            <ExportarOrdenesModal
+                isOpen={isExportarOpen}
+                onClose={() => setIsExportarOpen(false)}
             />
         </>
     );

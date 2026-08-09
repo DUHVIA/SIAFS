@@ -49,25 +49,30 @@ export const IngresoService = {
 
       for (const detalle of detallesProcesados) {
         const nuevoStock = detalle.stockActualDecifrado + detalle.cantidadIngresada;
+        const precioCompraCifrado = cifrarTexto(detalle.costoUnitario.toString());
         
         const updateData: any = {
           stockCifrado: cifrarTexto(nuevoStock.toString()),
           rangoStock: isNaN(nuevoStock) ? 0 : nuevoStock,
+          precioCompraCifrado: precioCompraCifrado,
         };
 
-        if (detalle.nuevoPrecioVenta !== undefined) {
-          const precioVentaAActualizar = cifrarTexto(detalle.nuevoPrecioVenta.toString());
+        let precioVentaAActualizar = detalle.precioVentaActualCifrado;
+
+        if (detalle.nuevoPrecioVenta !== undefined && !isNaN(detalle.nuevoPrecioVenta) && detalle.nuevoPrecioVenta > 0) {
+          precioVentaAActualizar = cifrarTexto(detalle.nuevoPrecioVenta.toString());
           updateData.precioVentaCifrado = precioVentaAActualizar;
-          
-          await tx.historialPrecio.create({
-            data: {
-              productoId: detalle.productoId,
-              usuarioId: data.usuarioId,
-              precioCompraCifrado: cifrarTexto(detalle.costoUnitario.toString()),
-              precioVentaCifrado: precioVentaAActualizar,
-            }
-          });
         }
+
+        // Siempre registrar en HistorialPrecio el cambio de costo de compra
+        await tx.historialPrecio.create({
+          data: {
+            productoId: detalle.productoId,
+            usuarioId: data.usuarioId,
+            precioCompraCifrado: precioCompraCifrado,
+            precioVentaCifrado: precioVentaAActualizar,
+          }
+        });
 
         await tx.producto.update({
           where: { id: detalle.productoId },
@@ -112,11 +117,19 @@ export const IngresoService = {
         const cantidad = parseInt(descifrarTexto(d.cantidadCifrada), 10);
         const costoUnitario = parseFloat(descifrarTexto(d.costoUnitarioCifrado));
         const productoNombre = descifrarTexto(d.producto.nombreCifrado);
+        let sku = 'N/A';
+        if (d.producto?.detallesCifrados) {
+          try {
+            const parsed = JSON.parse(descifrarTexto(d.producto.detallesCifrados));
+            if (parsed && parsed.sku) sku = parsed.sku;
+          } catch (e) {}
+        }
         return {
           ...d,
           cantidad,
           costoUnitario,
           productoNombre,
+          sku,
         };
       });
 
@@ -197,12 +210,20 @@ export const IngresoService = {
       const cantidad = parseInt(descifrarTexto(d.cantidadCifrada), 10);
       const costoUnitario = parseFloat(descifrarTexto(d.costoUnitarioCifrado));
       const productoNombre = descifrarTexto(d.producto.nombreCifrado);
+      let sku = 'N/A';
+      if (d.producto?.detallesCifrados) {
+        try {
+          const parsed = JSON.parse(descifrarTexto(d.producto.detallesCifrados));
+          if (parsed && parsed.sku) sku = parsed.sku;
+        } catch (e) {}
+      }
       return {
         id: d.id,
         productoId: d.productoId,
         cantidad,
         costoUnitario,
         productoNombre,
+        sku,
         subtotal: cantidad * costoUnitario,
       };
     });

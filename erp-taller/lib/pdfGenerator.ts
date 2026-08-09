@@ -123,10 +123,10 @@ export async function generarCotizacionPDF(datos: DatosCotizacion) {
     // Fecha de emisión
     let fechaTexto = '';
     if (datos.fecha instanceof Date) {
-        fechaTexto = datos.fecha.toLocaleDateString('es-PE');
+        fechaTexto = datos.fecha.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
     } else {
         const d = new Date(datos.fecha);
-        fechaTexto = isNaN(d.getTime()) ? String(datos.fecha) : d.toLocaleDateString('es-PE');
+        fechaTexto = isNaN(d.getTime()) ? String(datos.fecha) : d.toLocaleDateString('es-PE', { timeZone: 'America/Lima' });
     }
 
     doc.setFont('helvetica', 'normal');

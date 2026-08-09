@@ -164,3 +164,11 @@ Ubicados en [components/views/usuarios/](file:///c:/Users/ASUS%20TUF%20GAMMING%2
 
 1. Al modificar contraseñas o crear usuarios en `usuario.service.ts`, **NUNCA** guardes contraseñas en texto plano. Utiliza siempre la función de hash con `salt` nativa en `crypto.ts`.
 2. Conserva la validación de jerarquía impidiendo que un usuario con id igual a `x-usuario-id` altere su propio registro.
+3. La generación de links de invitación (`app/api/usuarios/[id]/invitacion/route.ts` y scripts CLI) prioriza siempre la variable `process.env.NEXT_PUBLIC_APP_URL` para evitar generar links con dominios internos de Docker/localhost cuando el ERP se despliega en producción (ej. Railway o Vercel).
+
+---
+
+## 10. Cambios de la Sesión 2026-08-07 ✅ COMPLETADO
+
+- [X] **Generación Dinámica de Links de Invitación** — `app/api/usuarios/[id]/invitacion/route.ts`, `scripts/create-users.ts` y `scripts/generate-invitation-link.ts` priorizan la variable de entorno `process.env.NEXT_PUBLIC_APP_URL` (recortando barras finales) para asegurar enlaces válidos en producción.
+

@@ -1,6 +1,7 @@
 import React from 'react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { FinancialDashboardView } from '@/components/dashboard/FinancialDashboardView';
+import { ProductosMasVendidosWidget } from '@/components/dashboard/ProductosMasVendidosWidget';
 import { DashboardService } from '@/modules/dashboard/dashboard.service';
 import { Users, ShoppingCart, DollarSign, Package, ShoppingBag, Truck } from 'lucide-react';
 
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
     const metricas = await DashboardService.obtenerMetricasGenerales();
+    const { top: topProductos, otros: otrosProductos } = await DashboardService.obtenerProductosMasVendidos(5);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -54,24 +56,31 @@ export default async function DashboardPage() {
                 />
             </div>
 
-            {/* Grid Principal: Módulo Financiero Interactivo + Últimas Órdenes */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Panel Izquierdo (Módulo Financiero con Gráfico por Periodo y Exportación) */}
-                <div className="lg:col-span-2">
-                    <FinancialDashboardView 
-                        initialChartData={metricas.chartData}
-                        metricasFinancieras={{
-                            ingresosTotales: metricas.ingresosTotales,
-                            gastosTotales: metricas.gastosTotales,
-                            gananciasTotales: metricas.gananciasTotales,
-                            margenGanancia: metricas.margenGanancia,
-                            totalInvertidoCompras: metricas.totalInvertidoCompras,
-                        }}
-                    />
-                </div>
+            {/* Módulo Financiero con Bento Grid y Gráfico Recharts por Periodo */}
+            <div>
+                <FinancialDashboardView 
+                    initialChartData={metricas.chartData}
+                    metricasFinancieras={{
+                        ingresosTotales: metricas.ingresosTotales,
+                        gastosTotales: metricas.gastosTotales,
+                        gananciasTotales: metricas.gananciasTotales,
+                        gananciaVentasTotales: metricas.gananciaVentasTotales,
+                        margenGanancia: metricas.margenGanancia,
+                        totalInvertidoCompras: metricas.totalInvertidoCompras,
+                    }}
+                />
+            </div>
+
+            {/* Grid Secundario: Productos Más Vendidos + Últimas Órdenes */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Panel Izquierdo: Productos Más Vendidos */}
+                <ProductosMasVendidosWidget
+                    topProductos={topProductos}
+                    otrosProductos={otrosProductos}
+                />
 
                 {/* Panel Derecho (Últimas Órdenes) */}
-                <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 h-[520px] flex flex-col">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 flex flex-col min-h-[420px]">
                     <h3 className="font-headline font-bold text-lg text-secondary mb-4">
                         Últimas Órdenes Creadas
                     </h3>

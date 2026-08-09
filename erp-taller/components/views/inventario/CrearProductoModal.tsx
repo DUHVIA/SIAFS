@@ -16,7 +16,7 @@ interface TipoAutoparte {
 interface CrearProductoModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (nuevoProducto?: any) => void;
     tiposAutoparte: TipoAutoparte[];
     onRefreshTipos: () => Promise<void>;
 }
@@ -36,6 +36,7 @@ export function CrearProductoModal({
     const [nombre, setNombre] = useState('');
     const [categoria, setCategoria] = useState<'AUTOPARTE' | 'MOTOR'>('AUTOPARTE');
     const [precioVenta, setPrecioVenta] = useState('');
+    const [precioCompra, setPrecioCompra] = useState('');
     const [stock, setStock] = useState('');
 
     // Detalles específicos para Autoparte
@@ -61,6 +62,7 @@ export function CrearProductoModal({
             setNombre('');
             setCategoria('AUTOPARTE');
             setPrecioVenta('');
+            setPrecioCompra('');
             setStock('');
             setTipoAutoparteId('');
             setEstadoFisico('Nuevo');
@@ -115,6 +117,10 @@ export function CrearProductoModal({
             newErrors.precioVenta = 'El precio debe ser un número positivo (ej: 45 o 45.50)';
         }
 
+        if (precioCompra.trim() && !/^\d+(\.\d+)?$/.test(precioCompra)) {
+            newErrors.precioCompra = 'El precio de compra debe ser un número positivo';
+        }
+
         if (!stock.trim()) {
             newErrors.stock = 'El stock es requerido';
         } else if (!/^\d+$/.test(stock)) {
@@ -163,6 +169,7 @@ export function CrearProductoModal({
                 nombre: nombre.trim(),
                 categoria,
                 precioVenta,
+                precioCompra: precioCompra.trim() || undefined,
                 stock,
                 tipoAutoparteId: categoria === 'AUTOPARTE' ? tipoAutoparteId : null,
                 detalles
@@ -175,7 +182,8 @@ export function CrearProductoModal({
             });
 
             if (res.ok) {
-                onSuccess();
+                const data = await res.json();
+                onSuccess(data);
                 onClose();
             } else {
                 const errData = await res.json();
@@ -297,7 +305,7 @@ export function CrearProductoModal({
                                     options={[
                                         { value: 'Nuevo', label: 'Nuevo' },
                                         { value: 'Usado', label: 'Usado' },
-                                        { value: 'Reconstruido', label: 'Reconstruido' }
+                                        { value: 'Importado', label: 'Importado' }
                                     ]}
                                     value={estadoFisico}
                                     onChange={(e) => setEstadoFisico(e.target.value)}
@@ -380,7 +388,7 @@ export function CrearProductoModal({
                                     options={[
                                         { value: 'Nuevo', label: 'Nuevo' },
                                         { value: 'Usado', label: 'Usado' },
-                                        { value: 'Reconstruido', label: 'Reconstruido' }
+                                        { value: 'Importado', label: 'Importado' }
                                     ]}
                                     value={estadoMotor}
                                     onChange={(e) => setEstadoMotor(e.target.value)}
@@ -405,7 +413,20 @@ export function CrearProductoModal({
                 )}
 
                 {/* Precios y Stock */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
+                            Precio de Compra (S/)
+                        </label>
+                        <Input
+                            placeholder="Ej. 120.00"
+                            value={precioCompra}
+                            onChange={(e) => setPrecioCompra(e.target.value)}
+                            error={errors.precioCompra}
+                            disabled={loading}
+                        />
+                    </div>
+
                     <div>
                         <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-2">
                             Precio de Venta (S/) *

@@ -6,7 +6,7 @@ generator client {
 
 //generator erd {
 //  provider                  = "prisma-erd-generator"
-//  output                    = "../../docs/03_arquitectura/modelo_db_v3.svg"
+//  output                    = "../../docs/03_arquitectura/modelo_db_v4.svg"
 //  includeRelationFromFields = true 
 //}
 
@@ -134,6 +134,7 @@ model Producto {
   idxNombre           String?           @map("idx_nombre") @db.VarChar(64)
   categoria           CategoriaProducto
   precioVentaCifrado  String            @map("precio_venta_cifrado") @db.Text
+  precioCompraCifrado String?           @map("precio_compra_cifrado") @db.Text
   stockCifrado        String            @map("stock_cifrado") @db.Text // Actúa como caché rápida
   rangoStock          Int               @default(0) @map("rango_stock")
   detallesCifrados    String            @map("detalles_cifrados") @db.Text
@@ -260,6 +261,7 @@ model Orden {
   subtotalCifrado String       @map("subtotal_cifrado") @db.Text
   totalCifrado    String       @map("total_cifrado") @db.Text
   fechaValidez    DateTime?    @map("fecha_validez") 
+  fechaOrden      DateTime     @default(now()) @map("fecha_orden")  // Fecha real de la transacción (configurable)
   createdAt       DateTime     @default(now()) @map("created_at")
 
   cliente         Cliente      @relation(fields: [clienteId], references: [id])
@@ -276,8 +278,9 @@ model DetalleOrden {
   productoId                    String?  @map("producto_id") @db.Uuid
   
   // SNAPSHOTS (Vital por si cambian los nombres/precios a futuro)
-  productoNombreCifrado         String   @map("producto_nombre_cifrado") @db.Text 
-  precioUnitarioCongeladoCifrado String  @map("precio_unitario_congelado_cifrado") @db.Text
+  productoNombreCifrado                String   @map("producto_nombre_cifrado") @db.Text 
+  precioUnitarioCongeladoCifrado       String   @map("precio_unitario_congelado_cifrado") @db.Text
+  costoUnitarioCongeladoCifrado        String?  @map("costo_unitario_congelado_cifrado") @db.Text  // Costo congelado al momento de la venta
   cantidadCifrada               String   @map("cantidad_cifrada") @db.Text
   subtotalCifrado               String   @map("subtotal_cifrado") @db.Text
 

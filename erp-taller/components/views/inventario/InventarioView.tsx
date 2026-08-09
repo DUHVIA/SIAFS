@@ -150,7 +150,7 @@ export function InventarioView() {
             );
         }
 
-        const isLow = row.categoria === 'MOTOR' ? stock <= 2 : stock <= 10;
+        const isLow = row.categoria === 'MOTOR' ? stock <= 1 : stock <= 5;
         if (isLow) {
             return (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 text-orange-600 rounded-full text-xs font-bold border border-orange-500/10">
@@ -234,7 +234,7 @@ export function InventarioView() {
             header: 'Acciones',
             render: (row: any) => {
                 const stock = parseInt(row.stock || '0', 10);
-                const isLow = stock === 0 || (row.categoria === 'MOTOR' ? stock <= 2 : stock <= 10);
+                const isLow = stock === 0 || (row.categoria === 'MOTOR' ? stock <= 1 : stock <= 5);
 
                 return (
                     <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -312,7 +312,7 @@ export function InventarioView() {
         const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
         const rows = items.map(p => {
             const stock = parseInt(p.stock || '0', 10);
-            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5) ? 'STOCK BAJO' : 'NORMAL';
             return [
                 p.detalles?.sku || '',
                 p.nombre || '',
@@ -332,7 +332,7 @@ export function InventarioView() {
         const headers = ['SKU', 'Producto', 'Categoría', 'Tipo Autoparte', 'Stock Actual', 'Estado Stock', 'Precio Venta (S/)'];
         const rows = items.map(p => {
             const stock = parseInt(p.stock || '0', 10);
-            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) ? 'STOCK BAJO' : 'NORMAL';
+            const estadoStr = stock === 0 ? 'AGOTADO' : (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5) ? 'STOCK BAJO' : 'NORMAL';
             return [
                 p.detalles?.sku || '',
                 p.nombre || '',

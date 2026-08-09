@@ -34,8 +34,16 @@ export const ProductoService = {
 
       let precioCosto = 0;
 
+      // 0. Prioridad 0: Directamente de producto.precioCompraCifrado
+      if (producto.precioCompraCifrado) {
+        try {
+          const val = parseFloat(descifrarTexto(producto.precioCompraCifrado));
+          if (!isNaN(val) && val > 0) precioCosto = val;
+        } catch (e) {}
+      }
+
       // 1. Prioridad: Último costo en DetalleIngreso
-      if (producto.detalleIngresos && producto.detalleIngresos.length > 0 && producto.detalleIngresos[0].costoUnitarioCifrado) {
+      if (precioCosto === 0 && producto.detalleIngresos && producto.detalleIngresos.length > 0 && producto.detalleIngresos[0].costoUnitarioCifrado) {
         try {
           const val = parseFloat(descifrarTexto(producto.detalleIngresos[0].costoUnitarioCifrado));
           if (!isNaN(val) && val > 0) precioCosto = val;
@@ -72,6 +80,7 @@ export const ProductoService = {
       const nombreCifrado = cifrarTexto(data.nombre);
       const idxNombre = generarIndiceCiego(data.nombre);
       const precioVentaCifrado = cifrarTexto(data.precioVenta);
+      const precioCompraCifrado = data.precioCompra ? cifrarTexto(data.precioCompra) : null;
       const stockCifrado = cifrarTexto(data.stock);
       const detallesCifrados = cifrarTexto(JSON.stringify(data.detalles || {}));
       
@@ -83,6 +92,7 @@ export const ProductoService = {
           idxNombre,
           categoria: data.categoria,
           precioVentaCifrado,
+          precioCompraCifrado,
           stockCifrado,
           rangoStock: isNaN(rangoStock) ? 0 : rangoStock,
           detallesCifrados,
@@ -96,6 +106,7 @@ export const ProductoService = {
           productoId: nuevoProducto.id,
           usuarioId: data.usuarioId,
           precioVentaCifrado: precioVentaCifrado,
+          precioCompraCifrado: precioCompraCifrado,
         }
       });
 
@@ -124,6 +135,7 @@ export const ProductoService = {
         ...nuevoProducto,
         nombre: data.nombre,
         precioVenta: data.precioVenta,
+        precioCosto: data.precioCompra ? parseFloat(data.precioCompra) : 0,
         stock: data.stock,
         detalles: data.detalles,
       };
@@ -136,11 +148,13 @@ export const ProductoService = {
       const nombreActual = descifrarTexto(productoActual.nombreCifrado);
       const precioActual = descifrarTexto(productoActual.precioVentaCifrado);
       const stockActual = descifrarTexto(productoActual.stockCifrado);
+      const precioCompraActual = productoActual.precioCompraCifrado ? descifrarTexto(productoActual.precioCompraCifrado) : '';
 
       const updateData: any = {};
       
       let nombreCambio = false;
       let precioCambio = false;
+      let precioCompraCambio = false;
       let stockCambio = false;
 
       if (data.nombre !== undefined && data.nombre !== nombreActual) {
@@ -155,6 +169,10 @@ export const ProductoService = {
         updateData.precioVentaCifrado = cifrarTexto(data.precioVenta);
         precioCambio = true;
       }
+      if (data.precioCompra !== undefined && data.precioCompra !== precioCompraActual) {
+        updateData.precioCompraCifrado = cifrarTexto(data.precioCompra);
+        precioCompraCambio = true;
+      }
       if (data.stock !== undefined && data.stock !== stockActual) {
         updateData.stockCifrado = cifrarTexto(data.stock);
         const rangoStock = parseInt(data.stock, 10);
@@ -168,7 +186,7 @@ export const ProductoService = {
         updateData.tipoAutoparteId = data.tipoAutoparteId;
       }
 
-      if ((nombreCambio || precioCambio || stockCambio) && !data.usuarioId) {
+      if ((nombreCambio || precioCambio || precioCompraCambio || stockCambio) && !data.usuarioId) {
         throw new Error("El campo usuarioId es requerido para mantener el historial de cambios.");
       }
 
@@ -188,12 +206,13 @@ export const ProductoService = {
             }
           });
         }
-        if (precioCambio) {
+        if (precioCambio || precioCompraCambio) {
           await tx.historialPrecio.create({
             data: {
               productoId: id,
               usuarioId: data.usuarioId,
-              precioVentaCifrado: updateData.precioVentaCifrado,
+              precioVentaCifrado: updateData.precioVentaCifrado || productoActual.precioVentaCifrado,
+              precioCompraCifrado: updateData.precioCompraCifrado || productoActual.precioCompraCifrado,
             }
           });
         }

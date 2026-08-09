@@ -103,9 +103,17 @@ model DetalleIngreso {
 
 Ubicados en [components/views/ingresos/](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/views/ingresos/):
 
-1. **`IngresosView.tsx`**: Vista principal. Bento grid de KPIs de Compras (Compras del Mes, Lotes Recibidos, Lote Promedio, Ítems Ingresados), buscador con debounce, tabla paginada con acciones "Ver Ficha" y botones de **Exportar CSV** y **Exportar Excel**.
-2. **`CrearIngresoModal.tsx`**: Formulario interactivo de recepción de mercadería. Incluye combobox de búsqueda de productos, tabla dinámica de líneas con cálculo en tiempo real del costo total del lote y actualización opcional de precio de venta.
+1. **`IngresosView.tsx`**: Vista principal. Bento grid de KPIs de Compras (Compras del Mes, Lotes Recibidos, Lote Promedio, Ítems Ingresados), buscador con debounce, tabla paginada con acción "Ver Ficha" y botón **"Exportar"** que abre `ExportarIngresosModal`.
+2. **`CrearIngresoModal.tsx`**: Formulario interactivo de recepción de mercancía. Incluye:
+   - Combobox de búsqueda de productos con tabla dinámica de líneas y cálculo en tiempo real del costo total del lote.
+   - Actualización opcional de precio de venta sugerido por línea.
+   - **Botón `+ Nuevo Producto`** junto al buscador: Abre `CrearProductoModal` como sub-modal. Al guardar, refresca la lista de productos y notifica al usuario para buscar y agregar el nuevo producto.
+   - El sub-modal carga `tiposAutoparte` de forma lazy (solo cuando se abre) vía `/api/tipos-autoparte`.
 3. **`VerIngresoModal.tsx`**: Modal de auditoría visual que muestra el desglose exacto de un lote guardado, usuario que registró la compra y fecha de recepción.
+4. **`ExportarIngresosModal.tsx`** *(Nuevo)*: Modal avanzado de exportación con:
+   - Rango de fechas (Inicio / Fin) filtrando por `fechaIngreso`.
+   - Tipo de reporte: **Resumen de Lotes** (1 fila por lote) | **Desglose de Ítems** (Producto, SKU, Cantidad, Costo Unitario, Subtotal).
+   - Formatos: CSV y Excel (`.xlsx`).
 
 ---
 
@@ -147,3 +155,14 @@ Ubicados en [components/views/ingresos/](file:///c:/Users/ASUS%20TUF%20GAMMING%2
 
 1. Al modificar `ingreso.service.ts`, mantén la transacción atómica `prisma.$transaction()`; si falla el registro de un ítem, todo el lote debe hacer rollback.
 2. Asegúrate de descifrar `descripcion_cifrada`, `total_cifrado` y `costo_unitario_cifrado` antes de devolver las respuestas JSON a la interfaz.
+3. `CrearIngresoModal` carga `tiposAutoparte` de forma **lazy** (solo al abrir `CrearProductoModal`) para no hacer una llamada innecesaria en cada apertura del modal principal.
+4. Al agregar campos al sub-modal `CrearProductoModal`, verifica que `CrearIngresoModal` provee las props `tiposAutoparte` y `onRefreshTipos` correctamente.
+5. `ExportarIngresosModal` en modo **detalle** hace fetch individual por ingreso si los detalles no están incluidos en la respuesta paginada. Considerar incluir detalles resumidos en el endpoint GET para optimizar.
+
+---
+
+## 10. Cambios de la Sesión 2026-08-07 ✅ COMPLETADO
+
+- [X] **Botón `+ Nuevo Producto` en `CrearIngresoModal`** — Abre `CrearProductoModal` como sub-modal integrado. Carga `tiposAutoparte` lazy. Al crear, refresca la lista de productos y notifica al usuario para buscar y agregar el nuevo producto al lote.
+- [X] **`ExportarIngresosModal.tsx`** — Nuevo modal avanzado de exportación con rango de fechas, reporte Resumen de Lotes / Desglose de Ítems en CSV y Excel.
+- [X] **`IngresosView.tsx`** — Botones "Exportar CSV" y "Exportar Excel" reemplazados por un único botón "Exportar" que abre el modal avanzado.

@@ -51,7 +51,7 @@ async function main() {
     .setExpirationTime('7d')
     .sign(secretKey);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tu-erp-en-railway.app';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://tu-erp-en-railway.app').replace(/\/+$/, '');
   const invitationLink = `${baseUrl}/invitacion?token=${token}`;
 
   console.log(`Usuario: ${usuario.nombre} | Email: ${usuario.email}`);

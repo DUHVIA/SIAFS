@@ -12,6 +12,7 @@ export const CrearOrdenSchema = z.object({
   clienteId: z.string().uuid("El clienteId debe ser un UUID"),
   usuarioId: z.string().uuid("El usuarioId debe ser un UUID"),
   metodoPagoId: z.string().uuid("El metodoPagoId debe ser un UUID").optional(),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "La fecha debe ser YYYY-MM-DD").optional(),
   detalles: z.array(DetalleOrdenSchema).min(1, "Debe incluir al menos un detalle en la orden"),
 });
 
@@ -30,6 +31,7 @@ export const ActualizarCotizacionSchema = z.object({
   tipo: z.literal('COTIZACION').optional(),
   clienteId: z.string().uuid("El clienteId debe ser un UUID"),
   usuarioId: z.string().uuid("El usuarioId debe ser un UUID"),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "La fecha debe ser YYYY-MM-DD").optional(),
   detalles: z.array(DetalleOrdenSchema).min(1, "Debe incluir al menos un detalle"),
 });
 

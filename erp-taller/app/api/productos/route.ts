@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
       if (stock === 0) {
         outOfStock++;
-      } else if (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10) {
+      } else if (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5) {
         lowStock++;
       }
       totalValue += precio * stock;
@@ -50,12 +50,12 @@ export async function GET(request: Request) {
     } else if (stockStatus === 'LOW_STOCK') {
       productosFiltrados = productosFiltrados.filter(p => {
         const stock = parseInt(p.stock || '0', 10);
-        return stock > 0 && (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10);
+        return stock > 0 && (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5);
       });
     } else if (stockStatus === 'RESTOCKING') {
       productosFiltrados = productosFiltrados.filter(p => {
         const stock = parseInt(p.stock || '0', 10);
-        return stock === 0 || (p.categoria === 'MOTOR' ? stock <= 2 : stock <= 10);
+        return stock === 0 || (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5);
       });
     }
 

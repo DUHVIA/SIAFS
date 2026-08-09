@@ -150,8 +150,9 @@ export function VerOrdenModal({ isOpen, ordenId, onClose, onSuccess }: VerOrdenM
 
                             <div className="flex items-center gap-2 text-xs text-tertiary">
                                 <Calendar className="w-3.5 h-3.5" />
-                                {new Date(orden.createdAt).toLocaleDateString('es-PE', {
-                                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                                {new Date(orden.fechaOrden || orden.createdAt).toLocaleDateString('es-PE', {
+                                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                                    timeZone: 'America/Lima'
                                 })}
                             </div>
 

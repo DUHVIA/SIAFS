@@ -608,6 +608,16 @@ ENCRYPTION_KEY="DuhviaERP_Secreta_32_Caracteres!"
 
 ---
 
+### 4.6 [ ] Ajustes del Cliente — Módulo de Inventario (Sesión 2026-08-07) ✅ COMPLETADO
+
+- [X] **Precio de Compra Directo en Productos** — Añadido el campo `precioCompraCifrado` al modelo `Producto` en Prisma, actualizado DTO y `ProductoService` para guardar y actualizar `HistorialPrecio`.
+- [X] **Formulario de Creación y Edición de Productos** — Añadido el campo "Precio de Compra (S/)" en `CrearProductoModal` y `EditarProductoModal`.
+- [X] **Estados Físicos de Producto** — Reemplazada la opción "Reconstruido" por "Importado" (opciones activas: `Nuevo`, `Usado`, `Importado`).
+- [X] **Pruebas Unitarias** — Añadida prueba en `producto.service.test.ts` verificando el guardado de `precioCompra` y la respuesta de `precioCosto` descifrada.
+
+
+---
+
 ## 5. Guía de Inicio Rápido para Agentes de IA
 
 ### Para continuar el desarrollo inmediatamente:

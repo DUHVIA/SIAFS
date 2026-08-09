@@ -35,6 +35,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
     const [loading, setLoading] = useState(false);
     const [tipo, setTipo] = useState<'VENTA' | 'COTIZACION'>(tipoInicial);
 
+    // Helper para obtener la fecha local de hoy en formato YYYY-MM-DD
+    const getTodayLocal = () => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    const [fecha, setFecha] = useState<string>(getTodayLocal());
     // Clientes
     const [clientes, setClientes] = useState<any[]>([]);
     const [clienteQuery, setClienteQuery] = useState<string>('');
@@ -70,6 +80,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                 setClienteSeleccionado(null);
                 setProductoQuery('');
                 setMetodoPagoId('');
+                setFecha(getTodayLocal());
                 setError(null);
             }
         }
@@ -108,6 +119,16 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                 if (!res.ok) return;
                 const orden = await res.json();
                 setTipo('COTIZACION');
+                // Cargar fecha guardada o usar hoy como fallback
+                if (orden.fechaOrden) {
+                    const d = new Date(orden.fechaOrden);
+                    const y = d.getFullYear();
+                    const mo = String(d.getMonth() + 1).padStart(2, '0');
+                    const da = String(d.getDate()).padStart(2, '0');
+                    setFecha(`${y}-${mo}-${da}`);
+                } else {
+                    setFecha(getTodayLocal());
+                }
                 if (orden.cliente) {
                     const clienteObj = {
                         id: orden.clienteId,
@@ -242,6 +263,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                 tipo,
                 clienteId: clienteSeleccionado.id,
                 usuarioId: user.id,
+                fecha,
                 detalles: detalles.map(d => ({
                     productoId: d.productoId,
                     cantidad: d.cantidad,
@@ -382,6 +404,21 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                     </div>
                 )}
 
+                {/* Fecha de la transacción */}
+                <div>
+                    <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-1.5">
+                        Fecha
+                    </label>
+                    <input
+                        id="orden-fecha"
+                        type="date"
+                        value={fecha}
+                        onChange={e => setFecha(e.target.value)}
+                        max={getTodayLocal()}
+                        className="w-full rounded-2xl border border-white/30 bg-white/60 backdrop-blur-sm px-4 py-2.5 text-sm text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+                    />
+                </div>
+
                 <hr className="border-white/20" />
 
                 {/* Buscador de productos */}
@@ -453,7 +490,10 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                                         min="1"
                                         max={tipo === 'VENTA' ? det.stockDisponible : undefined}
                                         value={det.cantidad}
-                                        onChange={e => actualizarDetalle(idx, 'cantidad', parseInt(e.target.value, 10) || 1)}
+                                        onChange={e => {
+                                            const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                            actualizarDetalle(idx, 'cantidad', parseInt(raw, 10) || 1);
+                                        }}
                                         className="text-center"
                                     />
                                 </div>
@@ -464,7 +504,10 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                                         step="0.01"
                                         min="0"
                                         value={det.precioCosto}
-                                        onChange={e => actualizarDetalle(idx, 'precioCosto', parseFloat(e.target.value) || 0)}
+                                        onChange={e => {
+                                            const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                            actualizarDetalle(idx, 'precioCosto', parseFloat(raw) || 0);
+                                        }}
                                     />
                                 </div>
                                 <div className="w-24">
@@ -474,7 +517,10 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                                         step="0.01"
                                         min="0.01"
                                         value={det.precioUnitario}
-                                        onChange={e => actualizarDetalle(idx, 'precioUnitario', parseFloat(e.target.value) || 0)}
+                                        onChange={e => {
+                                            const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                                            actualizarDetalle(idx, 'precioUnitario', parseFloat(raw) || 0);
+                                        }}
                                     />
                                 </div>
                                 <div className="w-24 text-right">

@@ -9,7 +9,16 @@ export interface PuntoFinanciero {
   ingresos: number;
   gastos: number;
   ganancias: number;
+  gananciaVentas: number;
   compras: number;
+}
+
+export interface ProductoMasVendido {
+  id: string;
+  nombre: string;
+  sku: string;
+  cantidadVendida: number;
+  totalVendido: number;
 }
 
 export const DashboardService = {
@@ -31,13 +40,27 @@ export const DashboardService = {
       where: { createdAt: { gte: hace30Dias } }
     });
 
-    // 4. Ingresos Totales por Órdenes completadas
+    // 4. Ingresos Totales por Órdenes completadas y Ganancia en Ventas (Bruta)
     const ordenesCompletadas = await prisma.orden.findMany({
       where: { estado: 'COMPLETADA' },
-      select: { totalCifrado: true, createdAt: true }
+      select: {
+        totalCifrado: true,
+        createdAt: true,
+        fechaOrden: true,
+        detalles: {
+          select: {
+            precioUnitarioCongeladoCifrado: true,
+            costoUnitarioCongeladoCifrado: true,
+            cantidadCifrada: true,
+            producto: { select: { precioCompraCifrado: true } }
+          }
+        }
+      }
     });
 
     let ingresosTotales = 0;
+    let gananciaVentasTotales = 0;
+
     ordenesCompletadas.forEach((orden) => {
       try {
         const total = parseFloat(descifrarTexto(orden.totalCifrado));
@@ -45,6 +68,21 @@ export const DashboardService = {
       } catch (e) {
         console.error('Error al descifrar total de orden:', e);
       }
+
+      orden.detalles.forEach((det) => {
+        try {
+          const cantidad = parseFloat(descifrarTexto(det.cantidadCifrada)) || 0;
+          const precioVentaUnit = parseFloat(descifrarTexto(det.precioUnitarioCongeladoCifrado)) || 0;
+          let costoUnit = 0;
+          if (det.costoUnitarioCongeladoCifrado) {
+            costoUnit = parseFloat(descifrarTexto(det.costoUnitarioCongeladoCifrado)) || 0;
+          } else if (det.producto?.precioCompraCifrado) {
+            costoUnit = parseFloat(descifrarTexto(det.producto.precioCompraCifrado)) || 0;
+          }
+          const gananciaItem = (precioVentaUnit - costoUnit) * cantidad;
+          gananciaVentasTotales += gananciaItem;
+        } catch (e) {}
+      });
     });
 
     // 5. Gastos Totales
@@ -122,6 +160,7 @@ export const DashboardService = {
       ingresosTotales,
       gastosTotales,
       gananciasTotales,
+      gananciaVentasTotales: parseFloat(gananciaVentasTotales.toFixed(2)),
       margenGanancia: parseFloat(margenGanancia.toFixed(1)),
       ordenesActivas,
       productosEnStock,
@@ -137,7 +176,19 @@ export const DashboardService = {
   async obtenerDatosFinancierosHistoricos(periodo: PeriodoFinanciero): Promise<PuntoFinanciero[]> {
     const ordenesCompletadas = await prisma.orden.findMany({
       where: { estado: 'COMPLETADA' },
-      select: { totalCifrado: true, createdAt: true }
+      select: {
+        totalCifrado: true,
+        createdAt: true,
+        fechaOrden: true,
+        detalles: {
+          select: {
+            precioUnitarioCongeladoCifrado: true,
+            costoUnitarioCongeladoCifrado: true,
+            cantidadCifrada: true,
+            producto: { select: { precioCompraCifrado: true } }
+          }
+        }
+      }
     });
 
     const gastosInternos = await prisma.gastoInterno.findMany({
@@ -149,11 +200,28 @@ export const DashboardService = {
       select: { totalCifrado: true, fechaIngreso: true }
     });
 
-    // Mapear ingresos, gastos y compras con fechas
-    const listaIngresos = ordenesCompletadas.map(o => ({
-      monto: parseFloat(descifrarTexto(o.totalCifrado)) || 0,
-      fecha: new Date(o.createdAt)
-    }));
+    // Mapear ingresos, ganancia de ventas, gastos y compras con fechas
+    const listaIngresos = ordenesCompletadas.map(o => {
+      let gananciaVenta = 0;
+      o.detalles.forEach((det) => {
+        try {
+          const cantidad = parseFloat(descifrarTexto(det.cantidadCifrada)) || 0;
+          const precioVentaUnit = parseFloat(descifrarTexto(det.precioUnitarioCongeladoCifrado)) || 0;
+          let costoUnit = 0;
+          if (det.costoUnitarioCongeladoCifrado) {
+            costoUnit = parseFloat(descifrarTexto(det.costoUnitarioCongeladoCifrado)) || 0;
+          } else if (det.producto?.precioCompraCifrado) {
+            costoUnit = parseFloat(descifrarTexto(det.producto.precioCompraCifrado)) || 0;
+          }
+          gananciaVenta += (precioVentaUnit - costoUnit) * cantidad;
+        } catch (e) {}
+      });
+      return {
+        monto: parseFloat(descifrarTexto(o.totalCifrado)) || 0,
+        gananciaVenta,
+        fecha: new Date(o.fechaOrden || o.createdAt)
+      };
+    });
 
     const listaGastos = gastosInternos.map(g => ({
       monto: parseFloat(descifrarTexto(g.montoCifrado)) || 0,
@@ -182,6 +250,10 @@ export const DashboardService = {
           .filter(item => item.fecha.toDateString() === d.toDateString())
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumGananciaVentas = listaIngresos
+          .filter(item => item.fecha.toDateString() === d.toDateString())
+          .reduce((acc, item) => acc + item.gananciaVenta, 0);
+
         // Gastos 
         const diaObjetivo = diaCalendarioUTC(d); 
         const sumGastos = listaGastos
@@ -197,6 +269,7 @@ export const DashboardService = {
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
           ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
       }
@@ -217,6 +290,10 @@ export const DashboardService = {
           .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumGananciaVentas = listaIngresos
+          .filter(item => item.fecha >= dStart && item.fecha <= dEnd)
+          .reduce((acc, item) => acc + item.gananciaVenta, 0);
+
         // Gastos
         const sumGastos = listaGastos
           .filter(item => {
@@ -234,6 +311,7 @@ export const DashboardService = {
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
           ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
       }
@@ -252,10 +330,13 @@ export const DashboardService = {
           .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
           .reduce((acc, item) => acc + item.monto, 0);
 
+        const sumGananciaVentas = listaIngresos
+          .filter(item => item.fecha.getFullYear() === year && q.months.includes(item.fecha.getMonth()))
+          .reduce((acc, item) => acc + item.gananciaVenta, 0);
+
         // Gastos
         const sumGastos = listaGastos
           .filter(item => item.dia.y === year && q.months.includes(item.dia.m)) // trimestral
-          // o: item.dia.y === year && item.dia.m === monthIdx   // anual
           .reduce((acc, item) => acc + item.monto, 0);
 
         const sumCompras = listaCompras
@@ -267,6 +348,7 @@ export const DashboardService = {
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
           ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
       });
@@ -279,6 +361,10 @@ export const DashboardService = {
         const sumIngresos = listaIngresos
           .filter(item => item.fecha.getFullYear() === year && item.fecha.getMonth() === monthIdx)
           .reduce((acc, item) => acc + item.monto, 0);
+
+        const sumGananciaVentas = listaIngresos
+          .filter(item => item.fecha.getFullYear() === year && item.fecha.getMonth() === monthIdx)
+          .reduce((acc, item) => acc + item.gananciaVenta, 0);
 
         const sumGastos = listaGastos
           .filter(item => item.dia.y === year && item.dia.m === monthIdx) // anual
@@ -293,11 +379,81 @@ export const DashboardService = {
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
           ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
       });
     }
 
     return result;
+  },
+
+  async obtenerProductosMasVendidos(limit: number = 5): Promise<{ top: ProductoMasVendido[]; otros: ProductoMasVendido | null }> {
+    const ordenesCompletadas = await prisma.orden.findMany({
+      where: { estado: 'COMPLETADA' },
+      select: {
+        detalles: {
+          select: {
+            productoId: true,
+            productoNombreCifrado: true,
+            precioUnitarioCongeladoCifrado: true,
+            cantidadCifrada: true,
+            subtotalCifrado: true,
+            producto: {
+              select: {
+                detallesCifrados: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const mapaProductos: Record<string, { id: string; nombre: string; sku: string; cantidadVendida: number; totalVendido: number }> = {};
+
+    ordenesCompletadas.forEach((orden) => {
+      orden.detalles.forEach((det: any) => {
+        try {
+          const id = det.productoId || det.productoNombreCifrado;
+          const nombre = descifrarTexto(det.productoNombreCifrado);
+          const cantidad = parseInt(descifrarTexto(det.cantidadCifrada), 10) || 0;
+          const subtotal = parseFloat(descifrarTexto(det.subtotalCifrado)) || 0;
+          
+          let sku = 'N/A';
+          if (det.producto?.detallesCifrados) {
+            try {
+              const obj = JSON.parse(descifrarTexto(det.producto.detallesCifrados));
+              if (obj && obj.sku) sku = obj.sku;
+            } catch (e) {}
+          }
+
+          if (!mapaProductos[id]) {
+            mapaProductos[id] = { id, nombre, sku, cantidadVendida: 0, totalVendido: 0 };
+          }
+          mapaProductos[id].cantidadVendida += cantidad;
+          mapaProductos[id].totalVendido += subtotal;
+        } catch (e) {}
+      });
+    });
+
+    const lista = Object.values(mapaProductos).sort((a, b) => b.cantidadVendida - a.cantidadVendida);
+
+    const top = lista.slice(0, limit);
+    const resto = lista.slice(limit);
+
+    let otros: ProductoMasVendido | null = null;
+    if (resto.length > 0) {
+      const cantidadTotalResto = resto.reduce((s, r) => s + r.cantidadVendida, 0);
+      const totalVendidoResto = resto.reduce((s, r) => s + r.totalVendido, 0);
+      otros = {
+        id: 'otros',
+        nombre: 'Otros Productos',
+        sku: '-',
+        cantidadVendida: cantidadTotalResto,
+        totalVendido: parseFloat(totalVendidoResto.toFixed(2))
+      };
+    }
+
+    return { top, otros };
   }
 };

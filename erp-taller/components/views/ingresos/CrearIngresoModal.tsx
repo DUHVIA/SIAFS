@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
 import { Search, Plus, Trash2, Loader2, Package } from 'lucide-react';
+import { CrearProductoModal } from '@/components/views/inventario/CrearProductoModal';
 
 interface DetalleLinea {
   productoId: string;
@@ -38,6 +39,10 @@ export function CrearIngresoModal({ isOpen, onClose, onSuccess }: CrearIngresoMo
   const [showProductoDropdown, setShowProductoDropdown] = useState(false);
   const productoRef = useRef<HTMLDivElement>(null);
 
+  // Sub-modal: Crear Producto
+  const [isCrearProductoOpen, setIsCrearProductoOpen] = useState(false);
+  const [tiposAutoparte, setTiposAutoparte] = useState<any[]>([]);
+
   // Líneas del lote de ingreso
   const [detalles, setDetalles] = useState<DetalleLinea[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -53,25 +58,44 @@ export function CrearIngresoModal({ isOpen, onClose, onSuccess }: CrearIngresoMo
   }, [isOpen]);
 
   // Cargar productos
+  const fetchProductos = async () => {
+    try {
+      const res = await fetch('/api/productos?limit=999');
+      if (res.ok) {
+        const data = await res.json();
+        const items = data.items || [];
+        setProductos(items);
+        return items;
+      } else {
+        toast.error('Error al cargar catálogo de productos');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al conectar con la base de datos de productos');
+    }
+    return [];
+  };
+
   useEffect(() => {
     if (!isOpen) return;
-    const fetchProductos = async () => {
-      try {
-        const res = await fetch('/api/productos?limit=999');
-        if (res.ok) {
-          const data = await res.json();
-          setProductos(data.items || []);
-        } else {
-          toast.error('Error al cargar catálogo de productos');
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error('Error al conectar con la base de datos de productos');
-      }
-    };
     fetchProductos();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Cargar tipos de autoparte (necesario para sub-modal de crear producto)
+  useEffect(() => {
+    if (!isCrearProductoOpen) return;
+    const fetchTipos = async () => {
+      try {
+        const res = await fetch('/api/tipos-autoparte');
+        if (res.ok) {
+          const data = await res.json();
+          setTiposAutoparte(data || []);
+        }
+      } catch { /* silent */ }
+    };
+    fetchTipos();
+  }, [isCrearProductoOpen]);
 
   // Filtrar productos
   useEffect(() => {
@@ -199,6 +223,7 @@ export function CrearIngresoModal({ isOpen, onClose, onSuccess }: CrearIngresoMo
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -221,9 +246,19 @@ export function CrearIngresoModal({ isOpen, onClose, onSuccess }: CrearIngresoMo
 
         {/* Buscador de productos */}
         <div ref={productoRef} className="relative">
-          <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider mb-1.5">
-            Buscar Producto para Agregar
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold text-tertiary uppercase tracking-wider">
+              Buscar Producto para Agregar
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsCrearProductoOpen(true)}
+              className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Nuevo Producto
+            </button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary" />
             <Input
@@ -382,5 +417,44 @@ export function CrearIngresoModal({ isOpen, onClose, onSuccess }: CrearIngresoMo
         </div>
       </form>
     </Modal>
-  );
+
+    {isCrearProductoOpen && (
+      <CrearProductoModal
+        isOpen={isCrearProductoOpen}
+        tiposAutoparte={tiposAutoparte}
+        onRefreshTipos={async () => {
+          try {
+            const res = await fetch('/api/tipos-autoparte');
+            if (res.ok) setTiposAutoparte(await res.json());
+          } catch { /* silent */ }
+        }}
+        onClose={() => setIsCrearProductoOpen(false)}
+        onSuccess={async (nuevoProducto) => {
+          //const prods = await fetchProductos();
+          // 1. Refrescar lista de productos y auto-seleccionar el último creado
+          //setIsCrearProductoOpen(false);
+          //if (prods && prods.length > 0) {
+          //  const ultimo = prods[0];
+          //  agregarProducto(ultimo);
+          //  toast.success(`Producto "${ultimo.nombre}" creado y agregado al lote de compra.`);
+          //} else {
+          //  toast.success('Producto creado exitosamente.');
+          //}
+          setIsCrearProductoOpen(false);
+          
+          // 1. Refrescar lista de productos en el modal de ingresos
+          const prods = await fetchProductos();
+
+          if (nuevoProducto) {
+            // 2. Buscar el producto recién creado por su ID único en la lista actualizada
+            const encontrado = prods?.find((p: any) => p.id === nuevoProducto.id) || nuevoProducto;
+
+            // 3. Agregar al lote de compra con los datos exactos descifrados/completos
+            agregarProducto(encontrado);
+            toast.success(`Producto "${encontrado.nombre}" creado y agregado al lote de compra.`);
+          }
+        }}
+      />
+    )}
+  </>);
 }

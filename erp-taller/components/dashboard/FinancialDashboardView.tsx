@@ -16,6 +16,7 @@ interface FinancialDashboardViewProps {
     ingresosTotales: number;
     gastosTotales: number;
     gananciasTotales: number;
+    gananciaVentasTotales: number;
     margenGanancia: number;
     totalInvertidoCompras: number;
   };
@@ -52,10 +53,11 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
   };
 
   const handleExportCSV = () => {
-    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
+    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Ganancia en Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
     const rows = chartData.map(p => [
       p.periodoLabel,
       p.ingresos.toFixed(2),
+      (p.gananciaVentas || 0).toFixed(2),
       p.gastos.toFixed(2),
       p.ganancias.toFixed(2),
       p.compras.toFixed(2),
@@ -64,10 +66,11 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
   };
 
   const handleExportExcel = () => {
-    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
+    const headers = ['Periodo / Fecha', 'Ingresos Ventas (S/)', 'Ganancia en Ventas (S/)', 'Gastos (S/)', 'Ganancia Neta (S/)', 'Compras Inventario (S/)'];
     const rows = chartData.map(p => [
       p.periodoLabel,
       p.ingresos,
+      p.gananciaVentas || 0,
       p.gastos,
       p.ganancias,
       p.compras,
@@ -78,7 +81,7 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
   return (
     <div className="space-y-6">
       {/* Bento Grid Financiero: Métricas Claves */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* Ingresos Totales */}
         <div className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-500/20 shadow-soft rounded-3xl p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -92,6 +95,22 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
               S/ {metricasFinancieras.ingresosTotales.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </span>
             <p className="text-xs text-emerald-700 mt-1 font-body">Ventas cerradas y cobradas</p>
+          </div>
+        </div>
+
+        {/* Ganancia en Ventas (Bruta) */}
+        <div className="bg-teal-500/10 backdrop-blur-xl border border-teal-500/20 shadow-soft rounded-3xl p-5 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="font-headline text-xs font-bold uppercase tracking-wider text-teal-700">Ganancia en Ventas</span>
+            <div className="w-10 h-10 rounded-2xl bg-teal-500/20 flex items-center justify-center text-teal-600">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="font-label font-bold text-2xl text-teal-900">
+              S/ {(metricasFinancieras.gananciaVentasTotales || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+            </span>
+            <p className="text-xs text-teal-700 mt-1 font-body">Utilidad bruta comercial</p>
           </div>
         </div>
 
@@ -123,7 +142,7 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
             <span className="font-label font-bold text-2xl text-blue-900">
               S/ {metricasFinancieras.gananciasTotales.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </span>
-            <p className="text-xs text-blue-700 mt-1 font-body">Balance utilidad bruta</p>
+            <p className="text-xs text-blue-700 mt-1 font-body">Balance final utilidad</p>
           </div>
         </div>
 
@@ -256,8 +275,9 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
                   itemStyle={{ fontSize: '12px', fontWeight: 600 }}
                   formatter={(value: any, name: any) => {
                     const labels: Record<string, string> = {
-                      ingresos: 'Ingresos',
-                      gastos: 'Gastos',
+                      ingresos: 'Ingresos Ventas',
+                      gananciaVentas: 'Ganancia en Ventas',
+                      gastos: 'Gastos Internos',
                       ganancias: 'Ganancia Neta',
                       compras: 'Compras Inventario',
                     };
@@ -270,8 +290,9 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
                   iconType="circle"
                   formatter={(val) => {
                     const labels: Record<string, string> = {
-                      ingresos: 'Ingresos',
-                      gastos: 'Gastos',
+                      ingresos: 'Ingresos Ventas',
+                      gananciaVentas: 'Ganancia en Ventas',
+                      gastos: 'Gastos Internos',
                       ganancias: 'Ganancia Neta',
                       compras: 'Compras Inventario',
                     };
@@ -282,9 +303,10 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
                     );
                   }}
                 />
-                <Bar dataKey="ingresos" fill="#10B981" radius={[6, 6, 0, 0]} maxBarSize={24} />
-                <Bar dataKey="gastos" fill="#EF4444" radius={[6, 6, 0, 0]} maxBarSize={24} />
-                <Bar dataKey="compras" fill="#8B5CF6" radius={[6, 6, 0, 0]} maxBarSize={24} />
+                <Bar dataKey="ingresos" fill="#10B981" radius={[6, 6, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="gananciaVentas" fill="#0D9488" radius={[6, 6, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="gastos" fill="#EF4444" radius={[6, 6, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="compras" fill="#8B5CF6" radius={[6, 6, 0, 0]} maxBarSize={20} />
                 <Line type="monotone" dataKey="ganancias" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>

@@ -57,6 +57,31 @@ describe('ProductoService (CRUD y Control de Errores)', () => {
       expect(resultado.nombre).toBe('Bujía');
     });
 
+    it('debe registrar el precioCompra en el historial y devolver precioCosto', async () => {
+      const dto = {
+        usuarioId: 'uuid-user',
+        nombre: 'Filtro Aceite',
+        categoria: 'AUTOPARTE' as any,
+        precioVenta: '45.00',
+        precioCompra: '28.50',
+        stock: '15',
+        detalles: {}
+      };
+
+      prismaMock.producto.create.mockResolvedValue({
+        id: 'uuid-prod-2',
+        nombreCifrado: cifrarTexto(dto.nombre),
+        precioVentaCifrado: cifrarTexto(dto.precioVenta),
+        precioCompraCifrado: cifrarTexto(dto.precioCompra),
+        stockCifrado: cifrarTexto(dto.stock),
+      });
+
+      const resultado = await ProductoService.crear(dto);
+
+      expect(prismaMock.producto.create).toHaveBeenCalledTimes(1);
+      expect(resultado.precioCosto).toBe(28.5);
+    });
+
     it('debe propagar el error si ocurre una falla en Prisma (ej. Restricción Única)', async () => {
       const dto = {
         usuarioId: 'uuid-user',

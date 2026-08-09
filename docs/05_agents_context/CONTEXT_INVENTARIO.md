@@ -53,6 +53,7 @@ model Producto {
   idxNombre           String?           @map("idx_nombre") @db.VarChar(64)
   categoria           CategoriaProducto
   precioVentaCifrado  String            @map("precio_venta_cifrado") @db.Text
+  precioCompraCifrado String?           @map("precio_compra_cifrado") @db.Text
   stockCifrado        String            @map("stock_cifrado") @db.Text
   rangoStock          Int               @default(0) @map("rango_stock")
   detallesCifrados    String            @map("detalles_cifrados") @db.Text
@@ -147,8 +148,8 @@ model HistorialPrecio {
 Ubicados en [components/views/inventario/](file:///c:/Users/ASUS%20TUF%20GAMMING%20F15/Desktop/SIAFS/SIAFS/erp-taller/components/views/inventario/):
 
 1. **`InventarioView.tsx`**: Vista maestra. Bento grid de KPIs (Total SKUs, Agotados, Stock Bajo, Valor Total en S/), tabs de filtro (Todo, Autopartes, Motores, Reabastecimiento), buscador con debounce (300ms), dropdown dinámico de tipos y banner "Low Stock Advisory".
-2. **`CrearProductoModal.tsx`**: Formulario dinámico. Adapta campos si es `AUTOPARTE` (requiere Tipo de Autoparte con botón `+` inline) o `MOTOR` (requiere Nro Motor, Serie, Cilindrada, Marca).
-3. **`EditarProductoModal.tsx`**: Modal de modificación con pre-llenado de campos descifrados.
+2. **`CrearProductoModal.tsx`**: Formulario dinámico. Incluye los campos "Precio de Venta (S/)" y "Precio de Compra (S/)", y adapta campos según categoría `AUTOPARTE` (requiere Tipo de Autoparte con botón `+` inline, estado físico `Nuevo` | `Usado` | `Importado`) o `MOTOR`.
+3. **`EditarProductoModal.tsx`**: Modal de modificación con pre-llenado de campos descifrados (incluyendo precio de venta, precio de compra editable y estado físico `Nuevo` | `Usado` | `Importado`).
 4. **`RestockModal.tsx`**: Modal para adición rápida de unidades con campo obligatorio de Motivo.
 5. **`GestionarTiposModal.tsx`**: Modal CRUD para administrar el catálogo de tipos de autopartes (crear, editar inline y eliminar).
 6. **`VerKardexModal.tsx`**: Modal de auditoría que despliega la tabla histórica de entradas, salidas y ajustes por usuario con exportación.

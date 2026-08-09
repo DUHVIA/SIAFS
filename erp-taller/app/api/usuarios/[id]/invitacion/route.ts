@@ -41,9 +41,10 @@ export async function GET(
       .setExpirationTime('7d') // Expira en 7 días
       .sign(secretKey);
 
-    // Obtener la URL base
+    // Obtener la URL base (priorizar NEXT_PUBLIC_APP_URL si está configurada)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '');
     const url = new URL(request.url);
-    const baseUrl = `${url.protocol}//${url.host}`;
+    const baseUrl = appUrl || `${url.protocol}//${url.host}`;
     const invitationLink = `${baseUrl}/invitacion?token=${token}`;
 
     return NextResponse.json({ link: invitationLink }, { status: 200 });

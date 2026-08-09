@@ -20,10 +20,16 @@ export const OrdenService = {
 
           const nombreDecifrado = descifrarTexto(producto.nombreCifrado);
 
+          // Congelar el costo unitario actual del producto al momento de la venta
+          const costoCongelado = producto.precioCompraCifrado
+            ? producto.precioCompraCifrado
+            : null;
+
           return {
             productoId: detalle.productoId,
             productoNombreCifrado: cifrarTexto(nombreDecifrado),
             precioUnitarioCongeladoCifrado: cifrarTexto(detalle.precioUnitario.toString()),
+            costoUnitarioCongeladoCifrado: costoCongelado,
             cantidadCifrada: cifrarTexto(detalle.cantidad.toString()),
             subtotalCifrado: cifrarTexto(sub.toString()),
             stockActualDecifrado: parseInt(descifrarTexto(producto.stockCifrado), 10),
@@ -34,6 +40,13 @@ export const OrdenService = {
 
       const total = subtotal;
 
+      // Parsear fecha local para evitar desfasaje UTC
+      let fechaOrden: Date = new Date();
+      if (data.fecha) {
+        const [year, month, day] = data.fecha.split('-').map(Number);
+        fechaOrden = new Date(year, month - 1, day, 12, 0, 0);
+      }
+
       const nuevaOrden = await tx.orden.create({
         data: {
           tipo: data.tipo,
@@ -41,6 +54,7 @@ export const OrdenService = {
           clienteId: data.clienteId,
           usuarioId: data.usuarioId,
           metodoPagoId: data.metodoPagoId,
+          fechaOrden,
           subtotalCifrado: cifrarTexto(subtotal.toString()),
           totalCifrado: cifrarTexto(total.toString()),
           detalles: {
@@ -48,6 +62,7 @@ export const OrdenService = {
               productoId: d.productoId,
               productoNombreCifrado: d.productoNombreCifrado,
               precioUnitarioCongeladoCifrado: d.precioUnitarioCongeladoCifrado,
+              costoUnitarioCongeladoCifrado: d.costoUnitarioCongeladoCifrado,
               cantidadCifrada: d.cantidadCifrada,
               subtotalCifrado: d.subtotalCifrado,
             }))
@@ -111,33 +126,44 @@ export const OrdenService = {
             where: { id: detalle.productoId }
           });
           const nombreDecifrado = descifrarTexto(producto.nombreCifrado);
+          const costoCongelado = producto.precioCompraCifrado ?? null;
           return {
             productoId: detalle.productoId,
             productoNombreCifrado: cifrarTexto(nombreDecifrado),
             precioUnitarioCongeladoCifrado: cifrarTexto(detalle.precioUnitario.toString()),
+            costoUnitarioCongeladoCifrado: costoCongelado,
             cantidadCifrada: cifrarTexto(detalle.cantidad.toString()),
             subtotalCifrado: cifrarTexto(sub.toString()),
           };
         })
       );
 
+      // Parsear fecha local si se provee
+      const updateData: any = {
+        clienteId: data.clienteId,
+        subtotalCifrado: cifrarTexto(subtotal.toString()),
+        totalCifrado: cifrarTexto(subtotal.toString()),
+        detalles: {
+          create: detallesProcesados.map(d => ({
+            productoId: d.productoId,
+            productoNombreCifrado: d.productoNombreCifrado,
+            precioUnitarioCongeladoCifrado: d.precioUnitarioCongeladoCifrado,
+            costoUnitarioCongeladoCifrado: d.costoUnitarioCongeladoCifrado,
+            cantidadCifrada: d.cantidadCifrada,
+            subtotalCifrado: d.subtotalCifrado,
+          }))
+        }
+      };
+
+      if (data.fecha) {
+        const [year, month, day] = data.fecha.split('-').map(Number);
+        updateData.fechaOrden = new Date(year, month - 1, day, 12, 0, 0);
+      }
+
       // Crear nuevos detalles y actualizar totales
       return await tx.orden.update({
         where: { id },
-        data: {
-          clienteId: data.clienteId,
-          subtotalCifrado: cifrarTexto(subtotal.toString()),
-          totalCifrado: cifrarTexto(subtotal.toString()),
-          detalles: {
-            create: detallesProcesados.map(d => ({
-              productoId: d.productoId,
-              productoNombreCifrado: d.productoNombreCifrado,
-              precioUnitarioCongeladoCifrado: d.precioUnitarioCongeladoCifrado,
-              cantidadCifrada: d.cantidadCifrada,
-              subtotalCifrado: d.subtotalCifrado,
-            }))
-          }
-        },
+        data: updateData,
         include: { detalles: true }
       });
     });
@@ -156,17 +182,40 @@ export const OrdenService = {
       include: {
         cliente: true,
         metodoPago: true,
-        detalles: true,
+        detalles: {
+          include: { producto: true }
+        },
       }
     });
 
-    const descifradas = todas.map(orden => ({
-      ...orden,
-      total: descifrarTexto(orden.totalCifrado),
-      subtotal: descifrarTexto(orden.subtotalCifrado),
-      clienteNombre: orden.cliente ? descifrarTexto(orden.cliente.nombreCifrado) : 'Consumidor Final',
-      cantidadItems: orden.detalles.length,
-    }));
+    const descifradas = todas.map(orden => {
+      const detallesDescifrados = orden.detalles.map(d => {
+        let sku = 'N/A';
+        if (d.producto?.detallesCifrados) {
+          try {
+            const parsed = JSON.parse(descifrarTexto(d.producto.detallesCifrados));
+            if (parsed && parsed.sku) sku = parsed.sku;
+          } catch (e) {}
+        }
+        return {
+          ...d,
+          sku,
+          productoNombre: descifrarTexto(d.productoNombreCifrado),
+          precioUnitario: descifrarTexto(d.precioUnitarioCongeladoCifrado),
+          cantidad: descifrarTexto(d.cantidadCifrada),
+          subtotal: descifrarTexto(d.subtotalCifrado),
+        };
+      });
+
+      return {
+        ...orden,
+        total: descifrarTexto(orden.totalCifrado),
+        subtotal: descifrarTexto(orden.subtotalCifrado),
+        clienteNombre: orden.cliente ? descifrarTexto(orden.cliente.nombreCifrado) : 'Consumidor Final',
+        cantidadItems: orden.detalles.length,
+        detalles: detallesDescifrados,
+      };
+    });
 
     // Métricas del mes en curso
     const inicioMes = new Date();
@@ -233,19 +282,31 @@ export const OrdenService = {
       }
     });
 
+    const detallesDescifrados = orden.detalles.map(d => {
+      let sku = 'N/A';
+      if (d.producto?.detallesCifrados) {
+        try {
+          const parsed = JSON.parse(descifrarTexto(d.producto.detallesCifrados));
+          if (parsed && parsed.sku) sku = parsed.sku;
+        } catch (e) {}
+      }
+      return {
+        ...d,
+        sku,
+        productoNombre: descifrarTexto(d.productoNombreCifrado),
+        precioUnitario: descifrarTexto(d.precioUnitarioCongeladoCifrado),
+        cantidad: descifrarTexto(d.cantidadCifrada),
+        subtotal: descifrarTexto(d.subtotalCifrado),
+      };
+    });
+
     return {
       ...orden,
       total: descifrarTexto(orden.totalCifrado),
       subtotal: descifrarTexto(orden.subtotalCifrado),
       clienteNombre: orden.cliente ? descifrarTexto(orden.cliente.nombreCifrado) : 'Consumidor Final',
       clienteDocumento: orden.cliente ? descifrarTexto(orden.cliente.documentoCifrado) : null,
-      detalles: orden.detalles.map(d => ({
-        ...d,
-        productoNombre: descifrarTexto(d.productoNombreCifrado),
-        precioUnitario: descifrarTexto(d.precioUnitarioCongeladoCifrado),
-        cantidad: descifrarTexto(d.cantidadCifrada),
-        subtotal: descifrarTexto(d.subtotalCifrado),
-      })),
+      detalles: detallesDescifrados,
     };
   },
 
