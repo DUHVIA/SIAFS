@@ -35,6 +35,7 @@ export function OrdenesView() {
 
     const [tab, setTab] = useState<Tab>('ventas');
     const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(15);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [items, setItems] = useState<any[]>([]);
@@ -74,7 +75,7 @@ export function OrdenesView() {
                 const filters = TAB_FILTERS[tab];
                 const params = new URLSearchParams({
                     page: page.toString(),
-                    limit: '15',
+                    limit: limit.toString(),
                     search: debouncedSearch,
                     ...(filters.tipo  ? { tipo:   filters.tipo  } : {}),
                     ...(filters.estado ? { estado: filters.estado } : {}),
@@ -94,7 +95,7 @@ export function OrdenesView() {
         };
         fetchOrdenes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tab, page, debouncedSearch, refreshTrigger]);
+    }, [tab, page, limit, debouncedSearch, refreshTrigger]);
 
     const handleRefresh = () => setRefreshTrigger(t => t + 1);
 
@@ -411,11 +412,31 @@ export function OrdenesView() {
                     </div>
 
                     {/* Paginación */}
-                    {!loading && pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between px-4 py-3 border-t border-white/20">
-                            <span className="text-xs text-tertiary">
-                                Mostrando {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}–{Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total}
-                            </span>
+                    {!loading && items.length > 0 && (
+                        <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-white/20 gap-4">
+                            <div className="flex flex-wrap items-center gap-4">
+                                <span className="text-xs text-tertiary">
+                                    Mostrando {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}–{Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total}
+                                </span>
+                                <div className="flex items-center gap-2 text-xs text-tertiary font-body">
+                                    <span>Filas por página:</span>
+                                    <select
+                                        value={limit}
+                                        onChange={(e) => {
+                                            setLimit(Number(e.target.value));
+                                            setPage(1);
+                                        }}
+                                        className="bg-white/80 border border-white/40 rounded-xl px-2.5 py-1 text-xs font-semibold text-secondary outline-none focus:border-primary/50 cursor-pointer"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={15}>15</option>
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div className="flex gap-1">
                                 <Button
                                     variant="ghost" size="sm"

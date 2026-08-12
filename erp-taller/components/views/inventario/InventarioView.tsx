@@ -32,7 +32,7 @@ interface TipoAutoparte {
 export function InventarioView() {
     // Estados para paginación y filtros
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [categoriaFilter, setCategoriaFilter] = useState<'ALL' | 'AUTOPARTE' | 'MOTOR'>('ALL');
@@ -452,7 +452,7 @@ export function InventarioView() {
                             </p>
                         </div>
                         <StatCard 
-                            title="Valor Total" 
+                            title="Valor Total (Costo)" 
                             value={`S/ ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
                             icon={Cpu} 
                         />
@@ -617,9 +617,29 @@ export function InventarioView() {
                 {/* Footer de Paginación */}
                 {!loading && items.length > 0 && (
                     <div className="p-5 flex flex-col sm:flex-row gap-4 items-center justify-between bg-neutral-light/30 border-t border-white/40">
-                        <p className="text-xs text-tertiary font-body">
-                            Mostrando <span className="font-bold text-secondary">{items.length}</span> de <span className="font-bold text-secondary">{pagination.total}</span> productos
-                        </p>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <p className="text-xs text-tertiary font-body">
+                                Mostrando <span className="font-bold text-secondary">{items.length}</span> de <span className="font-bold text-secondary">{pagination.total}</span> productos
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-tertiary font-body">
+                                <span>Filas por página:</span>
+                                <select
+                                    value={limit}
+                                    onChange={(e) => {
+                                        setLimit(Number(e.target.value));
+                                        setPage(1);
+                                    }}
+                                    className="bg-white/80 border border-white/40 rounded-xl px-2.5 py-1 text-xs font-semibold text-secondary outline-none focus:border-primary/50 cursor-pointer"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={15}>15</option>
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-1">
                             <Button
                                 size="sm"

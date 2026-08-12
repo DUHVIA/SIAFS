@@ -21,6 +21,7 @@ export function GastosView() {
   const toast = useToast();
 
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [items, setItems] = useState<any[]>([]);
@@ -55,7 +56,7 @@ export function GastosView() {
       try {
         const params = new URLSearchParams({
           page: page.toString(),
-          limit: '15',
+          limit: limit.toString(),
           search: debouncedSearch,
         });
         const res = await fetch(`/api/gastos?${params.toString()}`);
@@ -80,7 +81,7 @@ export function GastosView() {
     };
     fetchGastos();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, debouncedSearch, refreshTrigger]);
+  }, [page, limit, debouncedSearch, refreshTrigger]);
 
   const handleRefresh = () => setRefreshTrigger(t => t + 1);
 
@@ -293,11 +294,31 @@ export function GastosView() {
           </div>
 
           {/* Paginación */}
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-white/20">
-              <span className="text-xs text-tertiary font-body">
-                Mostrando página <span className="font-semibold text-secondary">{pagination.page}</span> de <span className="font-semibold text-secondary">{pagination.totalPages}</span>
-              </span>
+          {!loading && items.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-white/20 gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-xs text-tertiary font-body">
+                  Mostrando <span className="font-semibold text-secondary">{items.length}</span> de <span className="font-semibold text-secondary">{pagination.total}</span> gastos
+                </span>
+                <div className="flex items-center gap-2 text-xs text-tertiary font-body">
+                  <span>Filas por página:</span>
+                  <select
+                    value={limit}
+                    onChange={(e) => {
+                      setLimit(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="bg-white/80 border border-white/40 rounded-xl px-2.5 py-1 text-xs font-semibold text-secondary outline-none focus:border-primary/50 cursor-pointer"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant="secondary"

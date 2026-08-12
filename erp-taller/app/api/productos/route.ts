@@ -24,14 +24,14 @@ export async function GET(request: Request) {
 
     todosLosProductos.forEach(p => {
       const stock = parseInt(p.stock || '0', 10);
-      const precio = parseFloat(p.precioVenta || '0');
+      const precioCompra = typeof p.precioCosto === 'number' ? p.precioCosto : parseFloat((p as any).precioCosto || '0');
 
       if (stock === 0) {
         outOfStock++;
       } else if (p.categoria === 'MOTOR' ? stock <= 1 : stock <= 5) {
         lowStock++;
       }
-      totalValue += precio * stock;
+      totalValue += precioCompra * stock;
     });
 
     // Aplicar filtros en memoria
