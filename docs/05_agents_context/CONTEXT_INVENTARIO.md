@@ -207,3 +207,4 @@ Ubicados en [components/views/inventario/](file:///c:/Users/ASUS%20TUF%20GAMMING
 1. Al modificar el stock de un producto, **NUNCA** hagas un `prisma.producto.update` aislado. Siempre envuélvelo en `prisma.$transaction()` agregando la fila correspondiente en `Kardex`.
 2. Si agregas un nuevo campo a `Producto`, recuerda actualizar tanto `ProductoDTO` en `producto.dto.ts` como la lógica de cifrado/descifrado en `producto.service.ts`.
 3. Respeta los tokens de diseño: badges de stock crítico deben usar `bg-red-100 text-primary font-bold`.
+4. Al crear un nuevo `TipoAutoparte` desde el formulario rápido de `CrearProductoModal`, el estado `tiposLocales` se actualiza de forma síncrona e inmediata (`setTiposLocales` + `setTipoAutoparteId`) para garantizar que la opción aparezca en el menú `<Select>` sin depender exclusivamente del ciclo de re-renderizado del componente padre.

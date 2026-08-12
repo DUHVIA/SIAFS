@@ -51,13 +51,37 @@ export function CrearProductoModal({
     const [combustible, setCombustible] = useState('Gasolina');
     const [estadoMotor, setEstadoMotor] = useState('Nuevo');
 
+    // Estado local para garantizar sincronía inmediata de tipos de autoparte
+    const [tiposLocales, setTiposLocales] = useState<TipoAutoparte[]>(tiposAutoparte || []);
+
     // Estado para creación rápida de tipo de autoparte
     const [showNewTipoForm, setShowNewTipoForm] = useState(false);
     const [newTipoNombre, setNewTipoNombre] = useState('');
     const [newTipoLoading, setNewTipoLoading] = useState(false);
 
+    const fetchTiposDirecto = async () => {
+        try {
+            const res = await fetch('/api/tipos-autoparte');
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setTiposLocales(data);
+                    return data;
+                }
+            }
+        } catch (err) {
+            console.error('Error al cargar tipos de autoparte:', err);
+        }
+        return [];
+    };
+
     useEffect(() => {
-        if (!isOpen) {
+        if (isOpen) {
+            if (tiposAutoparte && tiposAutoparte.length > 0) {
+                setTiposLocales(tiposAutoparte);
+            }
+            fetchTiposDirecto();
+        } else {
             // Limpiar formulario al cerrar
             setNombre('');
             setCategoria('AUTOPARTE');
@@ -76,7 +100,7 @@ export function CrearProductoModal({
             setNewTipoNombre('');
             setErrors({});
         }
-    }, [isOpen]);
+    }, [isOpen, tiposAutoparte]);
 
     const handleCreateTipo = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -91,11 +115,25 @@ export function CrearProductoModal({
             });
 
             const data = await res.json();
-            if (res.ok) {
-                await onRefreshTipos();
+            if (res.ok && data?.id) {
+                // 1. Refrescar lista de tipos directamente
+                const actualizados = await fetchTiposDirecto();
+                
+                // 2. Asegurar que el objeto esté en el estado local
+                const existe = actualizados.some((t: TipoAutoparte) => t.id === data.id);
+                if (!existe) {
+                    setTiposLocales(prev => [...prev, { id: data.id, nombre: data.nombre }]);
+                }
+
+                // 3. Auto-seleccionar INMEDIATAMENTE el nuevo tipo
                 setTipoAutoparteId(data.id);
                 setShowNewTipoForm(false);
                 setNewTipoNombre('');
+
+                // 4. Refrescar padre en segundo plano
+                if (onRefreshTipos) {
+                    onRefreshTipos().catch(() => {});
+                }
             } else {
                 alert(data.error || 'Error al crear el tipo de autoparte');
             }
@@ -273,7 +311,7 @@ export function CrearProductoModal({
                                     </div>
                                 ) : (
                                     <Select
-                                        options={tiposAutoparte.map(t => ({ value: t.id, label: t.nombre }))}
+                                        options={tiposLocales.map(t => ({ value: t.id, label: t.nombre }))}
                                         value={tipoAutoparteId}
                                         onChange={(e) => setTipoAutoparteId(e.target.value)}
                                         error={errors.tipoAutoparteId}

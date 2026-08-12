@@ -53,6 +53,21 @@ export function EditarProductoModal({
     const [combustible, setCombustible] = useState('Gasolina');
     const [estadoMotor, setEstadoMotor] = useState('Nuevo');
 
+    // Estado local para tipos de autoparte
+    const [tiposLocales, setTiposLocales] = useState<TipoAutoparte[]>(tiposAutoparte || []);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (tiposAutoparte && tiposAutoparte.length > 0) {
+                setTiposLocales(tiposAutoparte);
+            }
+            fetch('/api/tipos-autoparte')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (Array.isArray(data)) setTiposLocales(data); })
+                .catch(() => {});
+        }
+    }, [isOpen, tiposAutoparte]);
+
     // Cargar datos del producto seleccionado
     useEffect(() => {
         if (isOpen && producto) {
@@ -215,7 +230,7 @@ export function EditarProductoModal({
                                     Tipo de Autoparte *
                                 </label>
                                 <Select
-                                    options={tiposAutoparte.map(t => ({ value: t.id, label: t.nombre }))}
+                                    options={tiposLocales.map(t => ({ value: t.id, label: t.nombre }))}
                                     value={tipoAutoparteId}
                                     onChange={(e) => setTipoAutoparteId(e.target.value)}
                                     error={errors.tipoAutoparteId}
