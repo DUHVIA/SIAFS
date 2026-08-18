@@ -11,7 +11,9 @@
     "create-user": "npx tsx scripts/create-user.ts",
     "inspect-db": "npx tsx scripts/inspect-database.ts",
     "decrypt-text": "npx tsx scripts/decrypt-text.ts",
-    "trace-dashboard": "npx tsx scripts/trace-dashboard-metrics.ts"
+    "trace-dashboard": "npx tsx scripts/trace-dashboard-metrics.ts",
+    "historial-precios": "npx tsx scripts/inspect-historial-precios.ts",
+    "historial-nombres": "npx tsx scripts/inspect-historial-nombres.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
