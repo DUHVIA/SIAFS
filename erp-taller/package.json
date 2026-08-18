@@ -13,7 +13,8 @@
     "decrypt-text": "npx tsx scripts/decrypt-text.ts",
     "trace-dashboard": "npx tsx scripts/trace-dashboard-metrics.ts",
     "historial-precios": "npx tsx scripts/inspect-historial-precios.ts",
-    "historial-nombres": "npx tsx scripts/inspect-historial-nombres.ts"
+    "historial-nombres": "npx tsx scripts/inspect-historial-nombres.ts",
+    "fix-null-prices": "npx tsx scripts/fix-null-prices.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

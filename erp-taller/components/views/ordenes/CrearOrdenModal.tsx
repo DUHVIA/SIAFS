@@ -18,6 +18,7 @@ interface DetalleLinea {
     precioUnitario: number;
     precioCosto: number;
     stockDisponible: number;
+    origenCosto?: string;
 }
 
 interface CrearOrdenModalProps {
@@ -204,6 +205,11 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
         const costo = typeof producto.precioCosto === 'number' && producto.precioCosto > 0
             ? producto.precioCosto
             : parseFloat(producto.detalles?.costo || producto.detalles?.precioCompra || producto.precioCosto || '0');
+
+        const origenCosto = producto.precioCompraCifrado
+            ? 'BD Tabla'
+            : (producto.historialPrecios?.length ? 'Historial' : 'Estimado');
+
         if (yaEsta) {
             setDetalles(detalles.map(d =>
                 d.productoId === producto.id
@@ -218,6 +224,7 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                 precioUnitario: parseFloat(producto.precioVenta || '0'),
                 precioCosto: costo,
                 stockDisponible: parseInt(producto.stock || '0', 10),
+                origenCosto,
             }]);
         }
         setProductoQuery('');
@@ -497,8 +504,15 @@ export function CrearOrdenModal({ isOpen, tipoInicial, editarOrdenId, onClose, o
                                         className="text-center"
                                     />
                                 </div>
-                                <div className="w-24">
-                                    <label className="text-[10px] text-tertiary block mb-0.5">P. Costo (S/)</label>
+                                <div className="w-28">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <label className="text-[10px] text-tertiary">P. Costo (S/)</label>
+                                        {det.origenCosto && (
+                                            <span className="text-[8px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded" title={`Origen: ${det.origenCosto}`}>
+                                                {det.origenCosto}
+                                            </span>
+                                        )}
+                                    </div>
                                     <Input
                                         type="number"
                                         step="0.01"

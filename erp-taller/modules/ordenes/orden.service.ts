@@ -21,9 +21,22 @@ export const OrdenService = {
           const nombreDecifrado = descifrarTexto(producto.nombreCifrado);
 
           // Congelar el costo unitario actual del producto al momento de la venta
-          const costoCongelado = producto.precioCompraCifrado
-            ? producto.precioCompraCifrado
-            : null;
+          let costoCongelado = producto.precioCompraCifrado ?? null;
+          if (!costoCongelado) {
+            const hp = await tx.historialPrecio.findFirst({
+              where: { productoId: detalle.productoId, NOT: { precioCompraCifrado: null } },
+              orderBy: { fechaCambio: 'desc' }
+            });
+            if (hp?.precioCompraCifrado) costoCongelado = hp.precioCompraCifrado;
+          }
+          if (!costoCongelado) {
+            const di = await tx.detalleIngreso.findFirst({
+              where: { productoId: detalle.productoId },
+              orderBy: { ingreso: { fechaIngreso: 'desc' } },
+              select: { costoUnitarioCifrado: true }
+            });
+            if (di?.costoUnitarioCifrado) costoCongelado = di.costoUnitarioCifrado;
+          }
 
           return {
             productoId: detalle.productoId,
@@ -126,7 +139,24 @@ export const OrdenService = {
             where: { id: detalle.productoId }
           });
           const nombreDecifrado = descifrarTexto(producto.nombreCifrado);
-          const costoCongelado = producto.precioCompraCifrado ?? null;
+
+          let costoCongelado = producto.precioCompraCifrado ?? null;
+          if (!costoCongelado) {
+            const hp = await tx.historialPrecio.findFirst({
+              where: { productoId: detalle.productoId, NOT: { precioCompraCifrado: null } },
+              orderBy: { fechaCambio: 'desc' }
+            });
+            if (hp?.precioCompraCifrado) costoCongelado = hp.precioCompraCifrado;
+          }
+          if (!costoCongelado) {
+            const di = await tx.detalleIngreso.findFirst({
+              where: { productoId: detalle.productoId },
+              orderBy: { ingreso: { fechaIngreso: 'desc' } },
+              select: { costoUnitarioCifrado: true }
+            });
+            if (di?.costoUnitarioCifrado) costoCongelado = di.costoUnitarioCifrado;
+          }
+
           return {
             productoId: detalle.productoId,
             productoNombreCifrado: cifrarTexto(nombreDecifrado),

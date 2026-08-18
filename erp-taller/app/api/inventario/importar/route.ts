@@ -133,6 +133,7 @@ export async function POST(request: Request) {
             idxNombre,
             categoria,
             precioVentaCifrado,
+            precioCompraCifrado: precioCompraNum > 0 ? cifrarTexto(precioCompraNum.toFixed(2)) : null,
             stockCifrado,
             rangoStock: stockNum,
             detallesCifrados,
