@@ -120,13 +120,13 @@ async function main() {
   console.log(`  👉 TOTAL CARD GASTOS TOTALES: S/ ${gastosTotales.toFixed(2)}`);
 
   // 3. GANANCIA NETA Y MARGEN
-  const gananciasTotales = ingresosTotales - gastosTotales;
+  const gananciasTotales = gananciaVentasTotales - gastosTotales;
   const margenGanancia = ingresosTotales > 0 ? (gananciasTotales / ingresosTotales) * 100 : 0;
 
   console.log(`\n----------------------------------------------------------------------------`);
   console.log(`3. CARDS: GANANCIA NETA Y MARGEN DE GANANCIA`);
   console.log(`----------------------------------------------------------------------------`);
-  console.log(`  Formula Ganancia Neta: Ingresos (S/ ${ingresosTotales.toFixed(2)}) - Gastos (S/ ${gastosTotales.toFixed(2)})`);
+  console.log(`  Formula Ganancia Neta: Ganancia en Ventas (S/ ${gananciaVentasTotales.toFixed(2)}) - Gastos (S/ ${gastosTotales.toFixed(2)})`);
   console.log(`  👉 TOTAL CARD GANANCIA NETA: S/ ${gananciasTotales.toFixed(2)}`);
   console.log(`  Formula Margen: (Ganancia Neta / Ingresos Totales) * 100`);
   console.log(`  👉 TOTAL CARD MARGEN DE GANANCIA: ${margenGanancia.toFixed(1)}%`);

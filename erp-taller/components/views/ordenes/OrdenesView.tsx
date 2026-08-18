@@ -11,6 +11,7 @@ import {
     Clock, BarChart2, DollarSign, Download, Loader2, Pencil
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
+import { TruncatedCell } from '@/components/ui/Tooltip';
 import { CrearOrdenModal } from './CrearOrdenModal';
 import { VerOrdenModal } from './VerOrdenModal';
 import { ExportarOrdenesModal } from './ExportarOrdenesModal';
@@ -352,9 +353,7 @@ export function OrdenesView() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="font-body text-secondary font-medium truncate max-w-[180px] block">
-                                                {orden.clienteNombre}
-                                            </span>
+                                            <TruncatedCell text={orden.clienteNombre} maxWidthClass="max-w-[200px]" />
                                         </td>
                                         <td className="px-4 py-3 text-tertiary text-xs font-label">
                                             {new Date(orden.fechaOrden || orden.createdAt).toLocaleDateString('es-PE', {

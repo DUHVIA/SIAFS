@@ -1,9 +1,11 @@
 import React from 'react';
+import { TruncatedCell } from './Tooltip';
 
-interface Column<T> {
+export interface Column<T> {
     key: string;
     header: string;
     render?: (row: T) => React.ReactNode;
+    maxWidthClass?: string;
 }
 
 interface TableProps<T> {
@@ -20,7 +22,7 @@ export function Table<T extends { id?: string }>({
     emptyMessage = "No hay datos para mostrar"
 }: TableProps<T>) {
     return (
-        <div className="w-full bg-white/70 backdrop-blur-xl rounded-3xl shadow-soft border border-white/20 overflow-hidden">
+        <div className="w-full bg-white/70 backdrop-blur-xl rounded-3xl shadow-soft border border-white/20 overflow-visible">
             <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -50,14 +52,26 @@ export function Table<T extends { id?: string }>({
                                     className={`group transition-colors duration-200 ${onRowClick ? 'cursor-pointer hover:bg-white/60 ' : 'hover:bg-white/40 '
                                         }`}
                                 >
-                                    {columns.map((col) => (
-                                        <td
-                                            key={col.key}
-                                            className="px-6 py-4 font-body text-sm text-secondary whitespace-nowrap"
-                                        >
-                                            {col.render ? col.render(row) : (row as any)[col.key]}
-                                        </td>
-                                    ))}
+                                    {columns.map((col) => {
+                                        const value = (row as any)[col.key];
+                                        return (
+                                            <td
+                                                key={col.key}
+                                                className="px-6 py-4 font-body text-sm text-secondary whitespace-nowrap"
+                                            >
+                                                {col.render ? (
+                                                    col.render(row)
+                                                ) : typeof value === 'string' ? (
+                                                    <TruncatedCell
+                                                        text={value}
+                                                        maxWidthClass={col.maxWidthClass || 'max-w-[240px]'}
+                                                    />
+                                                ) : (
+                                                    value
+                                                )}
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                             ))
                         )}

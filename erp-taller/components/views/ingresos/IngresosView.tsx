@@ -10,6 +10,7 @@ import {
   TrendingUp, Clock, Package, DollarSign, Download
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
+import { TruncatedCell } from '@/components/ui/Tooltip';
 import { CrearIngresoModal } from './CrearIngresoModal';
 import { VerIngresoModal } from './VerIngresoModal';
 import { ExportarIngresosModal } from './ExportarIngresosModal';
@@ -255,8 +256,8 @@ export function IngresosView() {
                     <td className="px-4 py-3 text-secondary font-body font-medium">
                       {ingreso.usuarioNombre}
                     </td>
-                    <td className="px-4 py-3 text-tertiary max-w-[200px] truncate font-body">
-                      {ingreso.descripcion || 'Sin notas'}
+                    <td className="px-4 py-3">
+                      <TruncatedCell text={ingreso.descripcion || 'Sin notas'} maxWidthClass="max-w-[240px]" />
                     </td>
                     <td className="px-4 py-3 text-secondary font-body">
                       {ingreso.cantidadItems} {ingreso.cantidadItems === 1 ? 'producto' : 'productos'}

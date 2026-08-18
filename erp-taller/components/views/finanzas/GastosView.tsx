@@ -10,6 +10,7 @@ import {
   Calendar, DollarSign, TrendingDown, ClipboardList, Download, FileSpreadsheet
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
+import { TruncatedCell } from '@/components/ui/Tooltip';
 import { CrearGastoModal } from './CrearGastoModal';
 import { EditarGastoModal } from './EditarGastoModal';
 import { ConfirmAnularGastoModal } from './ConfirmAnularGastoModal';
@@ -256,8 +257,8 @@ export function GastosView() {
                         {formatFechaDisplay(gasto.fecha)}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-secondary font-body font-medium max-w-sm truncate">
-                      {gasto.motivo}
+                    <td className="px-4 py-3">
+                      <TruncatedCell text={gasto.motivo} maxWidthClass="max-w-[320px]" />
                     </td>
                     <td className="px-4 py-3 font-label font-bold text-red-500">
                       -{fmtCurrency(parseFloat(gasto.monto || '0'))}

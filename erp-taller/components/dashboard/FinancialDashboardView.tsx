@@ -142,7 +142,7 @@ export function FinancialDashboardView({ initialChartData, metricasFinancieras }
             <span className="font-label font-bold text-2xl text-blue-900">
               S/ {metricasFinancieras.gananciasTotales.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
             </span>
-            <p className="text-xs text-blue-700 mt-1 font-body">Balance final utilidad</p>
+            <p className="text-xs text-blue-700 mt-1 font-body">Utilidad Bruta - Gastos Totales</p>
           </div>
         </div>
 

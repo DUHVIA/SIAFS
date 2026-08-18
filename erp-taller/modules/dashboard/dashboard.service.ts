@@ -101,7 +101,7 @@ export const DashboardService = {
       }
     });
 
-    const gananciasTotales = ingresosTotales - gastosTotales;
+    const gananciasTotales = gananciaVentasTotales - gastosTotales;
     const margenGanancia = ingresosTotales > 0 ? (gananciasTotales / ingresosTotales) * 100 : 0;
 
     // 6. Compras / Ingresos de Inventario
@@ -268,7 +268,7 @@ export const DashboardService = {
           periodoLabel: dayStr.charAt(0).toUpperCase() + dayStr.slice(1),
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          ganancias: parseFloat((sumGananciaVentas - sumGastos).toFixed(2)),
           gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
@@ -310,7 +310,7 @@ export const DashboardService = {
           periodoLabel: label,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          ganancias: parseFloat((sumGananciaVentas - sumGastos).toFixed(2)),
           gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
@@ -347,7 +347,7 @@ export const DashboardService = {
           periodoLabel: q.label,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          ganancias: parseFloat((sumGananciaVentas - sumGastos).toFixed(2)),
           gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });
@@ -378,7 +378,7 @@ export const DashboardService = {
           periodoLabel: mesLabel,
           ingresos: parseFloat(sumIngresos.toFixed(2)),
           gastos: parseFloat(sumGastos.toFixed(2)),
-          ganancias: parseFloat((sumIngresos - sumGastos).toFixed(2)),
+          ganancias: parseFloat((sumGananciaVentas - sumGastos).toFixed(2)),
           gananciaVentas: parseFloat(sumGananciaVentas.toFixed(2)),
           compras: parseFloat(sumCompras.toFixed(2)),
         });

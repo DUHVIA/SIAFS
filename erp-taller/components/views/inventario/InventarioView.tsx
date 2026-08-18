@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ModuleTemplate } from '@/components/templates/ModuleTemplate';
 import { Table } from '@/components/ui/Table';
+import { TruncatedCell } from '@/components/ui/Tooltip';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -182,14 +183,11 @@ export function InventarioView() {
                             <Wrench className="w-5 h-5 text-secondary" />
                         )}
                     </div>
-                    <div>
-                        <p className="font-headline font-bold text-sm text-secondary truncate max-w-[200px]">{row.nombre}</p>
-                        {row.categoria === 'AUTOPARTE' && row.tipoAutoparte && (
-                            <span className="text-[10px] text-tertiary uppercase font-label tracking-wider bg-white/60 px-1.5 py-0.5 rounded border border-white/20">
-                                {row.tipoAutoparte.nombre}
-                            </span>
-                        )}
-                    </div>
+                    <TruncatedCell
+                        text={row.nombre}
+                        maxWidthClass="max-w-[240px]"
+                        subtext={row.categoria === 'AUTOPARTE' && row.tipoAutoparte ? row.tipoAutoparte.nombre : undefined}
+                    />
                 </div>
             )
         },

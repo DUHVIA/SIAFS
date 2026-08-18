@@ -10,6 +10,7 @@ import {
     ChevronLeft, ChevronRight, Eye, Edit3, Trash2, Phone, Mail
 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
+import { Tooltip, TruncatedCell } from '@/components/ui/Tooltip';
 import { CrearClienteModal } from './CrearClienteModal';
 import { EditarClienteModal } from './EditarClienteModal';
 import { VerClienteModal } from './VerClienteModal';
@@ -215,7 +216,7 @@ export function ClientesView() {
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <p className="font-headline font-bold text-sm text-secondary">{cliente.nombre}</p>
+                                            <TruncatedCell text={cliente.nombre} maxWidthClass="max-w-[200px]" />
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-col gap-0.5">
@@ -225,9 +226,11 @@ export function ClientesView() {
                                                     </span>
                                                 )}
                                                 {cliente.correo && (
-                                                    <span className="flex items-center gap-1.5 text-xs text-tertiary truncate max-w-[180px]">
-                                                        <Mail className="w-3 h-3 flex-shrink-0" /> {cliente.correo}
-                                                    </span>
+                                                    <Tooltip content={cliente.correo}>
+                                                        <span className="flex items-center gap-1.5 text-xs text-tertiary truncate max-w-[180px]">
+                                                            <Mail className="w-3 h-3 flex-shrink-0" /> {cliente.correo}
+                                                        </span>
+                                                    </Tooltip>
                                                 )}
                                                 {!cliente.telefono && !cliente.correo && (
                                                     <span className="text-xs text-tertiary/50">Sin datos de contacto</span>
@@ -235,9 +238,7 @@ export function ClientesView() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="text-xs text-tertiary truncate max-w-[160px] block">
-                                                {cliente.direccion || '—'}
-                                            </span>
+                                            <TruncatedCell text={cliente.direccion || '—'} maxWidthClass="max-w-[180px]" />
                                         </td>
                                         <td className="px-4 py-3 text-xs text-tertiary font-label">
                                             {new Date(cliente.createdAt).toLocaleDateString('es-PE', {
